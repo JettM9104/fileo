@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "droplink",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/mattyasadi/Projects/Project/droplink",
+      "port": 3000
+    },
+    {
+      "name": "filo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "/Users/mattyasadi/Projects/Project/filo",
+      "port": 3000
+    },
+    {
+      "name": "filo-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4321", "/Users/mattyasadi/Projects/Project"],
+      "port": 4321
+    }
+  ]
+}
