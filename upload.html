@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fileo — Upload</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    html{scroll-behavior:smooth}
+    @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideIn {from{opacity:0;transform:translateY(12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes modalIn {from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes spin    {to{transform:rotate(360deg)}}
+    .fade-up  {animation:fadeUp  0.55s cubic-bezier(0.16,1,0.3,1) forwards}
+    .slide-in {animation:slideIn 0.4s  cubic-bezier(0.16,1,0.3,1) forwards}
+    .modal-in {animation:modalIn 0.3s  cubic-bezier(0.16,1,0.3,1) forwards}
+    .spinner  {animation:spin 0.8s linear infinite}
+    *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;box-sizing:border-box}
+    body{background:#F5F0E8;color:#1C1917;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;margin:0}
+    #nav-bar{transition:padding .25s,background .25s,box-shadow .25s,border-color .25s}
+    #nav-bar.scrolled{background:rgba(245,240,232,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:999px;padding:6px 16px;box-shadow:0 2px 16px rgba(28,25,23,0.10);border:1px solid rgba(28,25,23,0.09)}
+    input:focus,select:focus{outline:none;border-color:rgba(28,25,23,0.35)!important;box-shadow:0 0 0 3px rgba(28,25,23,0.07)}
+    #auth-modal{display:none}
+    #auth-modal.open{display:flex}
+    .dz-over{border-color:#8B6F47!important;background:rgba(139,111,71,0.05)!important}
+    .expiry-btn{transition:background .15s,color .15s,border-color .15s}
+    #toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-8px)}
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH MODAL ── -->
+<div id="auth-modal" class="fixed inset-0 z-[100] items-center justify-center p-4"
+  style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)"
+  onclick="if(event.target===this)closeModal()">
+  <div class="modal-in w-full max-w-sm rounded-2xl p-7 flex flex-col"
+    style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex gap-1 p-1 rounded-xl" style="background:#EAE4D9">
+        <button id="tab-login" onclick="setAuthTab('login')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Sign in</button>
+        <button id="tab-register" onclick="setAuthTab('register')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:transparent;color:rgba(28,25,23,0.45)">Sign up</button>
+      </div>
+      <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="auth-title" class="text-xl font-bold mb-1" style="color:#1C1917">Welcome back</h2>
+    <p id="auth-sub" class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Sign in to access your files from any device.</p>
+    <form id="auth-form" onsubmit="submitAuth(event)" class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Email</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Password</label>
+        <div class="relative">
+          <input id="auth-password" type="password" placeholder="Your password" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;padding-right:2.75rem" />
+          <button type="button" onclick="togglePwVis()" class="absolute right-3 top-1/2 -translate-y-1/2 hover:opacity-60" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;padding:0;display:flex">
+            <svg id="eye-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="auth-error" class="hidden text-xs px-3 py-2 rounded-lg" style="background:rgba(220,38,38,0.08);color:#DC2626"></div>
+      <button id="auth-submit" type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 mt-1" style="background:#1C1917;color:#F5F0E8">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="fixed top-5 left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="background:#1C1917;color:#F5F0E8"></div>
+
+<!-- ── NAV ── -->
+<div id="nav-bar" class="fixed top-4 left-1/2 z-50 flex items-center gap-6" style="transform:translateX(-50%)">
+  <a href="index.html" class="flex items-center gap-2 px-1 no-underline">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+    <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
+  </a>
+  <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
+    <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
+    <a href="index.html#pricing" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Pricing</a>
+    <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+  </nav>
+  <div class="relative">
+    <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-11 h-11 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </button>
+    <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-11 h-11 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
+    <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
+      <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+        <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+        <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
+      </div>
+      <button onclick="switchTab('files');document.getElementById('account-menu').classList.add('hidden')" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        My files
+      </button>
+      <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<main class="min-h-screen pt-24 pb-20 px-4">
+  <div class="max-w-xl mx-auto">
+    <div class="fade-up opacity-0">
+
+      <!-- Header + tabs -->
+      <div class="flex items-start justify-between mb-8 gap-4">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight" style="color:#1C1917">Upload</h1>
+          <p id="panel-desc" class="text-sm mt-1" style="color:rgba(28,25,23,0.45)">Drop a file or folder to get a shareable link.</p>
+        </div>
+        <div class="flex gap-1 p-1 rounded-xl flex-shrink-0" style="background:#EAE4D9">
+          <button id="tab-upload-btn" onclick="switchTab('upload')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Upload</button>
+          <button id="tab-files-btn" onclick="switchTab('files')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all" style="background:transparent;color:rgba(28,25,23,0.45)">My Files</button>
+        </div>
+      </div>
+
+      <!-- ══════════════════ UPLOAD PANEL ══════════════════ -->
+      <div id="panel-upload">
+
+        <!-- Quota card (shown when logged in) -->
+        <div id="quota-card" class="hidden mb-5 rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Storage used</span>
+            <span id="storage-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full mb-4" style="background:#EAE4D9">
+            <div id="storage-fill" class="h-1.5 rounded-full transition-all duration-500" style="background:#8B6F47;width:0%"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs" style="color:rgba(28,25,23,0.45)">Active links</span>
+            <span id="links-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
+          </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="drop-zone"
+          class="relative flex flex-col items-center justify-center rounded-2xl text-center cursor-pointer select-none transition-all"
+          style="border:2px dashed rgba(28,25,23,0.18);background:#FDFAF5;padding:52px 24px;min-height:230px"
+          onclick="document.getElementById('file-input').click()"
+          ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <input type="file" id="file-input" class="hidden" onchange="onFileChange(event)" />
+          <input type="file" id="folder-input" class="hidden" webkitdirectory multiple onchange="onFolderChange(event)" />
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <p class="font-semibold text-[15px] mb-1.5" style="color:#1C1917">Drop your file here</p>
+          <p class="text-sm mb-5" style="color:rgba(28,25,23,0.45)">or click to browse · any format up to <span id="dz-limit">500 MB</span></p>
+          <button type="button" onclick="event.stopPropagation();document.getElementById('folder-input').click()"
+            class="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium hover:opacity-70 transition-opacity"
+            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.55);font-family:inherit;cursor:pointer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Select folder
+          </button>
+        </div>
+
+        <!-- File preview (after selection) -->
+        <div id="file-preview" class="hidden">
+          <div class="flex items-center gap-4 rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+            <div id="file-icon" class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47"></div>
+            <div class="flex-1 min-w-0">
+              <p id="prev-name" class="font-semibold text-[15px] truncate" style="color:#1C1917"></p>
+              <p id="prev-size" class="text-sm mt-0.5" style="color:rgba(28,25,23,0.45)"></p>
+            </div>
+            <button onclick="clearFile()" class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <!-- Expiry selector -->
+          <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+            <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Expires after</p>
+            <div class="flex flex-wrap gap-2">
+              <button data-h="1"   onclick="setExpiry(1)"   class="expiry-btn px-4 py-1.5 rounded-full text-sm font-medium" style="background:#1C1917;color:#F5F0E8;border:1px solid #1C1917;font-family:inherit;cursor:pointer">1 hour</button>
+              <button data-h="24"  onclick="setExpiry(24)"  class="expiry-btn px-4 py-1.5 rounded-full text-sm font-medium" style="border:1px solid rgba(28,25,23,0.14);color:rgba(28,25,23,0.55);background:transparent;font-family:inherit;cursor:pointer">24 hours</button>
+              <button data-h="168" onclick="proExpiry(168)" class="expiry-btn relative px-4 py-1.5 rounded-full text-sm font-medium" id="btn-7d" style="border:1px solid rgba(28,25,23,0.10);color:rgba(28,25,23,0.28);background:#FDFAF5;font-family:inherit;cursor:pointer">
+                7 days
+                <span id="lock-7d" class="absolute -top-1.5 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+              </button>
+              <button data-h="720" onclick="proExpiry(720)" class="expiry-btn relative px-4 py-1.5 rounded-full text-sm font-medium" id="btn-30d" style="border:1px solid rgba(28,25,23,0.10);color:rgba(28,25,23,0.28);background:#FDFAF5;font-family:inherit;cursor:pointer">
+                30 days
+                <span id="lock-30d" class="absolute -top-1.5 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Advanced options (Pro only) -->
+          <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Advanced options</p>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+            </div>
+
+            <!-- Locked state -->
+            <div id="adv-locked">
+              <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.45)">Password protection, download limits, and access control are available on the Pro plan.</p>
+              <a href="index.html#pricing" class="inline-block mt-3 px-4 py-1.5 rounded-full text-xs font-semibold hover:opacity-80 no-underline" style="background:#1C1917;color:#F5F0E8">Upgrade to Pro</a>
+            </div>
+
+            <!-- Unlocked state -->
+            <div id="adv-unlocked" class="hidden flex flex-col gap-4">
+              <div>
+                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Password protection <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+                <input id="opt-password" type="text" placeholder="Leave blank for no password"
+                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+              </div>
+              <div>
+                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Download limit</label>
+                <select id="opt-dlimit" class="w-full px-3.5 py-2.5 rounded-xl text-sm appearance-none" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">
+                  <option value="">Unlimited</option>
+                  <option value="1">1 download</option>
+                  <option value="5">5 downloads</option>
+                  <option value="10">10 downloads</option>
+                  <option value="25">25 downloads</option>
+                  <option value="50">50 downloads</option>
+                  <option value="100">100 downloads</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-medium block mb-2" style="color:rgba(28,25,23,0.5)">Who can open this link</label>
+                <div class="flex flex-col gap-2.5">
+                  <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="radio" name="access" value="anyone" checked style="accent-color:#1C1917;width:15px;height:15px" />
+                    <span class="text-sm" style="color:#1C1917">Anyone with the link</span>
+                  </label>
+                  <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="radio" name="access" value="signed_in" style="accent-color:#1C1917;width:15px;height:15px" />
+                    <span class="text-sm" style="color:#1C1917">Only signed-in accounts</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upload button -->
+          <button id="upload-btn" onclick="doUpload()" class="w-full py-3.5 rounded-2xl text-sm font-semibold hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">
+            Upload file
+          </button>
+        </div><!-- /file-preview -->
+
+        <!-- Progress -->
+        <div id="upload-progress" class="hidden rounded-2xl p-7" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-5 h-5 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+            <p class="text-sm font-medium" style="color:#1C1917">Uploading…</p>
+          </div>
+          <div class="w-full h-1.5 rounded-full" style="background:#EAE4D9">
+            <div id="prog-fill" class="h-1.5 rounded-full transition-all" style="background:#8B6F47;width:0%"></div>
+          </div>
+          <p id="prog-label" class="text-xs mt-2" style="color:rgba(28,25,23,0.35)">0%</p>
+        </div>
+
+        <!-- Success -->
+        <div id="upload-success" class="hidden slide-in">
+          <div class="rounded-2xl p-7 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+            <div class="flex items-center gap-2.5 mb-5">
+              <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;color:#8B6F47">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <p class="font-semibold text-[15px]" style="color:#1C1917">File uploaded!</p>
+            </div>
+            <div class="flex items-center gap-2 rounded-xl px-4 py-3 mb-4" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.10)">
+              <p id="success-link" class="text-sm flex-1 truncate" style="color:#1C1917;font-family:ui-monospace,monospace"></p>
+              <button onclick="copySuccessLink()" class="flex-shrink-0 text-xs font-semibold px-3 py-1 rounded-lg hover:opacity-70 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Copy</button>
+            </div>
+            <p id="success-meta" class="text-xs" style="color:rgba(28,25,23,0.4)"></p>
+          </div>
+          <button onclick="resetUpload()" class="w-full py-3 rounded-2xl text-sm hover:opacity-70 transition-opacity" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.45);background:transparent;cursor:pointer;font-family:inherit">Upload another file</button>
+        </div>
+
+      </div><!-- /panel-upload -->
+
+      <!-- ══════════════════ MY FILES PANEL ══════════════════ -->
+      <div id="panel-files" class="hidden">
+
+        <!-- Not logged in -->
+        <div id="fl-login" class="hidden text-center py-16">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <p class="font-semibold text-lg mb-2" style="color:#1C1917">Sign in to see your files</p>
+          <p class="text-sm mb-6 max-w-xs mx-auto leading-relaxed" style="color:rgba(28,25,23,0.45)">Your uploaded files are saved to your account and accessible from any device.</p>
+          <button onclick="openModal()" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Sign in</button>
+        </div>
+
+        <!-- Loading -->
+        <div id="fl-loading" class="hidden flex items-center justify-center gap-2 py-16" style="color:rgba(28,25,23,0.4)">
+          <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+          <span class="text-sm">Loading files…</span>
+        </div>
+
+        <!-- Empty -->
+        <div id="fl-empty" class="hidden text-center py-16">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <p class="font-semibold text-lg mb-2" style="color:#1C1917">No active files</p>
+          <p class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Files you upload will appear here.</p>
+          <button onclick="switchTab('upload')" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Upload a file</button>
+        </div>
+
+        <!-- List -->
+        <div id="fl-list" class="hidden flex flex-col gap-3"></div>
+
+      </div><!-- /panel-files -->
+
+    </div>
+  </div>
+</main>
+
+<script>
+// ── CONFIG
+const SUPABASE_URL  = 'https://jahwqnzhzhrxcdszdclk.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphaHdxbnpoemhyeGNkc3pkY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTE0ODUsImV4cCI6MjA5MjYyNzQ4NX0.E_DvUN7WKSHgBJ_vb97FxyTKmg6x71dLUyJgn6GOV2M';
+const BUCKET = 'uploads';
+const FREE_MAX_LINKS   = 3;
+const FREE_MAX_STORAGE = 500 * 1024 * 1024;
+
+// ── STATE
+let _sb = null, currentUser = null, isPro = false;
+let selectedFile = null, selectedExpiry = 1;
+let activePanel = 'upload';
+let _authTab = 'login';
+
+// ── INIT
+window.addEventListener('DOMContentLoaded', () => {
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  isPro = localStorage.getItem('fileo_is_pro') === 'true';
+  if (isPro) applyProUI();
+
+  _sb.auth.onAuthStateChange((_e, session) => {
+    if (session?.user) {
+      currentUser = session.user;
+      showUserNav(session.user.email);
+      loadQuota();
+      if (activePanel === 'files') loadFiles();
+    } else {
+      currentUser = null;
+      showSignedOutNav();
+      document.getElementById('quota-card').classList.add('hidden');
+    }
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('tab') === 'files') switchTab('files');
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('account-menu');
+    const av   = document.getElementById('btn-avatar');
+    if (!menu.contains(e.target) && e.target !== av) menu.classList.add('hidden');
+  });
+});
+
+// ── PRO UI
+function applyProUI() {
+  document.getElementById('pro-badge').classList.remove('hidden');
+  document.getElementById('dz-limit').textContent = '10 GB';
+  // Unlock expiry buttons
+  ['btn-7d','btn-30d'].forEach(id => {
+    const b = document.getElementById(id);
+    b.style.color = 'rgba(28,25,23,0.55)';
+    b.style.borderColor = 'rgba(28,25,23,0.14)';
+    b.style.background = 'transparent';
+  });
+  // Hide pro locks on expiry
+  document.getElementById('lock-7d').style.display  = 'none';
+  document.getElementById('lock-30d').style.display = 'none';
+  // Show advanced options
+  document.getElementById('adv-locked').classList.add('hidden');
+  document.getElementById('adv-unlocked').classList.remove('hidden');
+}
+
+// ── QUOTA
+async function loadQuota() {
+  if (!currentUser) return;
+  const card = document.getElementById('quota-card');
+  card.classList.remove('hidden');
+
+  if (isPro) {
+    document.getElementById('storage-label').textContent = 'Unlimited';
+    document.getElementById('links-label').textContent   = 'Unlimited';
+    document.getElementById('storage-fill').style.width  = '0%';
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const { data: files } = await _sb.from('files')
+    .select('size')
+    .eq('user_id', currentUser.id)
+    .gt('expires_at', now);
+
+  const used  = (files || []).reduce((s, f) => s + (f.size || 0), 0);
+  const count = (files || []).length;
+  const pct   = Math.min(100, (used / FREE_MAX_STORAGE) * 100);
+
+  document.getElementById('storage-fill').style.width  = pct + '%';
+  document.getElementById('storage-label').textContent = fmtSize(used) + ' / 500 MB';
+  document.getElementById('links-label').textContent   = count + ' / ' + FREE_MAX_LINKS;
+}
+
+// ── HELPERS
+function fmtSize(b) {
+  if (b < 1024)       return b + ' B';
+  if (b < 1048576)    return (b/1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
+  return (b/1073741824).toFixed(2) + ' GB';
+}
+function timeUntil(iso) {
+  const d = new Date(iso) - Date.now();
+  if (d <= 0) return 'Expired';
+  const h = Math.floor(d / 3600000), days = Math.floor(h / 24), m = Math.floor((d % 3600000) / 60000);
+  if (days >= 1) return days + 'd ' + (h % 24) + 'h left';
+  if (h  >= 1)  return h + 'h ' + m + 'm left';
+  return m + 'm left';
+}
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function getShareLink(id) {
+  const base = window.location.href.replace(/upload\.html.*$/, '');
+  return base + 'index.html#d/' + id;
+}
+
+// ── TOAST
+let _toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(-8px)';
+  }, 2400);
+}
+
+// ── TABS
+function switchTab(tab) {
+  activePanel = tab;
+  const isUp = tab === 'upload';
+  document.getElementById('panel-upload').classList.toggle('hidden', !isUp);
+  document.getElementById('panel-files').classList.toggle('hidden',  isUp);
+  document.getElementById('panel-desc').textContent = isUp
+    ? 'Drop a file or folder to get a shareable link.'
+    : 'Files you upload while signed in.';
+  document.getElementById('tab-upload-btn').style.cssText = isUp
+    ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)'
+    : 'background:transparent;color:rgba(28,25,23,0.45)';
+  document.getElementById('tab-files-btn').style.cssText = isUp
+    ? 'background:transparent;color:rgba(28,25,23,0.45)'
+    : 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)';
+  if (tab === 'files') {
+    if (!currentUser) showFilesState('login');
+    else loadFiles();
+  }
+}
+
+// ── DRAG & DROP
+function onDragOver(e)  { e.preventDefault(); document.getElementById('drop-zone').classList.add('dz-over'); }
+function onDragLeave()  { document.getElementById('drop-zone').classList.remove('dz-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('dz-over');
+  const items = e.dataTransfer.items;
+  if (items && items[0]) {
+    const entry = items[0].webkitGetAsEntry?.();
+    if (entry?.isDirectory) { collectFolder(entry); return; }
+  }
+  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+}
+function onFileChange(e)   { if (e.target.files[0]) setFile(e.target.files[0]); }
+function onFolderChange(e) {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  const name = files[0].webkitRelativePath.split('/')[0];
+  zipFiles(files, name);
+}
+
+async function collectFolder(entry) {
+  const files = [];
+  async function walk(e, path) {
+    if (e.isFile) {
+      const f = await new Promise(r => e.file(r));
+      f._rel = path + '/' + e.name;
+      files.push(f);
+    } else {
+      const reader = e.createReader();
+      const entries = await new Promise(r => reader.readEntries(r));
+      for (const sub of entries) await walk(sub, path + '/' + e.name);
+    }
+  }
+  const reader = entry.createReader();
+  const entries = await new Promise(r => reader.readEntries(r));
+  for (const sub of entries) await walk(sub, entry.name);
+  if (files.length) zipFiles(files, entry.name);
+}
+
+async function zipFiles(files, folderName) {
+  showToast('Zipping folder…');
+  const zip = new JSZip();
+  for (const f of files) {
+    const rel = f.webkitRelativePath || f._rel || f.name;
+    zip.file(rel, f);
+  }
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  setFile(new File([blob], folderName + '.zip', { type: 'application/zip' }));
+}
+
+function setFile(file) {
+  const maxSize = isPro ? 10 * 1024 * 1024 * 1024 : FREE_MAX_STORAGE;
+  if (file.size > maxSize) {
+    showToast(isPro ? 'Max file size is 10 GB' : 'Max file size is 500 MB on the free plan');
+    return;
+  }
+  selectedFile = file;
+  document.getElementById('drop-zone').classList.add('hidden');
+  document.getElementById('file-preview').classList.remove('hidden');
+  document.getElementById('prev-name').textContent = file.name;
+  document.getElementById('prev-size').textContent = fmtSize(file.size);
+  document.getElementById('file-icon').innerHTML   = fileIconSvg(file.name);
+}
+
+function fileIconSvg(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (/^(jpg|jpeg|png|gif|webp|svg|bmp|ico)$/.test(ext))
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  if (/^(mp4|mov|avi|mkv|webm|flv|wmv)$/.test(ext))
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+  if (/^(mp3|wav|flac|aac|ogg|m4a)$/.test(ext))
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+  if (/^(zip|tar|gz|rar|7z|bz2)$/.test(ext))
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>';
+  return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('drop-zone').classList.remove('hidden');
+  document.getElementById('file-preview').classList.add('hidden');
+  document.getElementById('file-input').value   = '';
+  document.getElementById('folder-input').value = '';
+}
+
+// ── EXPIRY
+function setExpiry(hours) {
+  selectedExpiry = hours;
+  document.querySelectorAll('.expiry-btn').forEach(btn => {
+    const h   = parseInt(btn.getAttribute('data-h'));
+    const sel = h === hours;
+    btn.style.background   = sel ? '#1C1917' : 'transparent';
+    btn.style.color        = sel ? '#F5F0E8' : 'rgba(28,25,23,0.55)';
+    btn.style.borderColor  = sel ? '#1C1917' : 'rgba(28,25,23,0.14)';
+  });
+}
+function proExpiry(hours) {
+  if (!isPro) { showToast('7-day and 30-day expiry require the Pro plan'); return; }
+  setExpiry(hours);
+}
+
+// ── UPLOAD
+async function doUpload() {
+  if (!selectedFile) return;
+
+  // Free quota check
+  if (!isPro && currentUser) {
+    const now = new Date().toISOString();
+    const { data: existing } = await _sb.from('files')
+      .select('size')
+      .eq('user_id', currentUser.id)
+      .gt('expires_at', now);
+    const usedStorage = (existing || []).reduce((s, f) => s + (f.size || 0), 0);
+    const count = (existing || []).length;
+    if (count >= FREE_MAX_LINKS) {
+      showToast('You have ' + FREE_MAX_LINKS + ' active links — the free plan maximum. Delete one or upgrade.');
+      return;
+    }
+    if (usedStorage + selectedFile.size > FREE_MAX_STORAGE) {
+      const left = FREE_MAX_STORAGE - usedStorage;
+      showToast('Not enough storage. ' + fmtSize(left) + ' remaining on your free plan.');
+      return;
+    }
+  }
+
+  document.getElementById('file-preview').classList.add('hidden');
+  document.getElementById('upload-progress').classList.remove('hidden');
+
+  const fileId  = crypto.randomUUID ? crypto.randomUUID() : (Math.random().toString(36).slice(2) + Date.now().toString(36));
+  const userId  = currentUser?.id || 'anon';
+  const dotExt  = selectedFile.name.includes('.') ? '.' + selectedFile.name.split('.').pop() : '';
+  const storagePath = userId + '/' + fileId + dotExt;
+
+  // Fake progress (Supabase JS v2 lacks upload progress events)
+  let prog = 0;
+  const progTick = setInterval(() => {
+    prog = Math.min(prog + Math.random() * 18, 88);
+    document.getElementById('prog-fill').style.width  = prog + '%';
+    document.getElementById('prog-label').textContent = Math.round(prog) + '%';
+  }, 200);
+
+  const { error: upErr } = await _sb.storage.from(BUCKET).upload(storagePath, selectedFile, {
+    cacheControl: '3600',
+    upsert: false
+  });
+
+  clearInterval(progTick);
+
+  if (upErr) {
+    document.getElementById('upload-progress').classList.add('hidden');
+    document.getElementById('file-preview').classList.remove('hidden');
+    showToast('Upload failed: ' + upErr.message);
+    return;
+  }
+
+  document.getElementById('prog-fill').style.width  = '100%';
+  document.getElementById('prog-label').textContent = '100%';
+
+  // Build DB record
+  const expiresAt = new Date(Date.now() + selectedExpiry * 3600000).toISOString();
+  let passwordHash = null, downloadLimit = null, accessControl = 'anyone';
+
+  if (isPro) {
+    const pw = document.getElementById('opt-password').value.trim();
+    if (pw) passwordHash = await sha256hex(pw);
+    const dl = document.getElementById('opt-dlimit').value;
+    if (dl) downloadLimit = parseInt(dl);
+    accessControl = document.querySelector('input[name="access"]:checked')?.value || 'anyone';
+  }
+
+  const record = {
+    id:           fileId,
+    filename:     selectedFile.name,
+    size:         selectedFile.size,
+    storage_path: storagePath,
+    expires_at:   expiresAt,
+    downloads:    0,
+    access_control: accessControl
+  };
+  if (currentUser)   record.user_id        = currentUser.id;
+  if (passwordHash)  record.password_hash  = passwordHash;
+  if (downloadLimit) record.download_limit = downloadLimit;
+
+  const { error: dbErr } = await _sb.from('files').insert(record);
+
+  if (dbErr) {
+    await _sb.storage.from(BUCKET).remove([storagePath]);
+    document.getElementById('upload-progress').classList.add('hidden');
+    document.getElementById('file-preview').classList.remove('hidden');
+    showToast('Could not save file record: ' + dbErr.message);
+    return;
+  }
+
+  // Show success
+  const link = getShareLink(fileId);
+  document.getElementById('upload-progress').classList.add('hidden');
+  document.getElementById('upload-success').classList.remove('hidden');
+  document.getElementById('success-link').textContent = link;
+  document.getElementById('success-meta').textContent = fmtSize(selectedFile.size) + ' · expires ' + timeUntil(expiresAt);
+  loadQuota();
+}
+
+function copySuccessLink() {
+  navigator.clipboard.writeText(document.getElementById('success-link').textContent)
+    .then(() => showToast('Link copied!'));
+}
+
+function resetUpload() {
+  selectedFile   = null;
+  selectedExpiry = 1;
+  document.getElementById('upload-success').classList.add('hidden');
+  document.getElementById('upload-progress').classList.add('hidden');
+  document.getElementById('file-preview').classList.add('hidden');
+  document.getElementById('drop-zone').classList.remove('hidden');
+  document.getElementById('file-input').value   = '';
+  document.getElementById('folder-input').value = '';
+  setExpiry(1);
+  if (isPro) {
+    document.getElementById('opt-password').value = '';
+    document.getElementById('opt-dlimit').value   = '';
+    const r = document.querySelector('input[name="access"][value="anyone"]');
+    if (r) r.checked = true;
+  }
+}
+
+// ── MY FILES
+function showFilesState(state) {
+  ['fl-login','fl-loading','fl-empty','fl-list'].forEach(id => {
+    document.getElementById(id).classList.toggle('hidden', id !== 'fl-' + state);
+  });
+}
+
+async function loadFiles() {
+  if (!currentUser) { showFilesState('login'); return; }
+  showFilesState('loading');
+
+  const now = new Date().toISOString();
+  const { data: files, error } = await _sb.from('files')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .gt('expires_at', now)
+    .order('created_at', { ascending: false });
+
+  if (error || !files?.length) { showFilesState('empty'); return; }
+
+  const list = document.getElementById('fl-list');
+  list.innerHTML = '';
+
+  files.forEach(f => {
+    const tags = [
+      f.password_hash  ? '<span class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:#EAE4D9;color:rgba(28,25,23,0.55)"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Password</span>' : '',
+      f.download_limit ? `<span class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:#EAE4D9;color:rgba(28,25,23,0.55)">${f.download_limit - (f.downloads||0)} left</span>` : '',
+      f.access_control === 'signed_in' ? '<span class="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full" style="background:#EAE4D9;color:rgba(28,25,23,0.55)">Signed-in only</span>' : ''
+    ].filter(Boolean).join('');
+
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-4 rounded-2xl p-5';
+    div.style.cssText = 'background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)';
+    div.innerHTML = `
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">${fileIconSvg(f.filename)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm truncate" style="color:#1C1917">${escHtml(f.filename)}</p>
+        <p class="text-xs mt-0.5 mb-1.5" style="color:rgba(28,25,23,0.4)">${fmtSize(f.size)} · ${timeUntil(f.expires_at)} · ${f.downloads||0} downloads</p>
+        <div class="flex flex-wrap gap-1">${tags}</div>
+      </div>
+      <div class="flex flex-col gap-1.5 flex-shrink-0">
+        <button onclick="copyFileLink('${escHtml(f.id)}')" class="px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Copy link</button>
+        <button onclick="deleteFile('${escHtml(f.id)}','${escHtml(f.storage_path)}')" class="px-3 py-1 rounded-lg text-xs font-medium hover:opacity-70 transition-opacity" style="background:transparent;color:rgba(28,25,23,0.4);border:1px solid rgba(28,25,23,0.10);cursor:pointer;font-family:inherit">Delete</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+
+  showFilesState('list');
+}
+
+function copyFileLink(id) {
+  navigator.clipboard.writeText(getShareLink(id)).then(() => showToast('Link copied!'));
+}
+
+async function deleteFile(id, path) {
+  if (!confirm('Delete this file? The share link will stop working immediately.')) return;
+  await _sb.storage.from(BUCKET).remove([path]);
+  await _sb.from('files').delete().eq('id', id);
+  showToast('File deleted.');
+  loadFiles();
+  loadQuota();
+}
+
+// ── AUTH
+function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+
+function setAuthTab(tab) {
+  _authTab = tab;
+  const isL = tab === 'login';
+  document.getElementById('tab-login').style.cssText    = isL ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)' : 'background:transparent;color:rgba(28,25,23,0.45)';
+  document.getElementById('tab-register').style.cssText = isL ? 'background:transparent;color:rgba(28,25,23,0.45)' : 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)';
+  document.getElementById('auth-title').textContent = isL ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent   = isL ? 'Sign in to access your files from any device.' : 'Your uploads will sync across all your devices.';
+  document.getElementById('auth-password').placeholder = isL ? 'Your password' : 'At least 6 characters';
+  document.getElementById('auth-submit').textContent   = isL ? 'Sign in' : 'Create account';
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+async function submitAuth(e) {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  const btn   = document.getElementById('auth-submit');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Please wait…';
+  const { error } = _authTab === 'login'
+    ? await _sb.auth.signInWithPassword({ email, password: pw })
+    : await _sb.auth.signUp({ email, password: pw });
+  btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
+  if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
+  else closeModal();
+}
+
+function togglePwVis() {
+  const i = document.getElementById('auth-password');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  document.getElementById('eye-on').style.display  = i.type === 'text' ? 'none' : '';
+  document.getElementById('eye-off').style.display = i.type === 'text' ? '' : 'none';
+}
+
+function showUserNav(email) {
+  document.getElementById('btn-signin').classList.add('hidden');
+  const av = document.getElementById('btn-avatar');
+  av.textContent = email[0].toUpperCase();
+  av.classList.remove('hidden'); av.classList.add('flex');
+  document.getElementById('menu-email').textContent = email;
+  document.getElementById('menu-plan').textContent  = isPro ? 'Pro plan' : 'Free plan';
+}
+function showSignedOutNav() {
+  document.getElementById('btn-signin').classList.remove('hidden');
+  document.getElementById('btn-avatar').classList.add('hidden');
+  document.getElementById('btn-avatar').classList.remove('flex');
+  document.getElementById('account-menu').classList.add('hidden');
+}
+function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
+async function doSignOut() {
+  await _sb.auth.signOut();
+  showSignedOutNav();
+}
+</script>
+</body>
+</html>
