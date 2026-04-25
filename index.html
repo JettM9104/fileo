@@ -306,8 +306,13 @@
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
           <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Max file size</span><span class="text-sm font-medium" style="color:#1C1917">500 MB</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Active uploads</span><span class="text-sm font-medium" style="color:#1C1917">3 max</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Total storage</span><span class="text-sm font-medium" style="color:#1C1917">500 MB</span></div>
+          <div class="py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)">
+            <div class="flex items-center justify-between"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Active links</span><span id="free-links-val" class="text-sm font-medium" style="color:#1C1917">3 max</span></div>
+          </div>
+          <div class="py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)">
+            <div class="flex items-center justify-between mb-1.5"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Total storage</span><span id="free-storage-val" class="text-sm font-medium" style="color:#1C1917">500 MB</span></div>
+            <div id="free-storage-bar-wrap" class="hidden w-full h-1 rounded-full" style="background:#EAE4D9"><div id="free-storage-bar" class="h-1 rounded-full transition-all duration-500" style="background:#8B6F47;width:0%"></div></div>
+          </div>
           <div><p class="text-sm mb-2" style="color:rgba(28,25,23,0.45)">Expiry options</p><div class="flex gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">24 hours</span></div></div>
         </div>
         <button onclick="startUpload()" class="w-full text-center py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer;border-style:solid">Get started free</button>
@@ -321,8 +326,16 @@
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
           <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Max file size</span><span class="text-sm font-medium" style="color:#F5F0E8">10 GB</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active uploads</span><span class="text-sm font-medium" style="color:#F5F0E8">Unlimited</span></div>
-          <div><p class="text-sm mb-2" style="color:rgba(245,240,232,0.5)">Expiry options</p><div class="flex flex-wrap gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">24 hours</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">7 days</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">30 days</span></div></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active links</span><span id="pro-links-val" class="text-sm font-medium" style="color:#F5F0E8">Unlimited</span></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Total storage</span><span class="text-sm font-medium" style="color:#F5F0E8">Unlimited</span></div>
+          <div class="py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><p class="text-sm mb-2" style="color:rgba(245,240,232,0.5)">Expiry options</p><div class="flex flex-wrap gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">24 hours</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">7 days</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">30 days</span></div></div>
+          <div class="flex flex-col gap-2 pt-1">
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password protection</div>
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Download limits</div>
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Access control</div>
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access anywhere</div>
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatic malware scanning</div>
+          </div>
         </div>
         <button id="pro-cta-btn" onclick="openUpgradeModal()" class="w-full text-center py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;font-family:inherit;cursor:pointer;border:none">Get started — Testing</button>
       </div>
@@ -388,6 +401,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (session?.user) {
       currentUser = session.user;
       showUser(session.user.email);
+      loadPricingUsage();
       // Re-check download page if it was waiting on auth
       if (document.getElementById('dl-access-denied').classList.contains('hidden') === false && _dlFile) {
         showDownloadReady(_dlFile);
@@ -512,6 +526,33 @@ function confirmUpgrade() {
 function applyProPricingCard() {
   const btn = document.getElementById('pro-cta-btn');
   if (btn) { btn.textContent = 'Pro Active ✓'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.onclick = null; }
+}
+
+async function loadPricingUsage() {
+  if (!currentUser) return;
+  const now = new Date().toISOString();
+  const { data: files } = await _sb.from('files')
+    .select('size')
+    .eq('user_id', currentUser.id)
+    .gt('expires_at', now);
+
+  const count = (files || []).length;
+
+  if (isPro) {
+    const el = document.getElementById('pro-links-val');
+    if (el) el.textContent = count + ' active';
+  } else {
+    const used = (files || []).reduce((s, f) => s + (f.size || 0), 0);
+    const pct  = Math.min(100, (used / (500 * 1024 * 1024)) * 100);
+    const linksEl   = document.getElementById('free-links-val');
+    const storageEl = document.getElementById('free-storage-val');
+    const barWrap   = document.getElementById('free-storage-bar-wrap');
+    const barFill   = document.getElementById('free-storage-bar');
+    if (linksEl)   linksEl.textContent = count + ' / 3';
+    if (storageEl) storageEl.textContent = fmtSize(used) + ' / 500 MB';
+    if (barWrap)   barWrap.classList.remove('hidden');
+    if (barFill)   barFill.style.width = pct + '%';
+  }
 }
 
 let _toastIndexTimer = null;
