@@ -107,8 +107,8 @@
 
 <!-- ── MAIN ── -->
 <main class="min-h-screen pt-24 pb-20 px-4">
-  <div class="max-w-xl mx-auto">
-    <div class="fade-up opacity-0">
+  <div id="upload-layout" class="mx-auto flex gap-6 items-start justify-center" style="max-width:576px;transition:max-width 0.35s cubic-bezier(0.16,1,0.3,1)">
+    <div class="fade-up opacity-0 flex-1" style="min-width:0;max-width:576px">
 
       <!-- Header + tabs -->
       <div class="flex items-start justify-between mb-8 gap-4">
@@ -191,53 +191,13 @@
             </div>
           </div>
 
-          <!-- Advanced options (Pro only) -->
-          <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Advanced options</p>
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span>
-            </div>
-
-            <!-- Locked state -->
-            <div id="adv-locked">
-              <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.45)">Password protection, download limits, and access control are available on the Pro plan.</p>
-              <a href="index.html#pricing" class="inline-block mt-3 px-4 py-1.5 rounded-full text-xs font-semibold hover:opacity-80 no-underline" style="background:#1C1917;color:#F5F0E8">Upgrade to Pro</a>
-            </div>
-
-            <!-- Unlocked state -->
-            <div id="adv-unlocked" class="hidden flex flex-col gap-4">
-              <div>
-                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Password protection <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-                <input id="opt-password" type="text" placeholder="Leave blank for no password"
-                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
-              </div>
-              <div>
-                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Download limit</label>
-                <select id="opt-dlimit" class="w-full px-3.5 py-2.5 rounded-xl text-sm appearance-none" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">
-                  <option value="">Unlimited</option>
-                  <option value="1">1 download</option>
-                  <option value="5">5 downloads</option>
-                  <option value="10">10 downloads</option>
-                  <option value="25">25 downloads</option>
-                  <option value="50">50 downloads</option>
-                  <option value="100">100 downloads</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-xs font-medium block mb-2" style="color:rgba(28,25,23,0.5)">Who can open this link</label>
-                <div class="flex flex-col gap-2.5">
-                  <label class="flex items-center gap-2.5 cursor-pointer">
-                    <input type="radio" name="access" value="anyone" checked style="accent-color:#1C1917;width:15px;height:15px" />
-                    <span class="text-sm" style="color:#1C1917">Anyone with the link</span>
-                  </label>
-                  <label class="flex items-center gap-2.5 cursor-pointer">
-                    <input type="radio" name="access" value="signed_in" style="accent-color:#1C1917;width:15px;height:15px" />
-                    <span class="text-sm" style="color:#1C1917">Only signed-in accounts</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+          <!-- Advanced options toggle (Pro only) -->
+          <div id="adv-toggle-row" class="hidden mb-4">
+            <button id="adv-toggle-btn" onclick="toggleAdvPanel()" class="flex items-center gap-2 w-full px-4 py-2.5 rounded-2xl text-sm font-medium hover:opacity-70 transition-opacity" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);color:#1C1917;font-family:inherit;cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 19.07l-1.41 1.41M19.07 19.07l-1.41-1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+              <span class="flex-1 text-left">Advanced options</span>
+              <svg id="adv-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
 
           <!-- Upload button -->
@@ -313,6 +273,53 @@
       </div><!-- /panel-files -->
 
     </div>
+
+    <!-- ── ADVANCED SIDE PANEL ── -->
+    <div id="adv-side" style="width:0;overflow:hidden;flex-shrink:0;transition:width 0.35s cubic-bezier(0.16,1,0.3,1)">
+      <div style="width:272px">
+        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);margin-top:68px">
+          <p class="text-xs font-medium uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Advanced options</p>
+          <div class="flex flex-col gap-4">
+            <div>
+              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Password <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+              <input id="opt-password" type="text" placeholder="Leave blank for none"
+                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+            </div>
+            <div>
+              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Download limit</label>
+              <input id="opt-dlimit" type="number" min="1" placeholder="Unlimited"
+                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+            </div>
+            <div>
+              <label class="text-xs font-medium block mb-2" style="color:rgba(28,25,23,0.5)">Who can open this link</label>
+              <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                  <input type="radio" name="access" value="anyone" checked onclick="toggleEmailInput()" style="accent-color:#1C1917;width:14px;height:14px" />
+                  <span class="text-sm" style="color:#1C1917">Anyone with the link</span>
+                </label>
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                  <input type="radio" name="access" value="signed_in" onclick="toggleEmailInput()" style="accent-color:#1C1917;width:14px;height:14px" />
+                  <span class="text-sm" style="color:#1C1917">Signed-in accounts only</span>
+                </label>
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                  <input type="radio" name="access" value="specific" onclick="toggleEmailInput()" style="accent-color:#1C1917;width:14px;height:14px" />
+                  <span class="text-sm" style="color:#1C1917">Specific emails</span>
+                </label>
+              </div>
+              <div id="email-input-wrap" class="hidden mt-3">
+                <div id="email-tags" class="flex flex-wrap gap-1.5 mb-2 min-h-[24px]"></div>
+                <input id="email-input" type="email" placeholder="Add email, press Enter"
+                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917"
+                  onkeydown="handleEmailKey(event)" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -368,19 +375,70 @@ window.addEventListener('DOMContentLoaded', () => {
 function applyProUI() {
   document.getElementById('pro-badge').classList.remove('hidden');
   document.getElementById('dz-limit').textContent = '10 GB';
-  // Unlock expiry buttons
   ['btn-7d','btn-30d'].forEach(id => {
     const b = document.getElementById(id);
     b.style.color = 'rgba(28,25,23,0.55)';
     b.style.borderColor = 'rgba(28,25,23,0.14)';
     b.style.background = 'transparent';
   });
-  // Hide pro locks on expiry
   document.getElementById('lock-7d').style.display  = 'none';
   document.getElementById('lock-30d').style.display = 'none';
-  // Show advanced options
-  document.getElementById('adv-locked').classList.add('hidden');
-  document.getElementById('adv-unlocked').classList.remove('hidden');
+  document.getElementById('adv-toggle-row').classList.remove('hidden');
+}
+
+// ── ADVANCED PANEL
+let advPanelOpen = false;
+let allowedEmails = [];
+
+function toggleAdvPanel() {
+  advPanelOpen = !advPanelOpen;
+  document.getElementById('upload-layout').style.maxWidth = advPanelOpen ? '880px' : '576px';
+  document.getElementById('adv-side').style.width = advPanelOpen ? '272px' : '0';
+  const ch = document.getElementById('adv-chevron');
+  if (ch) ch.style.transform = advPanelOpen ? 'rotate(180deg)' : '';
+}
+
+function closeAdvPanel() {
+  if (!advPanelOpen) return;
+  advPanelOpen = false;
+  document.getElementById('upload-layout').style.maxWidth = '576px';
+  document.getElementById('adv-side').style.width = '0';
+  const ch = document.getElementById('adv-chevron');
+  if (ch) ch.style.transform = '';
+}
+
+function toggleEmailInput() {
+  const val = document.querySelector('input[name="access"]:checked')?.value;
+  document.getElementById('email-input-wrap').classList.toggle('hidden', val !== 'specific');
+}
+
+function handleEmailKey(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const input = document.getElementById('email-input');
+    addEmailTag(input.value);
+    input.value = '';
+  }
+}
+
+function addEmailTag(raw) {
+  const email = raw.trim().toLowerCase();
+  if (!email || !email.includes('@') || allowedEmails.includes(email)) return;
+  allowedEmails.push(email);
+  renderEmailTags();
+}
+
+function removeEmailTag(i) {
+  allowedEmails.splice(i, 1);
+  renderEmailTags();
+}
+
+function renderEmailTags() {
+  const c = document.getElementById('email-tags');
+  if (!c) return;
+  c.innerHTML = allowedEmails.map((e, i) =>
+    `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium" style="background:#EAE4D9;color:#1C1917">${escHtml(e)}<button onclick="removeEmailTag(${i})" style="background:none;border:none;cursor:pointer;padding:0 0 0 2px;color:rgba(28,25,23,0.4);font-size:14px;line-height:1;font-family:inherit">×</button></span>`
+  ).join('');
 }
 
 // ── QUOTA
@@ -455,6 +513,7 @@ function showToast(msg) {
 // ── TABS
 function switchTab(tab) {
   activePanel = tab;
+  closeAdvPanel();
   const isUp = tab === 'upload';
   document.getElementById('panel-upload').classList.toggle('hidden', !isUp);
   document.getElementById('panel-files').classList.toggle('hidden',  isUp);
@@ -553,6 +612,7 @@ function fileIconSvg(name) {
 
 function clearFile() {
   selectedFile = null;
+  closeAdvPanel();
   document.getElementById('drop-zone').classList.remove('hidden');
   document.getElementById('file-preview').classList.add('hidden');
   document.getElementById('file-input').value   = '';
@@ -639,8 +699,8 @@ async function doUpload() {
   if (isPro) {
     const pw = document.getElementById('opt-password').value.trim();
     if (pw) passwordHash = await sha256hex(pw);
-    const dl = document.getElementById('opt-dlimit').value;
-    if (dl) downloadLimit = parseInt(dl);
+    const dlVal = document.getElementById('opt-dlimit').value.trim();
+    if (dlVal && parseInt(dlVal) > 0) downloadLimit = parseInt(dlVal);
     accessControl = document.querySelector('input[name="access"]:checked')?.value || 'anyone';
   }
 
@@ -656,6 +716,7 @@ async function doUpload() {
   if (currentUser)   record.user_id        = currentUser.id;
   if (passwordHash)  record.password_hash  = passwordHash;
   if (downloadLimit) record.download_limit = downloadLimit;
+  if (isPro && accessControl === 'specific' && allowedEmails.length) record.allowed_emails = allowedEmails;
 
   const { error: dbErr } = await _sb.from('files').insert(record);
 
@@ -691,11 +752,16 @@ function resetUpload() {
   document.getElementById('file-input').value   = '';
   document.getElementById('folder-input').value = '';
   setExpiry(1);
+  closeAdvPanel();
   if (isPro) {
     document.getElementById('opt-password').value = '';
     document.getElementById('opt-dlimit').value   = '';
+    allowedEmails = [];
+    renderEmailTags();
+    const emailInput = document.getElementById('email-input');
+    if (emailInput) emailInput.value = '';
     const r = document.querySelector('input[name="access"][value="anyone"]');
-    if (r) r.checked = true;
+    if (r) { r.checked = true; toggleEmailInput(); }
   }
 }
 

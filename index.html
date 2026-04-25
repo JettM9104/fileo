@@ -604,6 +604,13 @@ async function showDownloadPage(fileId) {
     dlShowState('dl-access-denied');
     return;
   }
+  if (file.access_control === 'specific') {
+    if (!currentUser) { _dlFile = file; dlShowState('dl-access-denied'); return; }
+    const allowed = (file.allowed_emails || []).map(e => e.toLowerCase());
+    if (!allowed.includes(currentUser.email?.toLowerCase())) {
+      _dlFile = file; dlShowState('dl-access-denied'); return;
+    }
+  }
 
   _dlFile = file;
 
