@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="/config.js"></script>
   <style>
     html{scroll-behavior:smooth}
     @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -366,8 +367,8 @@
 
 <script>
 // ── CONFIG
-const SUPABASE_URL  = 'https://jahwqnzhzhrxcdszdclk.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphaHdxbnpoemhyeGNkc3pkY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTE0ODUsImV4cCI6MjA5MjYyNzQ4NX0.E_DvUN7WKSHgBJ_vb97FxyTKmg6x71dLUyJgn6GOV2M';
+const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
+const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
 const BUCKET = 'uploads';
 
 // ── STATE
@@ -381,16 +382,17 @@ let _pendingFolderId = null, _pendingFolderName = null, _latestSnapshotForConfli
 // ── INIT
 window.addEventListener('DOMContentLoaded', () => {
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  isPro = localStorage.getItem('fileo_is_pro') === 'true';
 
   _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
       currentUser = session.user;
+      isPro = session.user.app_metadata?.is_pro === true;
       showUserNav(session.user.email);
       if (isPro) loadWorkspace();
       else showState('upgrade');
     } else {
       currentUser = null;
+      isPro = false;
       showSignedOutNav();
       showState('signin');
     }
@@ -417,11 +419,7 @@ function showState(s) {
 
 // ── PRO
 function activatePro() {
-  localStorage.setItem('fileo_is_pro', 'true');
-  isPro = true;
-  showToast('Pro activated!');
-  if (currentUser) loadWorkspace();
-  else showState('signin');
+  window.location.href = 'index.html#pricing';
 }
 
 // ── WORKSPACE LOAD
@@ -1049,6 +1047,7 @@ function showToast(msg) {
 }
 
 // ── AUTH
+let _authAttempts = 0, _authLockedUntil = 0;
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(()=>document.getElementById('auth-email').focus(),50); }
 function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
 function setAuthTab(tab) {
@@ -1064,9 +1063,16 @@ function setAuthTab(tab) {
 }
 async function submitAuth(e) {
   e.preventDefault();
+  const errEl = document.getElementById('auth-error');
+  const now = Date.now();
+  if (now < _authLockedUntil) {
+    const secs = Math.ceil((_authLockedUntil - now) / 1000);
+    errEl.textContent = `Too many attempts. Try again in ${secs}s.`;
+    errEl.classList.remove('hidden');
+    return;
+  }
   const email = document.getElementById('auth-email').value.trim();
   const pw    = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-error');
   const btn   = document.getElementById('auth-submit');
   errEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Please wait…';
@@ -1074,8 +1080,14 @@ async function submitAuth(e) {
     ? await _sb.auth.signInWithPassword({ email, password: pw })
     : await _sb.auth.signUp({ email, password: pw });
   btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
-  if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
-  else closeModal();
+  if (error) {
+    _authAttempts++;
+    if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
+    errEl.textContent = error.message; errEl.classList.remove('hidden');
+  } else {
+    _authAttempts = 0;
+    closeModal();
+  }
 }
 function showUserNav(email) {
   document.getElementById('btn-signin').classList.add('hidden');

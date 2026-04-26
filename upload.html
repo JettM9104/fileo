@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="/config.js"></script>
   <style>
     html{scroll-behavior:smooth}
     @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -321,7 +322,7 @@
           <div class="flex flex-col gap-4">
             <div>
               <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Password <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="opt-password" type="text" placeholder="Leave blank for none"
+              <input id="opt-password" type="password" placeholder="Leave blank for none"
                 class="w-full px-3.5 py-2.5 rounded-xl text-sm"
                 style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
             </div>
@@ -364,8 +365,8 @@
 
 <script>
 // ── CONFIG
-const SUPABASE_URL  = 'https://jahwqnzhzhrxcdszdclk.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphaHdxbnpoemhyeGNkc3pkY2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTE0ODUsImV4cCI6MjA5MjYyNzQ4NX0.E_DvUN7WKSHgBJ_vb97FxyTKmg6x71dLUyJgn6GOV2M';
+const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
+const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
 const BUCKET = 'uploads';
 const FREE_MAX_LINKS   = 3;
 const FREE_MAX_STORAGE = 500 * 1024 * 1024;
@@ -380,17 +381,18 @@ let _authTab = 'login';
 window.addEventListener('DOMContentLoaded', () => {
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-  isPro = localStorage.getItem('fileo_is_pro') === 'true';
-  if (isPro) applyProUI();
-
   _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
       currentUser = session.user;
+      isPro = session.user.app_metadata?.is_pro === true;
+      if (isPro) applyProUI(); else removeProUI();
       showUserNav(session.user.email);
       loadQuota();
       if (activePanel === 'files') loadFiles();
     } else {
       currentUser = null;
+      isPro = false;
+      removeProUI();
       showSignedOutNav();
       document.getElementById('quota-card').classList.add('hidden');
     }
@@ -489,7 +491,7 @@ function handleEmailKey(e) {
 
 function addEmailTag(raw) {
   const email = raw.trim().toLowerCase();
-  if (!email || !email.includes('@') || allowedEmails.includes(email)) return;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || allowedEmails.includes(email)) return;
   allowedEmails.push(email);
   renderEmailTags();
 }
@@ -548,9 +550,16 @@ function timeUntil(iso) {
   if (h  >= 1)  return h + 'h ' + m + 'm left';
   return m + 'm left';
 }
-async function sha256hex(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+async function hashPassword(password) {
+  const salt = crypto.randomUUID();
+  const enc  = new TextEncoder();
+  const key  = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash: 'SHA-256' },
+    key, 256
+  );
+  const hash = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `pbkdf2:${salt}:${hash}`;
 }
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -801,7 +810,7 @@ async function doUpload() {
 
   if (isPro) {
     const pw = document.getElementById('opt-password').value.trim();
-    if (pw) passwordHash = await sha256hex(pw);
+    if (pw) passwordHash = await hashPassword(pw);
     const dlVal = document.getElementById('opt-dlimit').value.trim();
     if (dlVal && parseInt(dlVal) > 0) downloadLimit = parseInt(dlVal);
     accessControl = document.querySelector('input[name="access"]:checked')?.value || 'anyone';
@@ -939,6 +948,7 @@ async function deleteFile(id, path) {
 }
 
 // ── AUTH
+let _authAttempts = 0, _authLockedUntil = 0;
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
 function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
 
@@ -956,9 +966,16 @@ function setAuthTab(tab) {
 
 async function submitAuth(e) {
   e.preventDefault();
+  const errEl = document.getElementById('auth-error');
+  const now = Date.now();
+  if (now < _authLockedUntil) {
+    const secs = Math.ceil((_authLockedUntil - now) / 1000);
+    errEl.textContent = `Too many attempts. Try again in ${secs}s.`;
+    errEl.classList.remove('hidden');
+    return;
+  }
   const email = document.getElementById('auth-email').value.trim();
   const pw    = document.getElementById('auth-password').value;
-  const errEl = document.getElementById('auth-error');
   const btn   = document.getElementById('auth-submit');
   errEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Please wait…';
@@ -966,8 +983,14 @@ async function submitAuth(e) {
     ? await _sb.auth.signInWithPassword({ email, password: pw })
     : await _sb.auth.signUp({ email, password: pw });
   btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
-  if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
-  else closeModal();
+  if (error) {
+    _authAttempts++;
+    if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
+    errEl.textContent = error.message; errEl.classList.remove('hidden');
+  } else {
+    _authAttempts = 0;
+    closeModal();
+  }
 }
 
 function togglePwVis() {
@@ -994,7 +1017,6 @@ function showSignedOutNav() {
 function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
 async function doSignOut() {
   await _sb.auth.signOut();
-  localStorage.removeItem('fileo_is_pro');
   isPro = false;
   removeProUI();
   showSignedOutNav();

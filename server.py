@@ -1,9 +1,11 @@
+import json
 import os
-from flask import Flask, send_from_directory, send_file
+from flask import Flask, Response, send_from_directory, send_file
 from flask_cors import CORS
 from flask_talisman import Talisman
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # ---------------------------------------------------------------------------
 # Config
@@ -17,6 +19,9 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is not set")
 
+SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
@@ -25,8 +30,15 @@ app = Flask(__name__, static_folder="static")
 app.secret_key = SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB request limit
 
-# CORS — restrict to your actual domain in production
-CORS(app, origins=os.environ.get("ALLOWED_ORIGINS", "*"))
+# Trust one upstream reverse proxy so rate-limiting uses the real client IP
+# Set BEHIND_PROXY=1 when running behind Nginx, Heroku router, etc.
+if os.environ.get("BEHIND_PROXY", "0") == "1":
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# CORS — only enable when ALLOWED_ORIGINS is explicitly set (never default to *)
+_allowed_origins = os.environ.get("ALLOWED_ORIGINS", "")
+if _allowed_origins:
+    CORS(app, origins=[o.strip() for o in _allowed_origins.split(",")])
 
 # Security headers
 # FORCE_HTTPS=1 only if Flask is terminating SSL directly (not needed behind Nginx+SSL)
@@ -57,6 +69,13 @@ limiter = Limiter(
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+@app.route("/config.js")
+def config_js():
+    js = f"window.FILEO_CONFIG={{url:{json.dumps(SUPABASE_URL)},anon:{json.dumps(SUPABASE_ANON_KEY)}}};"
+    return Response(js, mimetype="application/javascript",
+                    headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
+
 
 @app.route("/")
 def index():
