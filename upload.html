@@ -81,6 +81,7 @@
   <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
     <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
     <a href="index.html#pricing" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Pricing</a>
+    <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Cloud</a>
     <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
   </nav>
   <div class="relative">
@@ -639,6 +640,14 @@ function proExpiry(hours) {
 async function doUpload() {
   if (!selectedFile) return;
 
+  // Require sign-in to track storage and file history
+  if (!currentUser) {
+    setAuthTab('register');
+    openModal();
+    showToast('Create a free account to upload — we need it to track your storage.');
+    return;
+  }
+
   // Free quota check
   if (!isPro && currentUser) {
     const now = new Date().toISOString();
@@ -717,6 +726,7 @@ async function doUpload() {
   if (downloadLimit)               record.download_limit = downloadLimit;
   if (accessControl !== 'anyone')  record.access_control = accessControl;
   if (isPro && accessControl === 'specific' && allowedEmails.length) record.allowed_emails = allowedEmails;
+  if (isPro)                           record.is_pro         = true;
 
   const { error: dbErr } = await _sb.from('files').insert(record);
 

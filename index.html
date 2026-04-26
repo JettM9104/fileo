@@ -213,7 +213,8 @@
     <a href="#how" onclick="scrollTo2(event,'how')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-how">How it works</a>
     <a href="#features" onclick="scrollTo2(event,'features')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-features">Features</a>
     <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-pricing">Pricing</a>
-    <button onclick="startUpload()" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;font-family:inherit;cursor:pointer;border:none">Get started</button>
+    <a href="cloud.html" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-cloud">Cloud</a>
+    <button onclick="startUpload()" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap" style="background:#1C1917;color:#F5F0E8;font-family:inherit;cursor:pointer;border:none">Get started</button>
   </nav>
   <div id="nav-account" class="relative">
     <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-11 h-11 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
@@ -316,6 +317,7 @@
           <div><p class="text-sm mb-2" style="color:rgba(28,25,23,0.45)">Expiry options</p><div class="flex gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">24 hours</span></div></div>
         </div>
         <button onclick="startUpload()" class="w-full text-center py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer;border-style:solid">Get started free</button>
+        <button id="free-testing-btn" onclick="downgradeToFree()" class="hidden w-full text-center py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity mt-2" style="background:transparent;border:1px solid rgba(28,25,23,0.18);color:rgba(28,25,23,0.5);font-family:inherit;cursor:pointer">Switch to Free — Testing</button>
       </div>
       <div class="rounded-2xl p-8 flex flex-col relative overflow-hidden" style="background:#1C1917;border:1px solid #1C1917">
         <div class="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[11px] font-semibold" style="background:rgba(245,240,232,0.15);color:#F5F0E8">Popular</div>
@@ -526,6 +528,16 @@ function confirmUpgrade() {
 function applyProPricingCard() {
   const btn = document.getElementById('pro-cta-btn');
   if (btn) { btn.textContent = 'Pro Active ✓'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.onclick = null; }
+  const freeBtn = document.getElementById('free-testing-btn');
+  if (freeBtn) freeBtn.classList.remove('hidden');
+}
+function downgradeToFree() {
+  localStorage.setItem('fileo_is_pro', 'false');
+  isPro = false;
+  const proBtn = document.getElementById('pro-cta-btn');
+  if (proBtn) { proBtn.textContent = 'Get started — Testing'; proBtn.style.opacity = ''; proBtn.style.cursor = 'pointer'; proBtn.onclick = openUpgradeModal; }
+  document.getElementById('free-testing-btn').classList.add('hidden');
+  showToastIndex('Switched to Free plan.');
 }
 
 async function loadPricingUsage() {
@@ -624,8 +636,7 @@ async function showDownloadPage(fileId) {
     return;
   }
 
-  // Malware scan for Pro uploads (files with a user_id)
-  if (file.user_id) {
+  if (file.is_pro) {
     dlShowState('dl-scanning');
     await new Promise(r => setTimeout(r, 1800));
   }
@@ -643,8 +654,7 @@ async function checkPassword() {
     document.getElementById('dl-pw-input').focus();
     return;
   }
-  // Correct — run scan if Pro upload, then show ready
-  if (file.user_id) {
+  if (file.is_pro) {
     dlShowState('dl-scanning');
     await new Promise(r => setTimeout(r, 1800));
   }
