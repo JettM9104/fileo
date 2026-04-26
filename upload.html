@@ -711,11 +711,11 @@ async function doUpload() {
     storage_path: storagePath,
     expires_at:   expiresAt,
     downloads:    0,
-    access_control: accessControl
   };
-  if (currentUser)   record.user_id        = currentUser.id;
-  if (passwordHash)  record.password_hash  = passwordHash;
-  if (downloadLimit) record.download_limit = downloadLimit;
+  if (currentUser)                 record.user_id        = currentUser.id;
+  if (passwordHash)                record.password_hash  = passwordHash;
+  if (downloadLimit)               record.download_limit = downloadLimit;
+  if (accessControl !== 'anyone')  record.access_control = accessControl;
   if (isPro && accessControl === 'specific' && allowedEmails.length) record.allowed_emails = allowedEmails;
 
   const { error: dbErr } = await _sb.from('files').insert(record);
