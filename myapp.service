@@ -1,0 +1,28 @@
+# /etc/systemd/system/myapp.service
+# After editing: sudo systemctl daemon-reload && sudo systemctl enable --now myapp
+
+[Unit]
+Description=Gunicorn instance for myapp
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/myapp        # <-- change to your project root
+
+# Load environment variables from a file (chmod 600 this file!)
+EnvironmentFile=/var/www/myapp/.env
+
+ExecStart=/var/www/myapp/venv/bin/gunicorn \
+    --config gunicorn.conf.py \
+    server:app
+
+Restart=on-failure
+RestartSec=5
+
+# Harden the process
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
