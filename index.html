@@ -33,6 +33,14 @@
     #upgrade-modal.open{display:flex}
     @keyframes scanPulse{0%,100%{opacity:.4}50%{opacity:1}}
     .scan-pulse{animation:scanPulse 1.2s ease-in-out infinite}
+    #nav-hamburger{display:none}
+    @media(max-width:767px){
+      #nav-bar{left:16px!important;right:16px!important;transform:none!important;width:auto!important}
+      #nav-pill-wrap{display:none!important}
+      #nav-hamburger{display:flex!important}
+      #nav-main-row{background:rgba(245,240,232,0.95)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;border:1px solid rgba(28,25,23,0.09)!important;border-radius:14px!important;padding:8px 12px!important;box-shadow:0 1px 4px rgba(28,25,23,0.06)!important}
+      #nav-bar.scrolled{background:transparent!important;backdrop-filter:none!important;border-radius:0!important;padding:0!important;box-shadow:none!important;border:none!important}
+    }
   </style>
 </head>
 <body>
@@ -114,7 +122,7 @@
 <!-- ── DOWNLOAD OVERLAY ── -->
 <div id="download-overlay" class="fixed inset-0 z-[95] items-center justify-center p-4"
   style="background:#F5F0E8">
-  <div class="w-full max-w-md">
+  <div id="dl-inner" class="w-full" style="max-width:28rem;transition:max-width 0.4s cubic-bezier(0.16,1,0.3,1)">
     <div class="flex items-center gap-2 mb-8">
       <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
       <span class="text-lg font-bold tracking-tight" style="color:#1C1917">Fileo</span>
@@ -181,58 +189,98 @@
     </div>
 
     <div id="dl-ready" class="hidden slide-in">
-      <!-- Scan result badge (shown for Pro uploads) -->
-      <div id="dl-scan-badge" class="hidden flex items-center gap-2 mb-4 px-3 py-2 rounded-xl" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        <span class="text-xs font-medium" style="color:#16a34a">Malware scan complete — no threats found</span>
-      </div>
-      <p class="text-xs uppercase tracking-[0.14em] mb-3" style="color:rgba(28,25,23,0.35)">Ready to download</p>
-      <div class="flex items-start gap-4 rounded-2xl p-5 mb-6" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.12)">
-        <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div class="flex gap-6 items-start">
+        <!-- Left: info + actions -->
+        <div style="width:28rem;flex-shrink:0">
+          <div id="dl-scan-badge" class="hidden flex items-center gap-2 mb-4 px-3 py-2 rounded-xl" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="text-xs font-medium" style="color:#16a34a">Malware scan complete — no threats found</span>
+          </div>
+          <p class="text-xs uppercase tracking-[0.14em] mb-3" style="color:rgba(28,25,23,0.35)">Ready to download</p>
+          <div class="flex items-start gap-4 rounded-2xl p-5 mb-6" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.12)">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p id="dl-filename" class="text-base font-semibold truncate" style="color:#1C1917"></p>
+              <p id="dl-meta" class="text-sm mt-1" style="color:rgba(28,25,23,0.4)"></p>
+            </div>
+          </div>
+          <a id="dl-btn" href="#" class="block w-full text-center py-3.5 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity mb-3" style="background:#1C1917;color:#F5F0E8">Download file</a>
+          <button onclick="copyDlLink()" class="block w-full text-center py-3 rounded-2xl text-sm font-medium hover:opacity-70 transition-opacity mb-3" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.55);background:transparent;cursor:pointer;font-family:inherit">Copy link</button>
+          <a href="/" class="block w-full text-center py-3 rounded-2xl text-sm hover:opacity-70 transition-opacity" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.45)">← Back to Fileo</a>
         </div>
-        <div class="flex-1 min-w-0">
-          <p id="dl-filename" class="text-base font-semibold truncate" style="color:#1C1917"></p>
-          <p id="dl-meta" class="text-sm mt-1" style="color:rgba(28,25,23,0.4)"></p>
+        <!-- Right: preview panel -->
+        <div id="dl-preview-side" style="width:0;overflow:hidden;flex-shrink:0;transition:width 0.4s cubic-bezier(0.16,1,0.3,1)">
+          <div style="width:380px">
+            <div class="rounded-2xl overflow-hidden" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <div class="px-5 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+                <p class="text-xs font-semibold uppercase tracking-widest" style="color:rgba(28,25,23,0.28)">Preview</p>
+              </div>
+              <div id="dl-preview-content" class="p-4 flex items-center justify-center" style="min-height:180px"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <a id="dl-btn" href="#" class="block w-full text-center py-3.5 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity mb-3" style="background:#1C1917;color:#F5F0E8">Download file</a>
-      <a href="/" class="block w-full text-center py-3 rounded-2xl text-sm hover:opacity-70 transition-opacity" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.45)">← Back to Fileo</a>
     </div>
   </div>
 </div>
 
 <!-- ── NAV ── -->
-<div id="nav-bar" class="fixed top-4 left-1/2 z-50 flex items-center gap-6" style="transform:translateX(-50%)">
-  <a href="#" onclick="scrollTop(event)" class="flex items-center gap-2 px-1 no-underline">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
-    <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
-  </a>
-  <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
-    <a href="#" onclick="scrollTop(event)" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline active" id="nav-home">Home</a>
-    <a href="#how" onclick="scrollTo2(event,'how')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-how">How it works</a>
-    <a href="#features" onclick="scrollTo2(event,'features')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-features">Features</a>
-    <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-pricing">Pricing</a>
-    <a href="cloud.html" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-cloud">Cloud</a>
-    <button onclick="startUpload()" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap" style="background:#1C1917;color:#F5F0E8;font-family:inherit;cursor:pointer;border:none">Get started</button>
-  </nav>
-  <div id="nav-account" class="relative">
-    <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-11 h-11 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </button>
-    <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-11 h-11 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
-    <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
-      <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
-        <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+  <div id="nav-main-row" class="flex items-center justify-between gap-3">
+    <a href="#" onclick="scrollTop(event)" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+      <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
+    </a>
+    <div id="nav-pill-wrap" class="flex flex-1 justify-center">
+      <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
+        <a href="#" onclick="scrollTop(event)" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline active" id="nav-home">Home</a>
+        <a href="#how" onclick="scrollTo2(event,'how')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-how">How it works</a>
+        <a href="#features" onclick="scrollTo2(event,'features')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-features">Features</a>
+        <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-pricing">Pricing</a>
+        <a href="cloud.html" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-cloud">Cloud</a>
+        <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+        <button onclick="startUpload()" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap" style="background:#1C1917;color:#F5F0E8;font-family:inherit;cursor:pointer;border:none">Get started</button>
+      </nav>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div id="nav-account" class="relative">
+        <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-10 h-10 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-10 h-10 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
+        <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
+          <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+            <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+          </div>
+          <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            My files
+          </button>
+          <button onclick="signOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign out
+          </button>
+        </div>
       </div>
-      <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left transition-colors" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        My files
+      <button id="nav-hamburger" onclick="toggleMobileMenu()" class="w-10 h-10 items-center justify-center rounded-full" style="background:#1C1917;border:none;cursor:pointer;color:#F5F0E8;flex-shrink:0">
+        <svg id="mob-icon-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg id="mob-icon-close" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <button onclick="signOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left transition-colors" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign out
-      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown menu -->
+  <div id="mob-menu" class="hidden mt-2 rounded-2xl overflow-hidden" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.1);box-shadow:0 4px 20px rgba(28,25,23,0.1)">
+    <div class="p-3 flex flex-col gap-1">
+      <a href="#" onclick="scrollTop(event);closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
+      <a href="#how" onclick="scrollTo2(event,'how');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">How it works</a>
+      <a href="#features" onclick="scrollTo2(event,'features');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Features</a>
+      <a href="#pricing" onclick="scrollTo2(event,'pricing');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Pricing</a>
+      <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
+    </div>
+    <div class="px-3 pb-3">
+      <button onclick="startUpload()" class="w-full py-3 rounded-xl text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started — it's free</button>
     </div>
   </div>
 </div>
@@ -250,7 +298,7 @@
   <p class="fade-up opacity-0 max-w-[440px] leading-relaxed mb-10" style="font-size:18px;color:rgba(28,25,23,0.45);animation-delay:160ms">
     Drop any file. Get a link. Share it anywhere. Links expire automatically, nothing lingers.
   </p>
-  <div class="fade-up opacity-0 flex items-center gap-3" style="animation-delay:240ms">
+  <div class="fade-up opacity-0 flex flex-wrap items-center justify-center gap-3" style="animation-delay:240ms">
     <button onclick="startUpload()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer">Get started — it's free</button>
     <a href="#how" onclick="scrollTo2(event,'how')" class="px-7 py-3.5 rounded-full font-medium text-[15px] no-underline transition-colors" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.45)">See how it works</a>
   </div>
@@ -355,14 +403,153 @@
   </div>
 </section>
 
-<!-- ── FOOTER ── -->
-<footer class="px-6 py-8" style="border-top:1px solid rgba(28,25,23,0.08);background:#F5F0E8">
-  <div class="max-w-[1000px] mx-auto flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
-      <span class="font-semibold text-sm" style="color:#1C1917">Fileo</span>
+<!-- ── TOS MODAL ── -->
+<div id="tos-modal" class="fixed inset-0 z-[100] items-center justify-center p-4" style="display:none;background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeTos()">
+  <div class="modal-in w-full max-w-xl rounded-2xl flex flex-col" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14);max-height:82vh">
+    <div class="flex items-center justify-between px-7 pt-6 pb-4 flex-shrink-0" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+      <h2 class="text-lg font-bold" style="color:#1C1917">Terms of Service</h2>
+      <button onclick="closeTos()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <p class="text-xs" style="color:rgba(28,25,23,0.28)">500 MB max · Free · Instant</p>
+    <div class="overflow-y-auto px-7 py-5 flex flex-col gap-5 text-sm" style="color:rgba(28,25,23,0.7);line-height:1.7">
+      <p style="color:rgba(28,25,23,0.35)" class="text-xs">Last updated: April 25, 2026</p>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">1. Acceptance</h3>
+        <p>By using Fileo you agree to these terms. If you don't agree, please don't use the service. We may update these terms at any time — continued use means you accept the changes.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">2. What Fileo is</h3>
+        <p>Fileo is a temporary file sharing service. You upload a file, get a short link, and share it. Files are automatically deleted when their expiry time passes. We are not a cloud storage provider — files are not intended to be kept permanently.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">3. Your files</h3>
+        <p>You retain full ownership of any files you upload. By uploading, you grant Fileo a limited license to store and serve the file solely for the purpose of delivering it to your recipients. We do not access, read, or share your files except as required to operate the service.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">4. Prohibited content</h3>
+        <p>You may not upload files that contain malware, viruses, or any malicious code; illegal content of any kind; content that infringes on third-party intellectual property rights; or content that violates any applicable law. We reserve the right to remove any file and terminate any account at our discretion.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">5. Free plan limits</h3>
+        <p>Free accounts may upload files up to 500 MB each, hold a maximum of 3 active links at once, and use up to 500 MB of total storage. Links expire after 1 hour or 24 hours. These limits may change over time.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">6. Pro plan</h3>
+        <p>Pro accounts receive increased limits including up to 10 GB per file, unlimited active links, unlimited storage, extended expiry options, and access to advanced features such as password protection, download limits, access control, and malware scanning. Pro is currently in testing mode — no payment is required during this period.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">7. File deletion</h3>
+        <p>Files are deleted automatically when their expiry time passes. We do not guarantee any minimum retention period beyond what is shown at upload time. We may delete files earlier if they are found to violate these terms.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">8. Disclaimer</h3>
+        <p>Fileo is provided "as is" without warranties of any kind. We are not liable for lost files, failed uploads, or any damages arising from your use of the service. Use it for non-critical transfers — always keep copies of important files.</p>
+      </div>
+
+    </div>
+    <div class="px-7 py-4 flex-shrink-0" style="border-top:1px solid rgba(28,25,23,0.08)">
+      <button onclick="closeTos()" class="w-full py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRIVACY MODAL ── -->
+<div id="privacy-modal" class="fixed inset-0 z-[100] items-center justify-center p-4" style="display:none;background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)" onclick="if(event.target===this)closePrivacy()">
+  <div class="modal-in w-full max-w-xl rounded-2xl flex flex-col" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14);max-height:82vh">
+    <div class="flex items-center justify-between px-7 pt-6 pb-4 flex-shrink-0" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+      <h2 class="text-lg font-bold" style="color:#1C1917">Privacy Policy</h2>
+      <button onclick="closePrivacy()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto px-7 py-5 flex flex-col gap-5 text-sm" style="color:rgba(28,25,23,0.7);line-height:1.7">
+      <p style="color:rgba(28,25,23,0.35)" class="text-xs">Last updated: April 25, 2026</p>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">1. What we collect</h3>
+        <p>When you create an account, we collect your email address and a hashed password. When you upload a file, we store the file itself, its name, size, expiry time, and any access settings you configure. We do not collect payment information during the current testing period.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">2. How we use your data</h3>
+        <p>Your email is used solely to identify your account and deliver files you have uploaded. We do not sell, rent, or share your personal information with third parties for marketing purposes.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">3. File storage</h3>
+        <p>Files are stored on our servers only for the duration of the expiry period you select at upload time. Once a file expires it is permanently deleted. You may also delete files manually from your account at any time.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">4. Cookies &amp; local storage</h3>
+        <p>We use browser local storage to remember your session and Pro plan status. We do not use third-party tracking cookies or advertising trackers.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">5. Security</h3>
+        <p>All data is transmitted over HTTPS. Passwords are hashed before storage and are never stored in plain text. We take reasonable precautions to protect your data, but no service can guarantee absolute security.</p>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-1.5" style="color:#1C1917">6. Changes to this policy</h3>
+        <p>We may update this Privacy Policy from time to time. Continued use of Fileo after changes are posted constitutes your acceptance of the revised policy.</p>
+      </div>
+    </div>
+    <div class="px-7 py-4 flex-shrink-0" style="border-top:1px solid rgba(28,25,23,0.08)">
+      <button onclick="closePrivacy()" class="w-full py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer class="px-6 pt-14 pb-8" style="border-top:1px solid rgba(28,25,23,0.08);background:#F5F0E8">
+  <div class="max-w-[1000px] mx-auto">
+    <!-- Top row -->
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-10 mb-12">
+      <!-- Brand -->
+      <div class="flex flex-col gap-3 max-w-[220px]">
+        <div class="flex items-center gap-2">
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+          <span class="font-bold text-base" style="color:#1C1917">Fileo</span>
+        </div>
+        <p class="text-xs leading-relaxed" style="color:rgba(28,25,23,0.4)">The simplest way to share a file. Drop it, link it, done.</p>
+      </div>
+      <!-- Links -->
+      <div class="flex gap-16">
+        <div class="flex flex-col gap-3">
+          <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:rgba(28,25,23,0.28)">Product</p>
+          <a href="#how" onclick="scrollTo2(event,'how')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">How it works</a>
+          <a href="#features" onclick="scrollTo2(event,'features')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Features</a>
+          <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Pricing</a>
+          <a href="cloud.html" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Cloud</a>
+        </div>
+        <div class="flex flex-col gap-3">
+          <p class="text-xs font-semibold uppercase tracking-widest mb-1" style="color:rgba(28,25,23,0.28)">Legal</p>
+          <button onclick="openTos()" class="text-sm text-left hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Terms of Service</button>
+          <button onclick="openPrivacy()" class="text-sm text-left hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Privacy Policy</button>
+        </div>
+      </div>
+    </div>
+    <!-- Bottom row -->
+    <div class="flex flex-col md:flex-row items-center justify-between gap-3 pt-6" style="border-top:1px solid rgba(28,25,23,0.07)">
+      <p class="text-xs" style="color:rgba(28,25,23,0.28)">© 2026 Fileo. All rights reserved.</p>
+      <div class="flex items-center gap-4">
+        <span class="text-xs" style="color:rgba(28,25,23,0.22)">500 MB free</span>
+        <span style="color:rgba(28,25,23,0.15)">·</span>
+        <span class="text-xs" style="color:rgba(28,25,23,0.22)">No account needed to download</span>
+        <span style="color:rgba(28,25,23,0.15)">·</span>
+        <span class="text-xs" style="color:rgba(28,25,23,0.22)">Files auto-delete</span>
+      </div>
+    </div>
   </div>
 </footer>
 
@@ -378,10 +565,10 @@ let _dlFile = null; // cached file record for password check
 
 // ── HELPERS ──────────────────────────────────────────
 function fmtSize(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
-  return (b/1073741824).toFixed(2) + ' GB';
+  if (b < 1000)       return b + ' B';
+  if (b < 1000000)    return (b/1000).toFixed(1) + ' KB';
+  if (b < 1000000000) return (b/1000000).toFixed(1) + ' MB';
+  return (b/1000000000).toFixed(2) + ' GB';
 }
 function timeUntil(iso) {
   const d = new Date(iso) - Date.now();
@@ -397,7 +584,10 @@ window.addEventListener('DOMContentLoaded', () => {
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
   isPro = localStorage.getItem('fileo_is_pro') === 'true';
-  if (isPro) applyProPricingCard();
+  if (isPro) {
+    applyProPricingCard();
+    document.getElementById('pro-badge').classList.remove('hidden');
+  }
 
   _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
@@ -425,7 +615,8 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   window.addEventListener('scroll', () => {
     if (window.scrollY < 200) setNavActive('home');
-    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+    const mobile = window.innerWidth < 768;
+    document.getElementById('nav-bar').classList.toggle('scrolled', !mobile && window.scrollY > 40);
   }, {passive:true});
 
   // Close account menu on outside click
@@ -453,6 +644,13 @@ function showSignedOut() {
 function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
 async function signOut() {
   await _sb.auth.signOut();
+  localStorage.removeItem('fileo_is_pro');
+  isPro = false;
+  document.getElementById('pro-badge').classList.add('hidden');
+  const proBtn = document.getElementById('pro-cta-btn');
+  if (proBtn) { proBtn.textContent = 'Get started — Testing'; proBtn.style.opacity = ''; proBtn.style.cursor = 'pointer'; proBtn.onclick = openUpgradeModal; }
+  const freeBtn = document.getElementById('free-testing-btn');
+  if (freeBtn) freeBtn.classList.add('hidden');
   showSignedOut();
   document.getElementById('account-menu').classList.add('hidden');
 }
@@ -468,6 +666,16 @@ function setNavActive(id) {
 }
 function scrollTop(e) { e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'}); }
 function scrollTo2(e, id) { e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth'}); }
+function toggleMobileMenu() {
+  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
+  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
+  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
+}
+function closeMobileMenu() {
+  document.getElementById('mob-menu').classList.add('hidden');
+  document.getElementById('mob-icon-open').style.display  = '';
+  document.getElementById('mob-icon-close').style.display = 'none';
+}
 
 // ── AUTH MODAL ───────────────────────────────────────
 let _authTab = 'login';
@@ -511,9 +719,16 @@ function startUpload() {
   window.location.href = 'upload.html';
 }
 
+// ── TOS MODAL ────────────────────────────────────────
+function openTos()      { document.getElementById('tos-modal').style.display     = 'flex'; }
+function closeTos()     { document.getElementById('tos-modal').style.display     = 'none'; }
+function openPrivacy()  { document.getElementById('privacy-modal').style.display = 'flex'; }
+function closePrivacy() { document.getElementById('privacy-modal').style.display = 'none'; }
+
 // ── PRO UPGRADE ──────────────────────────────────────
 function openUpgradeModal() {
   if (isPro) { showToastIndex('Pro plan is already active!'); return; }
+  if (!currentUser) { openModal(); return; }
   document.getElementById('upgrade-modal').classList.add('open');
 }
 function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); }
@@ -521,6 +736,7 @@ function confirmUpgrade() {
   localStorage.setItem('fileo_is_pro', 'true');
   isPro = true;
   applyProPricingCard();
+  document.getElementById('pro-badge').classList.remove('hidden');
   closeUpgradeModal();
   showToastIndex('Pro activated! Redirecting to upload…');
   setTimeout(() => window.location.href = 'upload.html', 1400);
@@ -534,6 +750,7 @@ function applyProPricingCard() {
 function downgradeToFree() {
   localStorage.setItem('fileo_is_pro', 'false');
   isPro = false;
+  document.getElementById('pro-badge').classList.add('hidden');
   const proBtn = document.getElementById('pro-cta-btn');
   if (proBtn) { proBtn.textContent = 'Get started — Testing'; proBtn.style.opacity = ''; proBtn.style.cursor = 'pointer'; proBtn.onclick = openUpgradeModal; }
   document.getElementById('free-testing-btn').classList.add('hidden');
@@ -674,14 +891,47 @@ function showDownloadReady(file) {
   dlBtn.href = urlData.publicUrl;
   dlBtn.setAttribute('download', file.filename);
 
-  // Show scan badge if this was a Pro upload
+  // Show scan badge only for Pro uploads
   const badge = document.getElementById('dl-scan-badge');
-  badge.classList.toggle('hidden', !file.user_id);
+  badge.classList.toggle('hidden', !file.is_pro);
 
   dlShowState('dl-ready');
+  if (window.innerWidth >= 768) showDlPreview(file.filename, urlData.publicUrl);
 
   // Increment download count
   _sb.from('files').update({ downloads: (file.downloads || 0) + 1 }).eq('id', file.id);
+}
+
+function showDlPreview(filename, url) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  let html = '';
+  if (/^(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(ext)) {
+    html = `<img src="${url}" alt="" style="width:100%;border-radius:8px;display:block;max-height:420px;object-fit:contain" />`;
+  } else if (/^(mp4|mov|webm|avi|mkv)$/.test(ext)) {
+    html = `<video src="${url}" controls style="width:100%;border-radius:8px;display:block;max-height:380px"></video>`;
+  } else if (/^(mp3|wav|flac|aac|ogg|m4a)$/.test(ext)) {
+    html = `<div style="padding:24px 0;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%">
+      <div style="width:56px;height:56px;border-radius:16px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;color:#8B6F47">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      </div>
+      <audio src="${url}" controls style="width:100%"></audio>
+    </div>`;
+  } else if (ext === 'pdf') {
+    html = `<iframe src="${url}" style="width:100%;height:460px;border:none;border-radius:8px;display:block"></iframe>`;
+  } else {
+    return;
+  }
+  document.getElementById('dl-preview-content').innerHTML = html;
+  document.getElementById('dl-preview-side').style.width = '380px';
+  document.getElementById('dl-inner').style.maxWidth = '56rem';
+}
+
+function copyDlLink() {
+  navigator.clipboard.writeText(window.location.href)
+    .then(() => {
+      const btn = document.querySelector('#dl-ready button[onclick="copyDlLink()"]');
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy link', 1800); }
+    });
 }
 </script>
 </body>

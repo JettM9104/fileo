@@ -32,6 +32,20 @@
     .folder-row .row-actions{opacity:0;transition:opacity .15s}
     .folder-row:hover .row-actions{opacity:1}
     .folder-row:hover{background:#F7F2EA!important}
+    #nav-hamburger{display:none}
+    @media(max-width:767px){
+      #nav-bar{left:16px!important;right:16px!important;transform:none!important;width:auto!important}
+      #nav-pill-wrap{display:none!important}
+      #nav-hamburger{display:flex!important}
+      #nav-main-row{background:rgba(245,240,232,0.95)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;border:1px solid rgba(28,25,23,0.09)!important;border-radius:14px!important;padding:8px 12px!important;box-shadow:0 1px 4px rgba(28,25,23,0.06)!important}
+      #nav-bar.scrolled{background:transparent!important;backdrop-filter:none!important;border-radius:0!important;padding:0!important;box-shadow:none!important;border:none!important}
+      .folder-row .row-actions{opacity:1!important}
+      .folder-row{flex-wrap:wrap;gap:12px!important}
+      #vp-panel{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;z-index:80!important;overflow-y:auto!important;background:#F5F0E8!important;padding:80px 16px 32px!important}
+      #vp-panel.hidden-mobile{display:none!important}
+      #vp-inner{width:100%!important}
+      #vp-inner>div{width:100%!important}
+    }
   </style>
 </head>
 <body>
@@ -95,35 +109,53 @@
 <input type="file" id="file-input" class="hidden" multiple onchange="onFilesSelected(event)" />
 
 <!-- ── NAV ── -->
-<div id="nav-bar" class="fixed top-4 left-1/2 z-50 flex items-center gap-6" style="transform:translateX(-50%)">
-  <a href="index.html" class="flex items-center gap-2 px-1 no-underline">
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
-    <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
-  </a>
-  <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
-    <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
-    <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Upload</a>
-    <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
-    <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
-  </nav>
-  <div class="relative">
-    <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-11 h-11 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </button>
-    <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-11 h-11 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
-    <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
-      <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
-        <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
-        <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
+<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+  <div id="nav-main-row" class="flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+      <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
+    </a>
+    <div id="nav-pill-wrap" class="flex flex-1 justify-center">
+      <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
+        <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
+        <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Upload</a>
+        <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
+        <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+      </nav>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="relative">
+        <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-10 h-10 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-10 h-10 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
+        <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
+          <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+            <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+            <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
+          </div>
+          <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            My files
+          </button>
+          <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign out
+          </button>
+        </div>
       </div>
-      <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        My files
+      <button id="nav-hamburger" onclick="toggleMobileMenu()" class="w-10 h-10 items-center justify-center rounded-full" style="background:#1C1917;border:none;cursor:pointer;color:#F5F0E8;flex-shrink:0">
+        <svg id="mob-icon-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg id="mob-icon-close" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Sign out
-      </button>
+    </div>
+  </div>
+  <!-- Mobile dropdown -->
+  <div id="mob-menu" class="hidden mt-2 rounded-2xl overflow-hidden" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.1);box-shadow:0 4px 20px rgba(28,25,23,0.1)">
+    <div class="p-3 flex flex-col gap-1">
+      <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
+      <a href="upload.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Upload</a>
+      <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
     </div>
   </div>
 </div>
@@ -169,7 +201,7 @@
   <div id="state-workspace" class="hidden max-w-4xl mx-auto fade-up opacity-0">
 
     <!-- Header -->
-    <div class="flex items-start justify-between mb-7 gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-7 gap-3">
       <div>
         <div class="flex items-center gap-2.5 mb-1">
           <h1 id="ws-name" class="text-2xl font-bold tracking-tight" style="color:#1C1917">My Workspace</h1>
@@ -187,10 +219,10 @@
     </div>
 
     <!-- Tab bar -->
-    <div class="flex gap-1 p-1 rounded-xl mb-6" style="background:#EAE4D9;display:inline-flex">
-      <button id="wstab-files"   onclick="switchWsTab('files')"   class="px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-active">Folders</button>
-      <button id="wstab-notes"   onclick="switchWsTab('notes')"   class="px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Notes</button>
-      <button id="wstab-members" onclick="switchWsTab('members')" class="px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Members</button>
+    <div class="flex gap-1 p-1 rounded-xl mb-6 w-full sm:w-auto" style="background:#EAE4D9;display:flex">
+      <button id="wstab-files"   onclick="switchWsTab('files')"   class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-active">Folders</button>
+      <button id="wstab-notes"   onclick="switchWsTab('notes')"   class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Notes</button>
+      <button id="wstab-members" onclick="switchWsTab('members')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Members</button>
     </div>
 
     <div class="flex gap-5 items-start">
@@ -365,7 +397,8 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('scroll', () => {
-    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+    const mobile = window.innerWidth < 768;
+    document.getElementById('nav-bar').classList.toggle('scrolled', !mobile && window.scrollY > 40);
   }, { passive: true });
 
   document.addEventListener('click', e => {
@@ -805,7 +838,11 @@ async function openVersionPanel(folderId, folderName) {
   if (!vpOpen) {
     vpOpen = true;
     const p = document.getElementById('vp-panel');
-    p.style.width = '272px'; p.style.opacity = '1';
+    if (window.innerWidth < 768) {
+      p.classList.remove('hidden-mobile');
+    } else {
+      p.style.width = '272px'; p.style.opacity = '1';
+    }
     document.getElementById('vp-inner').classList.remove('hidden');
   }
 
@@ -852,8 +889,18 @@ function closeVersionPanel() {
   if (!vpOpen) return;
   vpOpen = false;
   const p = document.getElementById('vp-panel');
-  p.style.width = '0'; p.style.opacity = '0';
+  if (window.innerWidth < 768) {
+    p.classList.add('hidden-mobile');
+  } else {
+    p.style.width = '0'; p.style.opacity = '0';
+  }
   setTimeout(() => document.getElementById('vp-inner').classList.add('hidden'), 350);
+}
+
+function toggleMobileMenu() {
+  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
+  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
+  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
 }
 
 // ── NOTES
@@ -967,10 +1014,10 @@ async function removeMember(id) {
 // ── HELPERS
 function fmtSize(b) {
   if (!b) return '0 B';
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
-  return (b/1073741824).toFixed(2) + ' GB';
+  if (b < 1000)       return b + ' B';
+  if (b < 1000000)    return (b/1000).toFixed(1) + ' KB';
+  if (b < 1000000000) return (b/1000000).toFixed(1) + ' MB';
+  return (b/1000000000).toFixed(2) + ' GB';
 }
 function timeAgo(iso) {
   const d = Date.now() - new Date(iso);

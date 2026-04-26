@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "fileo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "4322", "/Users/mattyasadi/Documents/GitHub/fileo"],
+      "port": 4322
+    },
+    {
       "name": "droplink",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
