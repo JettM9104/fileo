@@ -1,6 +1,9 @@
 import json
 import os
-from flask import Flask, Response, send_from_directory, send_file
+import urllib.request
+import urllib.error
+import stripe
+from flask import Flask, Response, send_from_directory, send_file, request, jsonify
 from flask_cors import CORS
 from flask_talisman import Talisman
 from flask_limiter import Limiter
@@ -19,8 +22,17 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is not set")
 
-SUPABASE_URL      = os.environ.get("SUPABASE_URL", "")
-SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+SUPABASE_URL          = os.environ.get("SUPABASE_URL", "")
+SUPABASE_ANON_KEY     = os.environ.get("SUPABASE_ANON_KEY", "")
+SUPABASE_SERVICE_KEY  = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+STRIPE_SECRET_KEY     = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_PRICE_ID       = os.environ.get("STRIPE_PRICE_ID", "")
+SITE_URL              = os.environ.get("SITE_URL", "").rstrip("/")
+
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -92,6 +104,104 @@ def serve(path):
 
     # Fall back to index.html so the frontend router handles the path
     return send_file(os.path.join(WEB_ROOT, "index.html"))
+
+
+# ---------------------------------------------------------------------------
+# Stripe helpers
+# ---------------------------------------------------------------------------
+
+def _verify_supabase_token(token):
+    """Call Supabase /auth/v1/user to verify the JWT and return (user_id, email)."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return None, None
+    try:
+        req = urllib.request.Request(
+            SUPABASE_URL + "/auth/v1/user",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "apikey": SUPABASE_ANON_KEY,
+            },
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            return data.get("id"), data.get("email", "")
+    except Exception:
+        return None, None
+
+
+def _activate_pro(user_id):
+    """Set app_metadata.is_pro=true for a Supabase user via the Admin API."""
+    if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        return False
+    try:
+        body = json.dumps({"app_metadata": {"is_pro": True}}).encode()
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/auth/v1/admin/users/{user_id}",
+            data=body,
+            method="PUT",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
+@app.route("/create-checkout-session", methods=["POST"])
+@limiter.limit("10 per minute")
+def create_checkout_session():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    token = auth[7:]
+    user_id, user_email = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+
+    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
+        return jsonify({"error": "Payments not configured on this server"}), 503
+
+    base = SITE_URL or request.host_url.rstrip("/")
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price": STRIPE_PRICE_ID, "quantity": 1}],
+            mode="subscription",
+            customer_email=user_email or None,
+            allow_promotion_codes=True,
+            success_url=base + "/?upgrade=success&session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=base + "/?upgrade=cancelled",
+            metadata={"user_id": user_id},
+        )
+        return jsonify({"url": session.url})
+    except stripe.error.StripeError as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/stripe-webhook", methods=["POST"])
+@limiter.exempt
+def stripe_webhook():
+    payload   = request.get_data()
+    sig_header = request.headers.get("Stripe-Signature", "")
+
+    if not STRIPE_WEBHOOK_SECRET:
+        return jsonify({"error": "Webhook not configured"}), 503
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except stripe.error.SignatureVerificationError:
+        return jsonify({"error": "Invalid signature"}), 400
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        user_id = session.get("metadata", {}).get("user_id")
+        if user_id:
+            _activate_pro(user_id)
+
+    return jsonify({"received": True})
 
 
 # ---------------------------------------------------------------------------

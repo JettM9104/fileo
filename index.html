@@ -102,7 +102,7 @@
       </button>
     </div>
     <h2 class="text-xl font-bold mb-1" style="color:#F5F0E8">Upgrade to Pro</h2>
-    <p class="text-sm mb-5" style="color:rgba(245,240,232,0.5)">Testing mode — one click activates all Pro features instantly.</p>
+    <p class="text-sm mb-5" style="color:rgba(245,240,232,0.5)">$10/mo — cancel anytime. Billed securely via Stripe.</p>
     <div class="flex flex-col gap-2 mb-6">
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 GB max file size</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unlimited active links &amp; storage</div>
@@ -111,11 +111,8 @@
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access files anywhere</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatic malware scanning on downloads</div>
     </div>
-    <div class="rounded-xl px-3 py-2 mb-5 text-xs" style="background:rgba(139,111,71,0.15);color:rgba(245,240,232,0.6);border:1px solid rgba(139,111,71,0.3)">
-      Testing mode: no payment required. Pro features activate immediately.
-    </div>
-    <button onclick="confirmUpgrade()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-85 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
-      Activate Pro — Testing Mode
+    <button id="upgrade-checkout-btn" onclick="startCheckout()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-85 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
+      Subscribe — $10/mo
     </button>
   </div>
 </div>
@@ -431,7 +428,7 @@
         <div class="absolute top-4 right-4 px-2.5 py-1 rounded-full text-[11px] font-semibold" style="background:rgba(245,240,232,0.15);color:#F5F0E8">Popular</div>
         <div class="mb-6">
           <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:rgba(245,240,232,0.4)">Pro</p>
-          <div class="flex items-end gap-1.5 mb-1"><span class="font-bold tracking-tight" style="font-size:42px;color:#F5F0E8;line-height:1">$6</span><span class="text-sm mb-1.5" style="color:rgba(245,240,232,0.5)">/mo</span></div>
+          <div class="flex items-end gap-1.5 mb-1"><span class="font-bold tracking-tight" style="font-size:42px;color:#F5F0E8;line-height:1">$10</span><span class="text-sm mb-1.5" style="color:rgba(245,240,232,0.5)">/mo</span></div>
           <p class="text-sm" style="color:rgba(245,240,232,0.5)">More space, more control, more time.</p>
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
@@ -447,7 +444,7 @@
             <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatic malware scanning</div>
           </div>
         </div>
-        <button id="pro-cta-btn" onclick="openUpgradeModal()" class="w-full text-center py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;font-family:inherit;cursor:pointer;border:none">Get started — Testing</button>
+        <button id="pro-cta-btn" onclick="openUpgradeModal()" class="w-full text-center py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;font-family:inherit;cursor:pointer;border:none">Get started — $10/mo</button>
       </div>
     </div>
   </div>
@@ -685,6 +682,24 @@ window.addEventListener('DOMContentLoaded', () => {
     const avatar = document.getElementById('btn-avatar');
     if (!menu.contains(e.target) && e.target !== avatar) menu.classList.add('hidden');
   });
+
+  // Handle Stripe redirect result
+  const _qp = new URLSearchParams(window.location.search);
+  const _upgradeStatus = _qp.get('upgrade');
+  if (_upgradeStatus) {
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    if (_upgradeStatus === 'success') {
+      _sb.auth.refreshSession().then(({ data }) => {
+        if (data?.session?.user?.app_metadata?.is_pro) {
+          showToastIndex('You\'re now Pro! All features are unlocked.');
+        } else {
+          showToastIndex('Payment received! Your Pro plan will activate in a moment.');
+        }
+      });
+    } else if (_upgradeStatus === 'cancelled') {
+      showToastIndex('Upgrade cancelled — no charge was made.');
+    }
+  }
 });
 
 // ── NAV AUTH ─────────────────────────────────────────
@@ -801,21 +816,50 @@ function closePrivacy() { document.getElementById('privacy-modal').style.display
 function openUpgradeModal() {
   if (isPro) { showToastIndex('Pro plan is already active!'); return; }
   if (!currentUser) { openModal(); return; }
+  const btn = document.getElementById('upgrade-checkout-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Subscribe — $10/mo'; }
   document.getElementById('upgrade-modal').classList.add('open');
 }
 function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); }
-function confirmUpgrade() {
-  closeUpgradeModal();
-  showToastIndex('Payment coming soon — check back shortly!');
+
+async function startCheckout() {
+  const btn = document.getElementById('upgrade-checkout-btn');
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to checkout…';
+
+  const { data: { session } } = await _sb.auth.getSession();
+  if (!session) {
+    closeUpgradeModal();
+    openModal();
+    return;
+  }
+
+  try {
+    const res = await fetch('/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token },
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Subscribe — $10/mo';
+      showToastIndex('Could not start checkout: ' + (data.error || 'Unknown error'));
+    }
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Subscribe — $10/mo';
+    showToastIndex('Checkout failed — please try again.');
+  }
 }
+
 function applyProPricingCard() {
   const btn = document.getElementById('pro-cta-btn');
   if (btn) { btn.textContent = 'Pro Active ✓'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.onclick = null; }
-  const freeBtn = document.getElementById('free-testing-btn');
-  if (freeBtn) freeBtn.classList.remove('hidden');
 }
 function downgradeToFree() {
-  showToastIndex('Contact support to manage your subscription.');
+  showToastIndex('To cancel your subscription, visit your Stripe billing portal.');
 }
 
 async function loadPricingUsage() {
