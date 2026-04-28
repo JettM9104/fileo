@@ -823,7 +823,7 @@ window.addEventListener('DOMContentLoaded', () => {
     _sb = null;
   }
 
-  _sb.auth.onAuthStateChange((_e, session) => {
+  if (_sb) _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
       currentUser = session.user;
       isPro = session.user.app_metadata?.is_pro === true;
