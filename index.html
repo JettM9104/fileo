@@ -113,8 +113,8 @@
     <h2 class="text-xl font-bold mb-1" style="color:#F5F0E8">Upgrade to Pro</h2>
     <p class="text-sm mb-5" style="color:rgba(245,240,232,0.5)">$10/mo — cancel anytime. Billed securely via Stripe.</p>
     <div class="flex flex-col gap-2 mb-6">
-      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 GB max file size</div>
-      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Unlimited active links &amp; storage</div>
+      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>3 GB weekly storage</div>
+      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 active links max</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>7-day &amp; 30-day expiry options</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password protection &amp; download limits</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access files anywhere</div>
@@ -306,7 +306,7 @@
     Drop any file. Get a link. Share it anywhere. Links expire automatically, nothing lingers.
   </p>
   <div class="fade-up opacity-0 flex flex-wrap items-center justify-center gap-3" style="animation-delay:240ms">
-    <button onclick="startUpload()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer">Get started — it's free</button>
+    <button onclick="startUpload()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer">Get started, it's free</button>
     <a href="#how" onclick="scrollTo2(event,'how')" class="px-7 py-3.5 rounded-full font-medium text-[15px] no-underline transition-colors" style="border:1px solid rgba(28,25,23,0.12);color:rgba(28,25,23,0.45)">See how it works</a>
   </div>
 </section>
@@ -492,14 +492,14 @@
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
           <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Max file size</span><span class="text-sm font-medium" style="color:#F5F0E8">10 GB</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active links</span><span id="pro-links-val" class="text-sm font-medium" style="color:#F5F0E8">Unlimited</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Total storage</span><span class="text-sm font-medium" style="color:#F5F0E8">Unlimited</span></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active links</span><span id="pro-links-val" class="text-sm font-medium" style="color:#F5F0E8">10 max</span></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Weekly storage</span><span class="text-sm font-medium" style="color:#F5F0E8">3 GB</span></div>
           <div class="py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><p class="text-sm mb-2" style="color:rgba(245,240,232,0.5)">Expiry options</p><div class="flex flex-wrap gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">24 hours</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">7 days</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">30 days</span></div></div>
           <div class="flex flex-col gap-2 pt-1">
             <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password protection</div>
             <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Download limits</div>
             <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Access control</div>
-            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access anywhere</div>
+            <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage, access anywhere</div>
             <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatic malware scanning</div>
           </div>
         </div>
@@ -558,7 +558,7 @@
 
       <div>
         <h3 class="font-semibold mb-1.5" style="color:#1C1917">6. Pro plan</h3>
-        <p>Pro accounts receive increased limits including up to 10 GB per file, unlimited active links, unlimited storage, extended expiry options, and access to advanced features such as password protection, download limits, access control, and malware scanning. Pro is currently in testing mode — no payment is required during this period.</p>
+        <p>Pro accounts receive increased limits including up to 10 GB per file, up to 10 active links, 3 GB weekly storage, extended expiry options, and access to advanced features such as password protection, download limits, access control, and malware scanning. Pro is currently in testing mode — no payment is required during this period.</p>
       </div>
 
       <div>
@@ -815,7 +815,14 @@ function timeUntil(iso) {
 
 // ── INIT ─────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  try {
+    if (!SUPABASE_URL || !SUPABASE_ANON) throw new Error('Supabase is not configured on this server.');
+    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  } catch (e) {
+    console.error('Supabase init failed:', e.message);
+    _sb = null;
+    return;
+  }
 
   _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
@@ -946,6 +953,11 @@ function setTab(tab) {
 async function submitAuth(e) {
   e.preventDefault();
   const errEl = document.getElementById('auth-error');
+  if (!_sb) {
+    errEl.textContent = 'Auth is not configured on this server.';
+    errEl.classList.remove('hidden');
+    return;
+  }
   const now = Date.now();
   if (now < _authLockedUntil) {
     const secs = Math.ceil((_authLockedUntil - now) / 1000);
@@ -958,27 +970,43 @@ async function submitAuth(e) {
   const btn = document.getElementById('auth-submit');
   errEl.classList.add('hidden');
   btn.disabled = true; btn.textContent = 'Please wait…';
-  const { error } = _authTab === 'login'
-    ? await _sb.auth.signInWithPassword({ email, password })
-    : await _sb.auth.signUp({ email, password });
-  btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
-  if (error) {
-    _authAttempts++;
-    if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
-    errEl.textContent = error.message; errEl.classList.remove('hidden');
-  } else {
-    _authAttempts = 0;
-    closeModal();
+  try {
+    const { error } = _authTab === 'login'
+      ? await _sb.auth.signInWithPassword({ email, password })
+      : await _sb.auth.signUp({ email, password });
+    btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
+    if (error) {
+      _authAttempts++;
+      if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
+      errEl.textContent = error.message; errEl.classList.remove('hidden');
+    } else {
+      _authAttempts = 0;
+      closeModal();
+    }
+  } catch (err) {
+    btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
+    errEl.textContent = err.message || 'An unexpected error occurred.';
+    errEl.classList.remove('hidden');
   }
 }
 async function signInWithGoogle() {
   const errEl = document.getElementById('auth-error');
   errEl.classList.add('hidden');
-  const { error } = await _sb.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin }
-  });
-  if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
+  if (!_sb) {
+    errEl.textContent = 'Auth is not configured on this server.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  try {
+    const { error } = await _sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
+  } catch (err) {
+    errEl.textContent = err.message || 'An unexpected error occurred.';
+    errEl.classList.remove('hidden');
+  }
 }
 function togglePassword() {
   const i = document.getElementById('auth-password');
