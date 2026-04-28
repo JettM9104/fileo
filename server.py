@@ -3,6 +3,19 @@ import os
 import urllib.request
 import urllib.error
 import stripe
+
+try:
+    from dotenv import load_dotenv
+    _here = os.path.dirname(os.path.abspath(__file__))
+    for _candidate in [
+        os.path.join(_here, ".env"),
+        os.path.join(_here, "../../../.env"),  # git worktree: up to repo root
+    ]:
+        if os.path.exists(_candidate):
+            load_dotenv(_candidate)
+            break
+except ImportError:
+    pass
 from flask import Flask, Response, send_from_directory, send_file, request, jsonify
 from flask_cors import CORS
 from flask_talisman import Talisman
