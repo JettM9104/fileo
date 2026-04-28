@@ -821,7 +821,6 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.error('Supabase init failed:', e.message);
     _sb = null;
-    return;
   }
 
   _sb.auth.onAuthStateChange((_e, session) => {
