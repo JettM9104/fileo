@@ -385,7 +385,6 @@
 // ── CONFIG
 const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
 const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
-const BUCKET = 'uploads';
 const FREE_MAX_LINKS   = 3;
 const FREE_MAX_STORAGE = 500 * 1024 * 1024;
 
@@ -733,27 +732,34 @@ function proExpiry(hours) {
 }
 
 // ── UPLOAD
-function uploadWithProgress(storagePath, file, onProgress) {
-  return new Promise(async (resolve) => {
-    const { data: sessionData } = await _sb.auth.getSession();
-    const token = sessionData?.session?.access_token || SUPABASE_ANON;
-    const encodedPath = storagePath.split('/').map(encodeURIComponent).join('/');
-    const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${encodedPath}`;
+async function uploadWithProgress(storageKey, file, onProgress) {
+  const { data: sessionData } = await _sb.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) return new Error('Not signed in');
 
+  const contentType = file.type || 'application/octet-stream';
+  const urlRes = await fetch('/upload-url', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: storageKey, content_type: contentType }),
+  });
+  if (!urlRes.ok) {
+    const b = await urlRes.json().catch(() => ({}));
+    return new Error(b.error || 'Could not get upload URL');
+  }
+  const { url } = await urlRes.json();
+
+  return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded, e.total); };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) { resolve(null); return; }
-      try { const b = JSON.parse(xhr.responseText); resolve(new Error(b.error || b.message || `HTTP ${xhr.status}`)); }
-      catch { resolve(new Error(`Upload failed (HTTP ${xhr.status})`)); }
+      resolve(new Error(`Upload failed (HTTP ${xhr.status})`));
     };
     xhr.onerror   = () => resolve(new Error('Network error during upload'));
     xhr.ontimeout = () => resolve(new Error('Upload timed out'));
-    xhr.open('POST', url);
-    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    xhr.setRequestHeader('x-upsert', 'false');
-    xhr.setRequestHeader('cache-control', '3600');
-    if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', contentType);
     xhr.send(file);
   });
 }
@@ -863,7 +869,9 @@ async function doUpload() {
   }
 
   if (dbErr) {
-    await _sb.storage.from(BUCKET).remove([storagePath]);
+    const { data: _s } = await _sb.auth.getSession();
+    const _t = _s?.session?.access_token;
+    if (_t) fetch('/r2-cleanup', { method: 'POST', headers: { 'Authorization': `Bearer ${_t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ key: storagePath }) }).catch(() => {});
     document.getElementById('upload-progress').classList.add('hidden');
     document.getElementById('file-preview').classList.remove('hidden');
     showToast('Could not save file record: ' + (dbErr.message || dbErr));
@@ -949,7 +957,7 @@ async function loadFiles() {
       </div>
       <div class="flex flex-col gap-1.5 flex-shrink-0">
         <button onclick="copyFileLink('${escHtml(f.id)}')" class="px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Copy link</button>
-        <button onclick="deleteFile('${escHtml(f.id)}','${escHtml(f.storage_path)}')" class="px-3 py-1 rounded-lg text-xs font-medium hover:opacity-70 transition-opacity" style="background:transparent;color:rgba(28,25,23,0.4);border:1px solid rgba(28,25,23,0.10);cursor:pointer;font-family:inherit">Delete</button>
+        <button onclick="deleteFile('${escHtml(f.id)}')" class="px-3 py-1 rounded-lg text-xs font-medium hover:opacity-70 transition-opacity" style="background:transparent;color:rgba(28,25,23,0.4);border:1px solid rgba(28,25,23,0.10);cursor:pointer;font-family:inherit">Delete</button>
       </div>
     `;
     list.appendChild(div);
@@ -962,10 +970,16 @@ function copyFileLink(id) {
   navigator.clipboard.writeText(getShareLink(id)).then(() => showToast('Link copied!'));
 }
 
-async function deleteFile(id, path) {
+async function deleteFile(id) {
   if (!confirm('Delete this file? The share link will stop working immediately.')) return;
-  await _sb.storage.from(BUCKET).remove([path]);
-  await _sb.from('files').delete().eq('id', id);
+  const { data: sessionData } = await _sb.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) { showToast('Sign in required.'); return; }
+  const res = await fetch(`/file/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  if (!res.ok) { showToast('Delete failed.'); return; }
   showToast('File deleted.');
   loadFiles();
   loadQuota();

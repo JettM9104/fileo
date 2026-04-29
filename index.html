@@ -791,7 +791,6 @@
 // ── CONFIG ──────────────────────────────────────────
 const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
 const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
-const BUCKET        = 'uploads';
 
 // ── STATE ────────────────────────────────────────────
 let _sb = null, currentUser = null, isPro = false;
@@ -1176,7 +1175,7 @@ async function showDownloadPage(fileId) {
     await new Promise(r => setTimeout(r, 1800));
   }
 
-  showDownloadReady(file);
+  await showDownloadReady(file);
 }
 
 async function verifyPassword(input, storedHash) {
@@ -1211,25 +1210,26 @@ async function checkPassword() {
     dlShowState('dl-scanning');
     await new Promise(r => setTimeout(r, 1800));
   }
-  showDownloadReady(file);
+  await showDownloadReady(file);
 }
 
-function showDownloadReady(file) {
-  const { data: urlData } = _sb.storage.from(BUCKET).getPublicUrl(file.storage_path);
+async function showDownloadReady(file) {
+  const res = await fetch(`/download-url/${encodeURIComponent(file.id)}`);
+  if (!res.ok) { dlShowState('dl-notfound'); return; }
+  const { url } = await res.json();
+
   document.getElementById('dl-filename').textContent = file.filename;
   document.getElementById('dl-meta').textContent     = fmtSize(file.size) + ' · ' + timeUntil(file.expires_at);
   const dlBtn = document.getElementById('dl-btn');
-  dlBtn.href = urlData.publicUrl;
+  dlBtn.href = url;
   dlBtn.setAttribute('download', file.filename);
 
-  // Show scan badge only for Pro uploads
   const badge = document.getElementById('dl-scan-badge');
   badge.classList.toggle('hidden', !file.is_pro);
 
   dlShowState('dl-ready');
-  if (window.innerWidth >= 768) showDlPreview(file.filename, urlData.publicUrl);
+  if (window.innerWidth >= 768) showDlPreview(file.filename, url);
 
-  // Increment download count
   _sb.from('files').update({ downloads: (file.downloads || 0) + 1 }).eq('id', file.id);
 }
 

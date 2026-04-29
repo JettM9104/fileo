@@ -4,3 +4,4 @@ flask-talisman
 flask-limiter
 gunicorn
 stripe
+boto3

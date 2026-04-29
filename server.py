@@ -2,7 +2,14 @@ import json
 import os
 import urllib.request
 import urllib.error
+import urllib.parse
 import stripe
+
+try:
+    import boto3
+    _HAS_BOTO3 = True
+except ImportError:
+    _HAS_BOTO3 = False
 
 try:
     from dotenv import load_dotenv
@@ -44,8 +51,23 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_ID       = os.environ.get("STRIPE_PRICE_ID", "")
 SITE_URL              = os.environ.get("SITE_URL", "").rstrip("/")
 
+R2_ACCOUNT_ID        = os.environ.get("R2_ACCOUNT_ID", "")
+R2_ACCESS_KEY_ID     = os.environ.get("R2_ACCESS_KEY_ID", "")
+R2_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY", "")
+R2_BUCKET_NAME       = os.environ.get("R2_BUCKET_NAME", "")
+
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
+
+_r2 = None
+if _HAS_BOTO3 and all([R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME]):
+    _r2 = boto3.client(
+        "s3",
+        endpoint_url=f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
+        aws_access_key_id=R2_ACCESS_KEY_ID,
+        aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+        region_name="auto",
+    )
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -77,7 +99,7 @@ Talisman(
         "script-src":  ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com", "cdn.jsdelivr.net"],
         "style-src":   ["'self'", "'unsafe-inline'"],
         "img-src":     ["'self'", "data:", "https:"],
-        "connect-src": ["'self'", "https://*.supabase.co"],
+        "connect-src": ["'self'", "https://*.supabase.co", "https://*.r2.cloudflarestorage.com"],
         "font-src":    ["'self'", "data:"],
     },
 )
@@ -160,6 +182,156 @@ def _activate_pro(user_id):
             return resp.status == 200
     except Exception:
         return False
+
+
+# ---------------------------------------------------------------------------
+# R2 helpers
+# ---------------------------------------------------------------------------
+
+def _get_file_record(file_id):
+    """Fetch a file record from Supabase by id."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return None
+    try:
+        safe_id = urllib.parse.quote(file_id, safe="")
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/rest/v1/files?id=eq.{safe_id}&select=id,storage_path,expires_at,user_id",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            rows = json.loads(resp.read())
+            return rows[0] if rows else None
+    except Exception:
+        return None
+
+
+def _delete_file_db(file_id, user_id):
+    """Delete a file record owned by user_id."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return False
+    try:
+        safe_id  = urllib.parse.quote(file_id, safe="")
+        safe_uid = urllib.parse.quote(user_id, safe="")
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/rest/v1/files?id=eq.{safe_id}&user_id=eq.{safe_uid}",
+            method="DELETE",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        with urllib.request.urlopen(req, timeout=5):
+            return True
+    except Exception:
+        return False
+
+
+def _delete_r2_object(key):
+    if _r2:
+        try:
+            _r2.delete_object(Bucket=R2_BUCKET_NAME, Key=key)
+        except Exception:
+            pass
+
+
+@app.route("/upload-url", methods=["POST"])
+@limiter.limit("30 per minute")
+def upload_url():
+    """Return a presigned PUT URL so the browser can upload directly to R2."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+
+    if not _r2:
+        return jsonify({"error": "Storage not configured"}), 503
+
+    body = request.get_json(silent=True) or {}
+    key          = body.get("key", "")
+    content_type = body.get("content_type", "application/octet-stream")
+
+    if not key or not key.startswith(user_id + "/"):
+        return jsonify({"error": "Invalid key"}), 400
+
+    try:
+        url = _r2.generate_presigned_url(
+            "put_object",
+            Params={"Bucket": R2_BUCKET_NAME, "Key": key, "ContentType": content_type},
+            ExpiresIn=900,
+        )
+        return jsonify({"url": url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/download-url/<file_id>", methods=["GET"])
+@limiter.limit("120 per minute")
+def download_url(file_id):
+    """Return a short-lived presigned GET URL for a file stored in R2."""
+    if not _r2:
+        return jsonify({"error": "Storage not configured"}), 503
+
+    rec = _get_file_record(file_id)
+    if not rec or not rec.get("storage_path"):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        url = _r2.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": R2_BUCKET_NAME, "Key": rec["storage_path"]},
+            ExpiresIn=3600,
+        )
+        return jsonify({"url": url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/file/<file_id>", methods=["DELETE"])
+@limiter.limit("30 per minute")
+def delete_file(file_id):
+    """Delete a file from R2 and the Supabase DB (owner only)."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+
+    rec = _get_file_record(file_id)
+    if not rec:
+        return jsonify({"error": "Not found"}), 404
+    if rec.get("user_id") != user_id:
+        return jsonify({"error": "Forbidden"}), 403
+
+    if rec.get("storage_path"):
+        _delete_r2_object(rec["storage_path"])
+
+    _delete_file_db(file_id, user_id)
+    return jsonify({"ok": True})
+
+
+@app.route("/r2-cleanup", methods=["POST"])
+@limiter.limit("10 per minute")
+def r2_cleanup():
+    """Delete an R2 object the caller owns (used to roll back a failed upload)."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+
+    body = request.get_json(silent=True) or {}
+    key = body.get("key", "")
+    if not key or not key.startswith(user_id + "/"):
+        return jsonify({"error": "Forbidden"}), 403
+
+    _delete_r2_object(key)
+    return jsonify({"ok": True})
 
 
 @app.route("/create-checkout-session", methods=["POST"])
