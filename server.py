@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 import urllib.request
 import urllib.error
 import urllib.parse
 import stripe
+
+log = logging.getLogger(__name__)
 
 try:
     import boto3
@@ -179,6 +182,7 @@ def _verify_supabase_token(token):
 def _activate_pro(user_id):
     """Set app_metadata.is_pro=true for a Supabase user via the Admin API."""
     if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        log.error("_activate_pro: missing SUPABASE_SERVICE_KEY or SUPABASE_URL")
         return False
     try:
         body = json.dumps({"app_metadata": {"is_pro": True}}).encode()
@@ -191,8 +195,12 @@ def _activate_pro(user_id):
         req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
         req.add_header("Content-Type", "application/json")
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status == 200
-    except Exception:
+            ok = resp.status == 200
+            if not ok:
+                log.error("_activate_pro: Supabase returned HTTP %s for user %s", resp.status, user_id)
+            return ok
+    except Exception as exc:
+        log.error("_activate_pro failed for user %s: %s", user_id, exc)
         return False
 
 

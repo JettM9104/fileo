@@ -875,13 +875,20 @@ window.addEventListener('DOMContentLoaded', () => {
   if (_upgradeStatus) {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     if (_upgradeStatus === 'success') {
-      _sb.auth.refreshSession().then(({ data }) => {
+      showToastIndex('Payment received! Activating your Pro plan…');
+      let _proAttempts = 0;
+      const _pollPro = async () => {
+        _proAttempts++;
+        const { data } = await _sb.auth.refreshSession();
         if (data?.session?.user?.app_metadata?.is_pro) {
           showToastIndex('You\'re now Pro! All features are unlocked.');
+        } else if (_proAttempts < 15) {
+          setTimeout(_pollPro, 2000);
         } else {
-          showToastIndex('Payment received! Your Pro plan will activate in a moment.');
+          showToastIndex('Pro activation is taking longer than expected — please refresh in a minute.');
         }
-      });
+      };
+      setTimeout(_pollPro, 2000);
     } else if (_upgradeStatus === 'cancelled') {
       showToastIndex('Upgrade cancelled — no charge was made.');
     }
