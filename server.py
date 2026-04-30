@@ -403,8 +403,12 @@ def stripe_webhook():
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("user_id")
+        log.info("stripe webhook: checkout.session.completed user_id=%s", user_id)
         if user_id:
-            _activate_pro(user_id)
+            ok = _activate_pro(user_id)
+            log.info("stripe webhook: _activate_pro(%s) -> %s", user_id, ok)
+        else:
+            log.error("stripe webhook: no user_id in metadata — metadata=%s", session.get("metadata"))
 
     return jsonify({"received": True})
 
