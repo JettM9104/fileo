@@ -52,6 +52,9 @@ STRIPE_PRICE_ID       = os.environ.get("STRIPE_PRICE_ID", "")
 SITE_URL              = os.environ.get("SITE_URL", "").rstrip("/")
 API_BASE_URL          = os.environ.get("API_BASE_URL", "").rstrip("/")
 
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+RESEND_FROM    = os.environ.get("RESEND_FROM_EMAIL", "Fileo <noreply@fileo.ca>")
+
 R2_ACCOUNT_ID        = os.environ.get("R2_ACCOUNT_ID", "")
 R2_ACCESS_KEY_ID     = os.environ.get("R2_ACCESS_KEY_ID", "")
 R2_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY", "")
@@ -191,6 +194,78 @@ def _activate_pro(user_id):
             return resp.status == 200
     except Exception:
         return False
+
+
+def _send_email(to_email, subject, html_body):
+    """Send a transactional email via the Resend API."""
+    if not RESEND_API_KEY:
+        return False
+    try:
+        body = json.dumps({
+            "from": RESEND_FROM,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body,
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=body,
+            method="POST",
+        )
+        req.add_header("Authorization", f"Bearer {RESEND_API_KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status in (200, 201)
+    except Exception:
+        return False
+
+
+def _find_user_by_email(email):
+    """Return the Supabase user_id for a given email, or None."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return None
+    try:
+        safe_email = urllib.parse.quote(email, safe="@")
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/auth/v1/admin/users?email={safe_email}&page=1&per_page=1",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            for user in data.get("users", []):
+                if user.get("email", "").lower() == email.lower():
+                    return user.get("id")
+    except Exception:
+        pass
+    return None
+
+
+def _invite_user(email, name=""):
+    """Invite a new Supabase user (creates account + sends magic-link email).
+    Returns user_id on success, None otherwise."""
+    if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        return None
+    redirect = f"{SITE_URL}/upload.html" if SITE_URL else ""
+    body = json.dumps({
+        "email": email,
+        "data": {"full_name": name},
+        **({"options": {"redirect_to": redirect}} if redirect else {}),
+    }).encode()
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/auth/v1/admin/invite",
+        data=body,
+        method="POST",
+    )
+    req.add_header("apikey", SUPABASE_SERVICE_KEY)
+    req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return data.get("id")
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -390,12 +465,100 @@ def stripe_webhook():
         return jsonify({"error": "Invalid signature"}), 400
 
     if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        user_id = session.get("metadata", {}).get("user_id")
+        session  = event["data"]["object"]
+        meta     = session.get("metadata") or {}
+        user_id  = meta.get("user_id")
+        details  = session.get("customer_details") or {}
+        email    = details.get("email") or session.get("customer_email", "")
+        name     = details.get("name") or meta.get("name", "")
+        base     = SITE_URL or ""
+        dashboard = base + "/upload.html"
+
         if user_id:
             _activate_pro(user_id)
+        elif email:
+            uid = _invite_user(email, name) or _find_user_by_email(email)
+            if uid:
+                _activate_pro(uid)
+
+        if email:
+            greeting = f"Welcome, {name}!" if name else "Welcome to Fileo Pro!"
+            _send_email(
+                email,
+                "You're in — Fileo Pro is ready",
+                f"""<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#F5F0E8;color:#1C1917">
+  <div style="margin-bottom:20px">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="14" fill="#1C1917"/>
+      <polygon points="14,8 21,20 7,20" fill="#F5F0E8"/>
+    </svg>
+  </div>
+  <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;letter-spacing:-0.02em">{greeting}</h1>
+  <p style="color:rgba(28,25,23,0.55);margin:0 0 8px;line-height:1.65">Payment confirmed. Your Pro account is active.</p>
+  <ul style="color:rgba(28,25,23,0.55);margin:0 0 28px;padding-left:20px;line-height:2">
+    <li>10 GB max file size</li>
+    <li>3 GB weekly storage</li>
+    <li>7-day &amp; 30-day expiry options</li>
+    <li>Password protection &amp; download limits</li>
+    <li>Cloud storage workspace</li>
+  </ul>
+  <a href="{dashboard}" style="display:inline-block;background:#1C1917;color:#F5F0E8;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px">Go to dashboard →</a>
+  <p style="color:rgba(28,25,23,0.35);font-size:12px;margin-top:28px;line-height:1.6">Sign in with <strong>{email}</strong>. If you don't have an account yet, check your inbox for a setup email — or create one at the dashboard link above using this address.</p>
+</div>""",
+            )
 
     return jsonify({"received": True})
+
+
+@app.route("/request-access", methods=["POST"])
+@limiter.limit("5 per hour")
+def request_access():
+    """Form submission: create a Stripe checkout session and email the payment link."""
+    body  = request.get_json(silent=True) or {}
+    name  = str(body.get("name", "")).strip()[:120]
+    email = str(body.get("email", "")).strip()[:254]
+
+    if not email or "@" not in email:
+        return jsonify({"error": "A valid email is required"}), 400
+    if not STRIPE_SECRET_KEY or not STRIPE_PRICE_ID:
+        return jsonify({"error": "Payments not configured on this server"}), 503
+    if not RESEND_API_KEY:
+        return jsonify({"error": "Email not configured on this server"}), 503
+
+    base = SITE_URL or request.host_url.rstrip("/")
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{"price": STRIPE_PRICE_ID, "quantity": 1}],
+            mode="subscription",
+            customer_email=email,
+            allow_promotion_codes=True,
+            success_url=base + "/?upgrade=success&session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=base + "/#get-access",
+            metadata={"name": name, "email": email},
+        )
+    except stripe.error.StripeError as e:
+        return jsonify({"error": str(e)}), 500
+
+    greeting = f"Hi {name}," if name else "Hi,"
+    _send_email(
+        email,
+        "Your Fileo Pro payment link",
+        f"""<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:480px;margin:0 auto;padding:40px 24px;background:#F5F0E8;color:#1C1917">
+  <div style="margin-bottom:20px">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="14" fill="#1C1917"/>
+      <polygon points="14,8 21,20 7,20" fill="#F5F0E8"/>
+    </svg>
+  </div>
+  <h1 style="font-size:24px;font-weight:700;margin:0 0 8px;letter-spacing:-0.02em">{greeting}</h1>
+  <p style="color:rgba(28,25,23,0.55);margin:0 0 24px;line-height:1.65">Here's your Fileo Pro payment link. Click the button to complete your purchase — $10/month, cancel anytime.</p>
+  <a href="{session.url}" style="display:inline-block;background:#1C1917;color:#F5F0E8;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px">Complete payment →</a>
+  <p style="color:rgba(28,25,23,0.35);font-size:12px;margin-top:28px;line-height:1.6">Once payment is confirmed, you'll receive a second email with your dashboard link. This payment link expires in 24 hours.</p>
+</div>""",
+    )
+
+    return jsonify({"ok": True})
 
 
 # ---------------------------------------------------------------------------
