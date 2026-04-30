@@ -386,7 +386,7 @@ def create_checkout_session():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/stripe-webhook", methods=["POST"])
+@app.route("/stripe-webhook", methods=["POST"], strict_slashes=False)
 @limiter.exempt
 def stripe_webhook():
     payload   = request.get_data()
