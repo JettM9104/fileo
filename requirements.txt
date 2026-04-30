@@ -3,5 +3,6 @@ flask-cors
 flask-talisman
 flask-limiter
 gunicorn
+python-dotenv
 stripe
 boto3

@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="/config.js"></script>
+  <script src="config.js"></script>
   <style>
     html{scroll-behavior:smooth}
     @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -385,6 +385,10 @@
 // ── CONFIG
 const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
 const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
+const API_BASE_URL  = (window.FILEO_CONFIG?.apiBaseUrl || '').replace(/\/$/, '');
+function apiUrl(path) {
+  return API_BASE_URL ? API_BASE_URL + path : path;
+}
 const FREE_MAX_LINKS   = 3;
 const FREE_MAX_STORAGE = 500 * 1024 * 1024;
 
@@ -738,7 +742,7 @@ async function uploadWithProgress(storageKey, file, onProgress) {
   if (!token) return new Error('Not signed in');
 
   const contentType = file.type || 'application/octet-stream';
-  const urlRes = await fetch('/upload-url', {
+  const urlRes = await fetch(apiUrl('/upload-url'), {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ key: storageKey, content_type: contentType }),
@@ -871,7 +875,7 @@ async function doUpload() {
   if (dbErr) {
     const { data: _s } = await _sb.auth.getSession();
     const _t = _s?.session?.access_token;
-    if (_t) fetch('/r2-cleanup', { method: 'POST', headers: { 'Authorization': `Bearer ${_t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ key: storagePath }) }).catch(() => {});
+    if (_t) fetch(apiUrl('/r2-cleanup'), { method: 'POST', headers: { 'Authorization': `Bearer ${_t}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ key: storagePath }) }).catch(() => {});
     document.getElementById('upload-progress').classList.add('hidden');
     document.getElementById('file-preview').classList.remove('hidden');
     showToast('Could not save file record: ' + (dbErr.message || dbErr));
@@ -975,7 +979,7 @@ async function deleteFile(id) {
   const { data: sessionData } = await _sb.auth.getSession();
   const token = sessionData?.session?.access_token;
   if (!token) { showToast('Sign in required.'); return; }
-  const res = await fetch(`/file/${encodeURIComponent(id)}`, {
+  const res = await fetch(apiUrl(`/file/${encodeURIComponent(id)}`), {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -1013,7 +1017,7 @@ async function signInWithGoogle() {
   try {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin }
+      options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
     });
     if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
   } catch (err) {

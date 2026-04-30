@@ -1,19 +1,19 @@
-# /etc/systemd/system/myapp.service
-# After editing: sudo systemctl daemon-reload && sudo systemctl enable --now myapp
+# /etc/systemd/system/fileo-api.service
+# After editing: sudo systemctl daemon-reload && sudo systemctl enable --now fileo-api
 
 [Unit]
-Description=Gunicorn instance for myapp
+Description=Gunicorn instance for Fileo API
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/myapp        # <-- change to your project root
+WorkingDirectory=/var/www/fileo
 
 # Load environment variables from a file (chmod 600 this file!)
-EnvironmentFile=/var/www/myapp/.env
+EnvironmentFile=/var/www/fileo/.env
 
-ExecStart=/var/www/myapp/venv/bin/gunicorn \
+ExecStart=/var/www/fileo/venv/bin/gunicorn \
     --config gunicorn.conf.py \
     server:app
 

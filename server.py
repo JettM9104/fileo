@@ -50,6 +50,7 @@ STRIPE_SECRET_KEY     = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 STRIPE_PRICE_ID       = os.environ.get("STRIPE_PRICE_ID", "")
 SITE_URL              = os.environ.get("SITE_URL", "").rstrip("/")
+API_BASE_URL          = os.environ.get("API_BASE_URL", "").rstrip("/")
 
 R2_ACCOUNT_ID        = os.environ.get("R2_ACCOUNT_ID", "")
 R2_ACCESS_KEY_ID     = os.environ.get("R2_ACCESS_KEY_ID", "")
@@ -119,7 +120,15 @@ limiter = Limiter(
 
 @app.route("/config.js")
 def config_js():
-    js = f"window.FILEO_CONFIG={{url:{json.dumps(SUPABASE_URL)},anon:{json.dumps(SUPABASE_ANON_KEY)}}};"
+    js = (
+        "window.FILEO_CONFIG="
+        + json.dumps({
+            "url": SUPABASE_URL,
+            "anon": SUPABASE_ANON_KEY,
+            "apiBaseUrl": API_BASE_URL,
+        })
+        + ";"
+    )
     return Response(js, mimetype="application/javascript",
                     headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
 
