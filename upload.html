@@ -872,6 +872,25 @@ async function doUpload() {
     dbErr = e;
   }
 
+  // If the insert failed because Pro-only columns don't exist in the DB schema yet,
+  // retry with only the basic columns so the upload still completes.
+  if (dbErr && typeof (dbErr.message || dbErr) === 'string' && (dbErr.message || String(dbErr)).toLowerCase().includes('column')) {
+    const basicRecord = { id: record.id, filename: record.filename, size: record.size, storage_path: record.storage_path, expires_at: record.expires_at, downloads: 0 };
+    if (record.user_id) basicRecord.user_id = record.user_id;
+    let retryErr;
+    try {
+      ({ error: retryErr } = await _sb.from('files').insert(basicRecord));
+    } catch (e2) {
+      retryErr = e2;
+    }
+    if (!retryErr) {
+      dbErr = null;
+      if (isPro) showToast('Uploaded! (Advanced settings require a DB schema update to save.)');
+    } else {
+      dbErr = retryErr;
+    }
+  }
+
   if (dbErr) {
     const { data: _s } = await _sb.auth.getSession();
     const _t = _s?.session?.access_token;
@@ -1063,7 +1082,6 @@ async function submitAuth(e) {
     btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
     errEl.textContent = err.message || 'An unexpected error occurred.';
     errEl.classList.remove('hidden');
-  }
   }
 }
 

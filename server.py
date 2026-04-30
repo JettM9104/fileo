@@ -91,6 +91,9 @@ if _allowed_origins:
 # Security headers
 # FORCE_HTTPS=1 only if Flask is terminating SSL directly (not needed behind Nginx+SSL)
 force_https = os.environ.get("FORCE_HTTPS", "0") == "1"
+_connect_src = ["'self'", "https://*.supabase.co", "https://*.r2.cloudflarestorage.com"]
+if API_BASE_URL:
+    _connect_src.append(API_BASE_URL)
 Talisman(
     app,
     force_https=force_https,
@@ -100,7 +103,7 @@ Talisman(
         "script-src":  ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com", "cdn.jsdelivr.net"],
         "style-src":   ["'self'", "'unsafe-inline'"],
         "img-src":     ["'self'", "data:", "https:"],
-        "connect-src": ["'self'", "https://*.supabase.co", "https://*.r2.cloudflarestorage.com"],
+        "connect-src": _connect_src,
         "font-src":    ["'self'", "data:"],
     },
 )
