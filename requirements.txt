@@ -6,3 +6,4 @@ gunicorn
 python-dotenv
 stripe
 boto3
+python-dotenv
