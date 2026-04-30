@@ -5,3 +5,4 @@ flask-limiter
 gunicorn
 stripe
 boto3
+python-dotenv
