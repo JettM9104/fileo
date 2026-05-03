@@ -405,6 +405,8 @@ function apiUrl(path) {
 }
 const FREE_MAX_LINKS   = 3;
 const FREE_MAX_STORAGE = 500 * 1024 * 1024;
+const PRO_MAX_LINKS    = 5;
+const PRO_MAX_STORAGE  = 50 * 1024 * 1024 * 1024;
 
 // ── STATE
 let _sb = null, currentUser = null, isPro = false;
@@ -793,8 +795,8 @@ async function doUpload() {
     return;
   }
 
-  // Free quota check
-  if (!isPro && currentUser) {
+  // Quota check
+  if (currentUser) {
     const now = new Date().toISOString();
     const { data: existing } = await _sb.from('files')
       .select('size')
@@ -802,13 +804,16 @@ async function doUpload() {
       .gt('expires_at', now);
     const usedStorage = (existing || []).reduce((s, f) => s + (f.size || 0), 0);
     const count = (existing || []).length;
-    if (count >= FREE_MAX_LINKS) {
-      showToast('You have ' + FREE_MAX_LINKS + ' active links — the free plan maximum. Delete one or upgrade.');
+    const maxLinks   = isPro ? PRO_MAX_LINKS   : FREE_MAX_LINKS;
+    const maxStorage = isPro ? PRO_MAX_STORAGE : FREE_MAX_STORAGE;
+    const planLabel  = isPro ? 'Pro' : 'free';
+    if (count >= maxLinks) {
+      showToast('You have ' + maxLinks + ' active links — the ' + planLabel + ' plan maximum. Delete one' + (isPro ? '.' : ' or upgrade.'));
       return;
     }
-    if (usedStorage + selectedFile.size > FREE_MAX_STORAGE) {
-      const left = FREE_MAX_STORAGE - usedStorage;
-      showToast('Not enough storage. ' + fmtSize(left) + ' remaining on your free plan.');
+    if (usedStorage + selectedFile.size > maxStorage) {
+      const left = maxStorage - usedStorage;
+      showToast('Not enough storage. ' + fmtSize(left) + ' remaining on your ' + planLabel + ' plan.');
       return;
     }
   }
