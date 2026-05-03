@@ -417,11 +417,11 @@ def activate_pro_from_session():
         log.error("activate_pro_from_session: stripe error for user %s: %s", user_id, e)
         return jsonify({"error": str(e)}), 400
 
-    if checkout.get("metadata", {}).get("user_id") != user_id:
+    if (checkout.metadata or {}).get("user_id") != user_id:
         log.warning("activate_pro_from_session: session %s does not belong to user %s", session_id, user_id)
         return jsonify({"error": "Session does not belong to this account"}), 403
 
-    if checkout.get("payment_status") not in ("paid", "no_payment_required"):
+    if checkout.payment_status not in ("paid", "no_payment_required"):
         return jsonify({"activated": False, "reason": "payment_incomplete"}), 200
 
     ok = _activate_pro(user_id)
@@ -445,13 +445,13 @@ def stripe_webhook():
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        user_id = session.get("metadata", {}).get("user_id")
+        user_id = (session.metadata or {}).get("user_id")
         log.info("stripe webhook: checkout.session.completed user_id=%s", user_id)
         if user_id:
             ok = _activate_pro(user_id)
             log.info("stripe webhook: _activate_pro(%s) -> %s", user_id, ok)
         else:
-            log.error("stripe webhook: no user_id in metadata — metadata=%s", session.get("metadata"))
+            log.error("stripe webhook: no user_id in metadata — metadata=%s", session.metadata)
 
     return jsonify({"received": True})
 
