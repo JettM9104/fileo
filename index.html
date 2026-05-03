@@ -198,7 +198,7 @@
     <div id="dl-ready" class="hidden slide-in">
       <div class="flex gap-6 items-start">
         <!-- Left: info + actions -->
-        <div style="width:28rem;flex-shrink:0">
+        <div style="flex:1;min-width:0">
           <div id="dl-scan-badge" class="hidden flex items-center gap-2 mb-4 px-3 py-2 rounded-xl" style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             <span class="text-xs font-medium" style="color:#16a34a">Malware scan complete — no threats found</span>
@@ -1129,7 +1129,11 @@ async function signInWithGoogle() {
   try {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+      options: {
+        redirectTo: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? window.location.href.split('#')[0].split('?')[0]
+          : 'https://fileo.ca/'
+      }
     });
     if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
   } catch (err) {

@@ -1100,7 +1100,11 @@ async function signInWithGoogle() {
   try {
     const { error } = await _sb.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href.split('#')[0].split('?')[0] }
+      options: {
+        redirectTo: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+          ? window.location.href.split('#')[0].split('?')[0]
+          : 'https://fileo.ca/upload.html'
+      }
     });
     if (error) { errEl.textContent = error.message; errEl.classList.remove('hidden'); }
   } catch (err) {
