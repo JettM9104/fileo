@@ -177,6 +177,8 @@ Returns a JS snippet setting `window.FILEO_CONFIG` with Supabase URL, anon key, 
 
 The fallback endpoint ensures activation even if the webhook is dropped or delayed.
 
+**Bug fixed (2026-05-03)**: The original `_triggerActivation` used `getSession()` (returns cached/possibly-expired JWT), never checked the fetch response status, and only attempted activation once. All three issues silently blocked Pro activation after payment. Fixed: use `refreshSession()` for a guaranteed-fresh token, check HTTP status and log errors, and retry activation on every poll iteration until it succeeds (`_activationOk` flag). Also explicitly set `isPro = true` and call `applyProPricingCard()` in the success branch rather than relying solely on `onAuthStateChange`.
+
 ---
 
 ## Free vs Pro Limits

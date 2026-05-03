@@ -955,24 +955,38 @@ window.addEventListener('DOMContentLoaded', () => {
       // Trigger server-side activation immediately as a webhook fallback, then
       // poll refreshSession() until the updated JWT reflects is_pro=true.
       const _triggerActivation = async () => {
-        if (!_checkoutSessionId) return;
+        if (!_checkoutSessionId) return false;
         try {
-          const { data: sd } = await _sb.auth.getSession();
-          if (!sd?.session) return;
-          await fetch(apiUrl('/activate-pro-from-session'), {
+          // Use refreshSession (not getSession) so we always send a non-expired token —
+          // the Stripe checkout flow can take long enough to expire the cached JWT.
+          const { data: rd } = await _sb.auth.refreshSession();
+          if (!rd?.session) return false;
+          const resp = await fetch(apiUrl('/activate-pro-from-session'), {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + sd.session.access_token, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': 'Bearer ' + rd.session.access_token, 'Content-Type': 'application/json' },
             body: JSON.stringify({ session_id: _checkoutSessionId }),
           });
-        } catch (_) {}
+          if (!resp.ok) { console.warn('[fileo] activate-pro-from-session HTTP', resp.status); return false; }
+          const body = await resp.json();
+          return body.activated === true;
+        } catch (err) {
+          console.warn('[fileo] _triggerActivation error:', err);
+          return false;
+        }
       };
 
       let _proAttempts = 0;
+      let _activationOk = false;
       const _pollPro = async () => {
         _proAttempts++;
-        if (_proAttempts === 1) await _triggerActivation();
+        // Keep retrying activation on every poll until it succeeds (server may have been
+        // temporarily unreachable, or the JWT was expired on the first attempt).
+        if (!_activationOk) _activationOk = await _triggerActivation();
         const { data } = await _sb.auth.refreshSession();
         if (data?.session?.user?.app_metadata?.is_pro) {
+          isPro = true;
+          applyProPricingCard();
+          document.getElementById('pro-badge').classList.remove('hidden');
           showToastIndex('You\'re now Pro! All features are unlocked.');
         } else if (_proAttempts < 15) {
           setTimeout(_pollPro, 2000);
