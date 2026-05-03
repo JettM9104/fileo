@@ -872,13 +872,31 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle Stripe redirect result
   const _qp = new URLSearchParams(window.location.search);
   const _upgradeStatus = _qp.get('upgrade');
+  const _checkoutSessionId = _qp.get('session_id'); // capture before clearing URL
   if (_upgradeStatus) {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     if (_upgradeStatus === 'success') {
       showToastIndex('Payment received! Activating your Pro plan…');
+
+      // Trigger server-side activation immediately as a webhook fallback, then
+      // poll refreshSession() until the updated JWT reflects is_pro=true.
+      const _triggerActivation = async () => {
+        if (!_checkoutSessionId) return;
+        try {
+          const { data: sd } = await _sb.auth.getSession();
+          if (!sd?.session) return;
+          await fetch(apiUrl('/activate-pro-from-session'), {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + sd.session.access_token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: _checkoutSessionId }),
+          });
+        } catch (_) {}
+      };
+
       let _proAttempts = 0;
       const _pollPro = async () => {
         _proAttempts++;
+        if (_proAttempts === 1) await _triggerActivation();
         const { data } = await _sb.auth.refreshSession();
         if (data?.session?.user?.app_metadata?.is_pro) {
           showToastIndex('You\'re now Pro! All features are unlocked.');

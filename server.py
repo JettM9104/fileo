@@ -386,6 +386,49 @@ def create_checkout_session():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/activate-pro-from-session", methods=["POST"])
+@limiter.limit("5 per minute")
+def activate_pro_from_session():
+    """Fallback: verify a completed Stripe checkout session and activate Pro.
+
+    Called by the client when the webhook may have been missed. Security is
+    enforced by requiring the authenticated user's own session_id — the
+    checkout metadata must carry the same user_id as the bearer token.
+    """
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+
+    if not STRIPE_SECRET_KEY:
+        return jsonify({"error": "Payments not configured"}), 503
+
+    body = request.get_json(silent=True) or {}
+    session_id = body.get("session_id", "").strip()
+    if not session_id:
+        return jsonify({"error": "Missing session_id"}), 400
+
+    try:
+        checkout = stripe.checkout.Session.retrieve(session_id)
+    except stripe.error.StripeError as e:
+        log.error("activate_pro_from_session: stripe error for user %s: %s", user_id, e)
+        return jsonify({"error": str(e)}), 400
+
+    if checkout.get("metadata", {}).get("user_id") != user_id:
+        log.warning("activate_pro_from_session: session %s does not belong to user %s", session_id, user_id)
+        return jsonify({"error": "Session does not belong to this account"}), 403
+
+    if checkout.get("payment_status") not in ("paid", "no_payment_required"):
+        return jsonify({"activated": False, "reason": "payment_incomplete"}), 200
+
+    ok = _activate_pro(user_id)
+    log.info("activate_pro_from_session: _activate_pro(%s) -> %s", user_id, ok)
+    return jsonify({"activated": ok})
+
+
 @app.route("/stripe-webhook", methods=["POST"], strict_slashes=False)
 @limiter.exempt
 def stripe_webhook():
