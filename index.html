@@ -114,7 +114,7 @@
     <p class="text-sm mb-5" style="color:rgba(245,240,232,0.5)">$10/mo — cancel anytime. Billed securely via Stripe.</p>
     <div class="flex flex-col gap-2 mb-6">
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>50 GB weekly storage</div>
-      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 active links max</div>
+      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>5 active links max</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>7-day &amp; 30-day expiry options</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password protection &amp; download limits</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access files anywhere</div>
@@ -924,7 +924,7 @@ window.addEventListener('DOMContentLoaded', () => {
   checkDownloadHash();
 
   // Nav scroll
-  const NAV_IDS = ['how','features','pricing'];
+  const NAV_IDS = ['how','features','pricing','faq'];
   NAV_IDS.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -1016,7 +1016,7 @@ async function signOut() {
 
 // ── NAV SCROLL ───────────────────────────────────────
 function setNavActive(id) {
-  ['home','how','features','pricing'].forEach(n => {
+  ['home','how','features','pricing','faq'].forEach(n => {
     const el = document.getElementById('nav-' + n);
     if (!el) return;
     el.classList.toggle('active', n === id);

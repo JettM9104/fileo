@@ -635,7 +635,7 @@ function switchTab(tab) {
   document.getElementById('panel-files').classList.toggle('hidden',  isUp);
   document.getElementById('panel-desc').textContent = isUp
     ? 'Drop a file or folder to get a shareable link.'
-    : 'Files you upload while signed in.';
+    : 'Files you\'ve sent or received while signed in.';
   document.getElementById('tab-upload-btn').style.cssText = isUp
     ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)'
     : 'background:transparent;color:rgba(28,25,23,0.45)';
@@ -901,8 +901,6 @@ async function doUpload() {
   if (dbErr && typeof (dbErr.message || dbErr) === 'string' && (dbErr.message || String(dbErr)).toLowerCase().includes('column')) {
     const basicRecord = { id: record.id, filename: record.filename, size: record.size, storage_path: record.storage_path, expires_at: record.expires_at, downloads: 0 };
     if (record.user_id) basicRecord.user_id = record.user_id;
-    if (record.title)   basicRecord.title   = record.title;
-    if (record.message) basicRecord.message = record.message;
     let retryErr;
     try {
       ({ error: retryErr } = await _sb.from('files').insert(basicRecord));
@@ -952,6 +950,8 @@ function resetUpload() {
   document.getElementById('folder-input').value = '';
   setExpiry(1);
   closeAdvPanel();
+  const _t = document.getElementById('opt-title');   if (_t) _t.value = '';
+  const _m = document.getElementById('opt-message'); if (_m) _m.value = '';
   if (isPro) {
     document.getElementById('opt-password').value = '';
     document.getElementById('opt-dlimit').value   = '';
@@ -979,7 +979,7 @@ async function loadFiles() {
 
   const [{ data: sent }, { data: received }] = await Promise.all([
     _sb.from('files').select('*').eq('user_id', currentUser.id).gt('expires_at', now).order('created_at', { ascending: false }),
-    _sb.from('files').select('*').contains('allowed_emails', [currentUser.email]).neq('user_id', currentUser.id).gt('expires_at', now).order('created_at', { ascending: false })
+    _sb.from('files').select('*').contains('allowed_emails', [currentUser.email.toLowerCase()]).neq('user_id', currentUser.id).gt('expires_at', now).order('created_at', { ascending: false })
   ]);
 
   const hasSent     = sent?.length > 0;
@@ -1002,7 +1002,7 @@ async function loadFiles() {
       <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">${fileIconSvg(f.filename)}</div>
       <div class="flex-1 min-w-0">
         <p class="font-semibold text-sm truncate" style="color:#1C1917">${escHtml(f.title || f.filename)}</p>
-        <p class="text-xs mt-0.5 mb-1.5" style="color:rgba(28,25,23,0.4)">${escHtml(f.filename)} · ${fmtSize(f.size)} · ${timeUntil(f.expires_at)} · ${f.downloads||0} downloads</p>
+        <p class="text-xs mt-0.5 mb-1.5" style="color:rgba(28,25,23,0.4)">${f.title ? escHtml(f.filename) + ' · ' : ''}${fmtSize(f.size)} · ${timeUntil(f.expires_at)} · ${f.downloads||0} downloads</p>
         <div class="flex flex-wrap gap-1">${tags}</div>
       </div>
       <div class="flex flex-col gap-1.5 flex-shrink-0">
@@ -1020,7 +1020,7 @@ async function loadFiles() {
       <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">${fileIconSvg(f.filename)}</div>
       <div class="flex-1 min-w-0">
         <p class="font-semibold text-sm truncate" style="color:#1C1917">${escHtml(f.title || f.filename)}</p>
-        <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">${escHtml(f.filename)} · ${fmtSize(f.size)} · ${timeUntil(f.expires_at)}</p>
+        <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">${f.title ? escHtml(f.filename) + ' · ' : ''}${fmtSize(f.size)} · ${timeUntil(f.expires_at)}</p>
         ${f.message ? `<p class="text-xs mt-1.5 italic" style="color:rgba(28,25,23,0.45);white-space:pre-wrap">${escHtml(f.message)}</p>` : ''}
       </div>
       <div class="flex-shrink-0">
