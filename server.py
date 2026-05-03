@@ -417,7 +417,7 @@ def activate_pro_from_session():
         log.error("activate_pro_from_session: stripe error for user %s: %s", user_id, e)
         return jsonify({"error": str(e)}), 400
 
-    if (checkout.metadata or {}).get("user_id") != user_id:
+    if getattr(checkout.metadata, "user_id", None) != user_id:
         log.warning("activate_pro_from_session: session %s does not belong to user %s", session_id, user_id)
         return jsonify({"error": "Session does not belong to this account"}), 403
 
@@ -445,7 +445,7 @@ def stripe_webhook():
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        user_id = (session.metadata or {}).get("user_id")
+        user_id = getattr(session.metadata, "user_id", None)
         log.info("stripe webhook: checkout.session.completed user_id=%s", user_id)
         if user_id:
             ok = _activate_pro(user_id)
