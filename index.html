@@ -246,6 +246,7 @@
         <a href="#how" onclick="scrollTo2(event,'how')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-how">How it works</a>
         <a href="#features" onclick="scrollTo2(event,'features')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-features">Features</a>
         <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-pricing">Pricing</a>
+        <a href="#faq" onclick="scrollTo2(event,'faq')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-faq">FAQ</a>
         <a href="cloud.html" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-cloud">Cloud</a>
         <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
         <button onclick="startUpload()" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap" style="background:#1C1917;color:#F5F0E8;font-family:inherit;cursor:pointer;border:none">Get started</button>
@@ -284,6 +285,7 @@
       <a href="#how" onclick="scrollTo2(event,'how');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">How it works</a>
       <a href="#features" onclick="scrollTo2(event,'features');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Features</a>
       <a href="#pricing" onclick="scrollTo2(event,'pricing');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Pricing</a>
+      <a href="#faq" onclick="scrollTo2(event,'faq');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">FAQ</a>
       <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
     </div>
     <div class="px-3 pb-3">
@@ -519,6 +521,73 @@
   </div>
 </section>
 
+<!-- ── FAQ ── -->
+<section id="faq" class="px-6 py-28" style="background:#F5F0E8">
+  <div class="max-w-[700px] mx-auto">
+    <p class="text-xs uppercase tracking-[0.14em] mb-4 text-center" style="color:rgba(28,25,23,0.35)">Questions</p>
+    <h2 class="text-center font-bold tracking-[-0.03em] mb-14" style="font-size:clamp(32px,4vw,52px);color:#1C1917">Frequently asked.</h2>
+    <div id="faq-list" style="border-top:1px solid rgba(28,25,23,0.1)">
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">Isn't this what cloud storage is for?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Cloud storage is for files you want to keep. Fileo is for the link you send once. No folders to set up, no permission dialogs, no shared quota eating into your account. Drop a file, share the link, done.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">What file types are supported?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Any file type — images, videos, documents, archives, code, you name it. If your browser can upload it, Fileo can store and share it. Free plan supports up to 500 MB per file; Pro raises that to 10 GB.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">How long do links stay active?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Free plan links expire after 1 hour or 24 hours — you pick at upload time. Pro unlocks 7-day and 30-day options. Once a link expires, the file is permanently deleted.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">Can anyone see my file?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Only people with your link. Files are not indexed or publicly listed. Pro users can go further — require a password, restrict access to signed-in users, or limit to specific email addresses.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">Can I delete a file before it expires?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Yes. Sign in, open the upload page, go to My Files, and hit Delete next to any link you own. The file is removed from storage immediately.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">Is there a download limit?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Free links have unlimited downloads for their lifetime. Pro lets you set a custom download cap per file — once it's hit, the link stops working automatically.</p></div>
+      </div>
+
+      <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
+        <button class="faq-q w-full flex items-center justify-between gap-4 py-5 text-left" onclick="toggleFaq(this)" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="text-base font-semibold" style="color:#1C1917">What does Pro cost?</span>
+          <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+        </button>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">$10/month. That gets you 10 GB uploads, 10 active links, 3 GB weekly storage, 7-day and 30-day expiry, password protection, download limits, access control, and the Cloud workspace for shared team folders.</p></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 <!-- ── TOS MODAL ── -->
 <div id="tos-modal" class="fixed inset-0 z-[100] items-center justify-center p-4" style="display:none;background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)" onclick="if(event.target===this)closeTos()">
   <div class="modal-in w-full max-w-xl rounded-2xl flex flex-col" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14);max-height:82vh">
@@ -646,6 +715,7 @@
           <a href="#how" onclick="scrollTo2(event,'how')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">How it works</a>
           <a href="#features" onclick="scrollTo2(event,'features')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Features</a>
           <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Pricing</a>
+          <a href="#faq" onclick="scrollTo2(event,'faq')" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">FAQ</a>
           <a href="cloud.html" class="text-sm no-underline hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.55)">Cloud</a>
         </div>
         <div class="flex flex-col gap-3">
@@ -951,6 +1021,20 @@ function setNavActive(id) {
 }
 function scrollTop(e) { e.preventDefault(); window.scrollTo({top:0,behavior:'smooth'}); }
 function scrollTo2(e, id) { e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth'}); }
+function toggleFaq(btn) {
+  var item = btn.closest('.faq-item');
+  var answer = item.querySelector('.faq-a');
+  var icon = btn.querySelector('.faq-icon');
+  var isOpen = answer.style.maxHeight && answer.style.maxHeight !== '0px';
+  document.querySelectorAll('.faq-item').forEach(function(i) {
+    i.querySelector('.faq-a').style.maxHeight = '0px';
+    i.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
+  });
+  if (!isOpen) {
+    answer.style.maxHeight = answer.scrollHeight + 'px';
+    icon.style.transform = 'rotate(45deg)';
+  }
+}
 function toggleMobileMenu() {
   const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
   document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
