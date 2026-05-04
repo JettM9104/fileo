@@ -230,7 +230,7 @@ Hash routing: `index.html#d/{file_id}` opens the download overlay.
 
 ## Cloud Workspace (`cloud.html`) — Pro Only
 
-A Git-like shared folder system.
+A simple shared file storage with notes and member management.
 
 **States**: loading → sign-in required → upgrade prompt (not Pro) → workspace
 
@@ -239,22 +239,20 @@ A Git-like shared folder system.
 - Falls back to workspace where user is a member (`workspace_members`)
 - Creates new workspace if none found
 
-**Folders tab**:
-- Lists `workspace_folders` with latest snapshot info (version, uploader, time, file count, size)
-- "Behind" badge shown if `localStorage.fileo_folder_{id}_last_sync` doesn't match latest snapshot ID
-- Per-folder actions: Download (ZIP), Upload (new version), Version history (slide-out panel), Delete
+**Files tab** (default):
+- Flat list of all uploaded files, sorted newest-first
+- File type icons based on extension (image, video, audio, doc, zip, generic)
+- Per-file actions: Download (direct via Supabase Storage public URL), Delete
+- Drop zone with two upload buttons: "Upload files" (any file, multiple) and "Photos" (`accept="image/*,video/*" multiple` — allows multi-select from camera roll on iOS)
+- Upload progress bar with per-file label and count
 
 **Upload flow**:
-- Folder picker or file picker, or drag-and-drop onto drop zone
-- If folder name already exists → checks for conflict (last sync ≠ latest snapshot) → conflict modal
-  - "Download latest first" or "Upload anyway — overwrite their changes"
-- Creates new snapshot record, uploads each file to R2 via Supabase Storage (`uploads` bucket)
-- Path: `ws/{workspace_id}/folders/{folder_id}/{snapshot_id}/{relative_path}`
-- Updates `localStorage` sync marker after successful upload
+- Each file is stored as a `workspace_folders` entry (name = filename) + `workspace_folder_snapshots` (version 1+) + `workspace_folder_files` record
+- Re-uploading the same filename increments the version; only latest version shown in list
+- Storage path: `ws/{workspace_id}/files/{folder_id}/{snapshot_id}/{sanitized_filename}`
+- Uses existing DB tables — no new schema needed
 
-**Download**: Fetches all files for the latest snapshot, downloads each via Supabase Storage public URL, zips client-side with JSZip, triggers download as `{folderName}_v{n}.zip`
-
-**Version history panel**: Slide-out panel lists all snapshots newest-first; each has a download button. Current and synced versions badged.
+**Delete flow**: Deletes all snapshots + file records + storage objects for that folder entry, then deletes the folder record.
 
 **Notes tab**: Shared markdown-free textarea. Auto-saves 3.5 seconds after last keystroke. Upserts `workspace_notes` record.
 
