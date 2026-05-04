@@ -265,6 +265,7 @@
         <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
           <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
             <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+            <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
           </div>
           <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -1008,6 +1009,7 @@ function showUser(email) {
   av.textContent = email[0].toUpperCase();
   av.classList.remove('hidden'); av.classList.add('flex');
   document.getElementById('menu-email').textContent = email;
+  document.getElementById('menu-plan').textContent = isPro ? 'Pro plan' : 'Free plan';
 }
 function showSignedOut() {
   document.getElementById('btn-signin').classList.remove('hidden');
