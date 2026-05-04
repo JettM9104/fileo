@@ -6,33 +6,27 @@
   <title>Fileo — Cloud Storage</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="config.js"></script>
   <style>
     html{scroll-behavior:smooth}
     @keyframes fadeUp  {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes slideIn {from{opacity:0;transform:translateY(12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes modalIn {from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
     @keyframes spin    {to{transform:rotate(360deg)}}
-    @keyframes slideR  {from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
     .fade-up  {animation:fadeUp  0.55s cubic-bezier(0.16,1,0.3,1) forwards}
     .modal-in {animation:modalIn 0.3s  cubic-bezier(0.16,1,0.3,1) forwards}
-    .slide-r  {animation:slideR  0.35s cubic-bezier(0.16,1,0.3,1) forwards}
     .spinner  {animation:spin 0.8s linear infinite}
     *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;box-sizing:border-box}
     body{background:#F5F0E8;color:#1C1917;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;margin:0}
     #nav-bar{transition:padding .25s,background .25s,box-shadow .25s,border-color .25s}
     #nav-bar.scrolled{background:rgba(245,240,232,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:999px;padding:6px 16px;box-shadow:0 2px 16px rgba(28,25,23,0.10);border:1px solid rgba(28,25,23,0.09)}
     input:focus,textarea:focus{outline:none;border-color:rgba(28,25,23,0.35)!important;box-shadow:0 0 0 3px rgba(28,25,23,0.07)}
-    #auth-modal{display:none}   #auth-modal.open{display:flex}
-    #conflict-modal{display:none} #conflict-modal.open{display:flex}
-#toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-8px)}
+    #auth-modal{display:none} #auth-modal.open{display:flex}
+    #toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-8px)}
     .ws-tab-active{background:#F5F0E8!important;color:#1C1917!important;box-shadow:0 1px 3px rgba(28,25,23,0.08)}
     .ws-tab-inactive{background:transparent;color:rgba(28,25,23,0.45)}
-    #vp-panel{transition:width 0.35s cubic-bezier(0.16,1,0.3,1),opacity 0.3s}
-    .folder-row .row-actions{opacity:0;transition:opacity .15s}
-    .folder-row:hover .row-actions{opacity:1}
-    .folder-row:hover{background:#F7F2EA!important}
+    .file-row .row-actions{opacity:0;transition:opacity .15s}
+    .file-row:hover .row-actions{opacity:1}
+    .file-row:hover{background:#F7F2EA!important}
     #nav-hamburger{display:none}
     @media(max-width:767px){
       #nav-bar{left:16px!important;right:16px!important;transform:none!important;width:auto!important}
@@ -40,12 +34,7 @@
       #nav-hamburger{display:flex!important}
       #nav-main-row{background:rgba(245,240,232,0.95)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;border:1px solid rgba(28,25,23,0.09)!important;border-radius:14px!important;padding:8px 12px!important;box-shadow:0 1px 4px rgba(28,25,23,0.06)!important}
       #nav-bar.scrolled{background:transparent!important;backdrop-filter:none!important;border-radius:0!important;padding:0!important;box-shadow:none!important;border:none!important}
-      .folder-row .row-actions{opacity:1!important}
-      .folder-row{flex-wrap:wrap;gap:12px!important}
-      #vp-panel{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;z-index:80!important;overflow-y:auto!important;background:#F5F0E8!important;padding:80px 16px 32px!important}
-      #vp-panel.hidden-mobile{display:none!important}
-      #vp-inner{width:100%!important}
-      #vp-inner>div{width:100%!important}
+      .file-row .row-actions{opacity:1!important}
     }
   </style>
 </head>
@@ -83,31 +72,12 @@
   </div>
 </div>
 
-<!-- ── CONFLICT MODAL ── -->
-<div id="conflict-modal" class="fixed inset-0 z-[110] items-center justify-center p-4"
-  style="background:rgba(28,25,23,0.5);backdrop-filter:blur(6px)">
-  <div class="modal-in w-full max-w-sm rounded-2xl p-7 flex flex-col"
-    style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.18)">
-    <div class="w-11 h-11 rounded-2xl flex items-center justify-center mb-5" style="background:#FEF3C7;border:1px solid rgba(245,158,11,0.2);color:#D97706">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    </div>
-    <h3 class="text-lg font-bold mb-1.5" style="color:#1C1917">Folder updated since your last sync</h3>
-    <p id="conflict-detail" class="text-sm mb-2 leading-relaxed" style="color:rgba(28,25,23,0.55)"></p>
-    <p class="text-sm mb-6 leading-relaxed" style="color:rgba(28,25,23,0.55)">Uploading now will overwrite their changes. Download the latest version first to avoid losing work.</p>
-    <div class="flex flex-col gap-2">
-      <button onclick="conflictDownloadFirst()" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Download latest first</button>
-      <button onclick="conflictUploadAnyway()" class="w-full py-2.5 rounded-xl text-sm font-medium hover:opacity-70 transition-opacity" style="background:transparent;border:1px solid rgba(28,25,23,0.14);color:rgba(28,25,23,0.55);cursor:pointer;font-family:inherit">Upload anyway — overwrite their changes</button>
-    </div>
-  </div>
-</div>
-
-
 <!-- ── TOAST ── -->
 <div id="toast" class="fixed top-5 left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="background:#1C1917;color:#F5F0E8"></div>
 
 <!-- ── HIDDEN INPUTS ── -->
-<input type="file" id="folder-input" class="hidden" webkitdirectory multiple onchange="onFolderSelected(event)" />
 <input type="file" id="file-input" class="hidden" multiple onchange="onFilesSelected(event)" />
+<input type="file" id="photo-input" class="hidden" accept="image/*,video/*" multiple onchange="onFilesSelected(event)" />
 
 <!-- ── NAV ── -->
 <div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
@@ -151,7 +121,6 @@
       </button>
     </div>
   </div>
-  <!-- Mobile dropdown -->
   <div id="mob-menu" class="hidden mt-2 rounded-2xl overflow-hidden" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.1);box-shadow:0 4px 20px rgba(28,25,23,0.1)">
     <div class="p-3 flex flex-col gap-1">
       <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
@@ -176,7 +145,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
     <h2 class="text-xl font-bold mb-2" style="color:#1C1917">Sign in to continue</h2>
-    <p class="text-sm mb-6 leading-relaxed" style="color:rgba(28,25,23,0.45)">Cloud Storage keeps your files permanently and lets you collaborate with your team.</p>
+    <p class="text-sm mb-6 leading-relaxed" style="color:rgba(28,25,23,0.45)">Cloud keeps your files permanently and lets you collaborate with your team.</p>
     <button onclick="openModal()" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Sign in</button>
   </div>
 
@@ -187,25 +156,25 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </div>
       <h2 class="text-xl font-bold mb-2" style="color:#F5F0E8">Cloud Storage is Pro</h2>
-      <p class="text-sm mb-6 leading-relaxed" style="color:rgba(245,240,232,0.5)">Upgrade to get a permanent shared workspace with version-controlled folders.</p>
+      <p class="text-sm mb-6 leading-relaxed" style="color:rgba(245,240,232,0.5)">Upgrade to get a permanent shared space for files, notes, and your team.</p>
       <div class="flex flex-col gap-2.5 mb-7 text-left">
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Version-controlled folders</div>
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Conflict warning if you're behind</div>
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Download any version as a ZIP</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Upload &amp; store files permanently</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Upload photos from your phone</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Download or delete any file</div>
         <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Invite collaborators · shared notes</div>
       </div>
-      <button onclick="activatePro()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Activate Pro — Testing Mode</button>
+      <button onclick="activatePro()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upgrade to Pro — $10/mo</button>
     </div>
   </div>
 
   <!-- Workspace -->
-  <div id="state-workspace" class="hidden max-w-4xl mx-auto fade-up opacity-0">
+  <div id="state-workspace" class="hidden max-w-3xl mx-auto fade-up opacity-0">
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-7 gap-3">
       <div>
         <div class="flex items-center gap-2.5 mb-1">
-          <h1 id="ws-name" class="text-2xl font-bold tracking-tight" style="color:#1C1917">My Workspace</h1>
+          <h1 id="ws-name" class="text-2xl font-bold tracking-tight" style="color:#1C1917">My Cloud</h1>
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
         </div>
         <p id="ws-meta" class="text-sm" style="color:rgba(28,25,23,0.45)">—</p>
@@ -220,166 +189,120 @@
     </div>
 
     <!-- Tab bar -->
-    <div class="flex gap-1 p-1 rounded-xl mb-6 w-full sm:w-auto" style="background:#EAE4D9;display:flex">
-      <button id="wstab-files"   onclick="switchWsTab('files')"   class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-active">Folders</button>
+    <div class="flex gap-1 p-1 rounded-xl mb-6" style="background:#EAE4D9">
+      <button id="wstab-files"   onclick="switchWsTab('files')"   class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-active">Files</button>
       <button id="wstab-notes"   onclick="switchWsTab('notes')"   class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Notes</button>
       <button id="wstab-members" onclick="switchWsTab('members')" class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ws-tab-inactive">Members</button>
     </div>
 
-    <div class="flex gap-5 items-start">
+    <!-- ════ FILES TAB ════ -->
+    <div id="ws-panel-files">
 
-      <!-- ── MAIN PANEL ── -->
-      <div class="flex-1 min-w-0">
-
-        <!-- ════ FOLDERS TAB ════ -->
-        <div id="ws-panel-files">
-
-          <!-- Upload progress (shown during upload) -->
-          <div id="ws-upload-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center gap-3 mb-2.5">
-              <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
-              <p id="ws-upload-label" class="text-sm font-medium flex-1 truncate" style="color:#1C1917">Uploading…</p>
-            </div>
-            <div class="w-full h-1.5 rounded-full" style="background:#EAE4D9">
-              <div id="ws-prog-fill" class="h-1.5 rounded-full transition-all" style="background:#8B6F47;width:0%"></div>
-            </div>
-            <p id="ws-prog-label" class="text-xs mt-1.5" style="color:rgba(28,25,23,0.35)">0%</p>
-          </div>
-
-          <!-- Download progress -->
-          <div id="ws-download-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center gap-3 mb-2.5">
-              <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
-              <p id="ws-dl-label" class="text-sm font-medium flex-1 truncate" style="color:#1C1917">Preparing download…</p>
-            </div>
-            <div class="w-full h-1.5 rounded-full" style="background:#EAE4D9">
-              <div id="ws-dl-fill" class="h-1.5 rounded-full transition-all" style="background:#8B6F47;width:0%"></div>
-            </div>
-          </div>
-
-          <!-- Drop zone -->
-          <div id="ws-dropzone"
-            class="flex flex-col items-center justify-center rounded-2xl text-center mb-4 transition-all"
-            style="border:2px dashed rgba(28,25,23,0.16);background:#FDFAF5;padding:28px 24px;cursor:default"
-            ondragover="wsDragOver(event)" ondragleave="wsDragLeave(event)" ondrop="wsDrop(event)">
-            <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2.5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            </div>
-            <p class="text-sm font-medium mb-0.5" style="color:#1C1917">Drop files or folders here</p>
-            <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">or use the buttons below · up to 10 GB</p>
-            <div class="flex gap-2">
-              <button onclick="clickAddFile()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-70 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Upload file
-              </button>
-              <button onclick="clickAddFolder()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-70 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                Upload folder
-              </button>
-            </div>
-          </div>
-
-          <!-- Toolbar -->
-          <div class="flex items-center justify-between mb-3">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.3)">Items</p>
-          </div>
-
-          <!-- Folders loading -->
-          <div id="ws-folders-loading" class="flex items-center gap-2 justify-center py-12" style="color:rgba(28,25,23,0.4)">
-            <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
-            <span class="text-sm">Loading folders…</span>
-          </div>
-
-          <!-- Folders empty -->
-          <div id="ws-folders-empty" class="hidden text-center py-12">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-            </div>
-            <p class="font-medium mb-1" style="color:#1C1917">No folders yet</p>
-            <p class="text-sm mb-4" style="color:rgba(28,25,23,0.4)">Select a local folder to add it to your workspace.</p>
-            <button onclick="clickAddFolder()" class="px-4 py-2 rounded-full text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Upload first folder</button>
-          </div>
-
-          <!-- Folders list -->
-          <div id="ws-folders-list" class="hidden flex flex-col gap-2"></div>
-
-        </div><!-- /folders tab -->
-
-        <!-- ════ NOTES TAB ════ -->
-        <div id="ws-panel-notes" class="hidden">
-          <div class="rounded-2xl overflow-hidden" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid rgba(28,25,23,0.08)">
-              <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Workspace notes</p>
-              <p class="text-xs" style="color:rgba(28,25,23,0.3)">Shared with all members · autosaves</p>
-            </div>
-            <textarea id="ws-notes-area"
-              placeholder="Write anything — meeting notes, links, plans, context for the team…"
-              class="w-full px-5 py-4 text-sm leading-relaxed resize-none"
-              style="background:transparent;border:none;color:#1C1917;min-height:400px;font-family:inherit"
-              oninput="notesChanged()"></textarea>
-            <div class="flex items-center justify-between px-5 py-3.5" style="border-top:1px solid rgba(28,25,23,0.08)">
-              <p id="ws-notes-meta" class="text-xs" style="color:rgba(28,25,23,0.35)">—</p>
-              <button onclick="saveNotes()" class="px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save</button>
-            </div>
-          </div>
+      <!-- Upload progress -->
+      <div id="ws-upload-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+        <div class="flex items-center gap-3 mb-2.5">
+          <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+          <p id="ws-upload-label" class="text-sm font-medium flex-1 truncate" style="color:#1C1917">Uploading…</p>
         </div>
-
-        <!-- ════ MEMBERS TAB ════ -->
-        <div id="ws-panel-members" class="hidden">
-          <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Invite a collaborator</p>
-            <div class="flex gap-2">
-              <input id="invite-email" type="email" placeholder="their@fileo.app"
-                class="flex-1 px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917"
-                onkeydown="if(event.key==='Enter')inviteMember()" />
-              <button onclick="inviteMember()" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-70 flex-shrink-0" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Invite</button>
-            </div>
-            <p class="text-xs mt-2" style="color:rgba(28,25,23,0.4)">They'll see this workspace the next time they open Cloud Storage.</p>
-          </div>
-          <div id="ws-members-list" class="flex flex-col gap-2"></div>
+        <div class="w-full h-1.5 rounded-full" style="background:#EAE4D9">
+          <div id="ws-prog-fill" class="h-1.5 rounded-full transition-all" style="background:#8B6F47;width:0%"></div>
         </div>
+        <p id="ws-prog-label" class="text-xs mt-1.5" style="color:rgba(28,25,23,0.35)"></p>
+      </div>
 
-      </div><!-- /main panel -->
-
-      <!-- ── SNAPSHOT HISTORY PANEL ── -->
-      <div id="vp-panel" style="width:0;overflow:hidden;flex-shrink:0;opacity:0;transition:width 0.35s cubic-bezier(0.16,1,0.3,1),opacity 0.3s">
-        <div id="vp-inner" style="width:272px" class="hidden slide-r">
-          <div class="rounded-2xl overflow-hidden" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center gap-2 px-4 py-3.5" style="border-bottom:1px solid rgba(28,25,23,0.08)">
-              <button onclick="closeVersionPanel()" class="hover:opacity-50 flex-shrink-0" style="background:none;border:none;cursor:pointer;padding:0;color:rgba(28,25,23,0.35)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <div class="flex-1 min-w-0">
-                <p id="vp-foldername" class="text-xs font-bold truncate" style="color:#1C1917"></p>
-                <p class="text-[10px]" style="color:rgba(28,25,23,0.35)">Version history</p>
-              </div>
-            </div>
-            <div id="vp-list" class="flex flex-col" style="max-height:520px;overflow-y:auto"></div>
-          </div>
+      <!-- Drop zone -->
+      <div id="ws-dropzone"
+        class="flex flex-col items-center justify-center rounded-2xl text-center mb-4 transition-all"
+        style="border:2px dashed rgba(28,25,23,0.16);background:#FDFAF5;padding:28px 24px;cursor:default"
+        ondragover="wsDragOver(event)" ondragleave="wsDragLeave(event)" ondrop="wsDrop(event)">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2.5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <p class="text-sm font-medium mb-0.5" style="color:#1C1917">Drop files here</p>
+        <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">or use the buttons below · up to 10 GB</p>
+        <div class="flex gap-2 flex-wrap justify-center">
+          <button onclick="document.getElementById('file-input').click()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload files
+          </button>
+          <button onclick="document.getElementById('photo-input').click()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-70 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Photos
+          </button>
         </div>
       </div>
 
-    </div><!-- /flex row -->
-  </div><!-- /state-workspace -->
+      <!-- Files loading -->
+      <div id="ws-files-loading" class="flex items-center gap-2 justify-center py-12" style="color:rgba(28,25,23,0.4)">
+        <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+        <span class="text-sm">Loading files…</span>
+      </div>
 
+      <!-- Files empty -->
+      <div id="ws-files-empty" class="hidden text-center py-12">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+        </div>
+        <p class="font-medium mb-1" style="color:#1C1917">No files yet</p>
+        <p class="text-sm mb-4" style="color:rgba(28,25,23,0.4)">Upload your first file to get started.</p>
+        <button onclick="document.getElementById('file-input').click()" class="px-4 py-2 rounded-full text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Upload a file</button>
+      </div>
+
+      <!-- Files list -->
+      <div id="ws-files-list" class="hidden flex flex-col gap-2"></div>
+
+    </div>
+
+    <!-- ════ NOTES TAB ════ -->
+    <div id="ws-panel-notes" class="hidden">
+      <div class="rounded-2xl overflow-hidden" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+        <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+          <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Workspace notes</p>
+          <p class="text-xs" style="color:rgba(28,25,23,0.3)">Shared with all members · autosaves</p>
+        </div>
+        <textarea id="ws-notes-area"
+          placeholder="Write anything — meeting notes, links, plans, context for the team…"
+          class="w-full px-5 py-4 text-sm leading-relaxed resize-none"
+          style="background:transparent;border:none;color:#1C1917;min-height:400px;font-family:inherit"
+          oninput="notesChanged()"></textarea>
+        <div class="flex items-center justify-between px-5 py-3.5" style="border-top:1px solid rgba(28,25,23,0.08)">
+          <p id="ws-notes-meta" class="text-xs" style="color:rgba(28,25,23,0.35)">—</p>
+          <button onclick="saveNotes()" class="px-4 py-1.5 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ MEMBERS TAB ════ -->
+    <div id="ws-panel-members" class="hidden">
+      <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Invite a collaborator</p>
+        <div class="flex gap-2">
+          <input id="invite-email" type="email" placeholder="their@email.com"
+            class="flex-1 px-3.5 py-2.5 rounded-xl text-sm"
+            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917"
+            onkeydown="if(event.key==='Enter')inviteMember()" />
+          <button onclick="inviteMember()" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-70 flex-shrink-0" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Invite</button>
+        </div>
+        <p class="text-xs mt-2" style="color:rgba(28,25,23,0.4)">They'll see this workspace the next time they open Cloud.</p>
+      </div>
+      <div id="ws-members-list" class="flex flex-col gap-2"></div>
+    </div>
+
+  </div><!-- /state-workspace -->
 </main>
 
 <script>
-// ── CONFIG
 const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
 const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
 const BUCKET = 'uploads';
 
-// ── STATE
 let _sb = null, currentUser = null, isPro = false;
 let workspace = null, wsMembers = [];
-let activeTab = 'files', vpOpen = false;
+let activeTab = 'files';
 let _notesTimer = null, _notesDirty = false;
 let _authTab = 'login';
-let _pendingFolderId = null, _pendingFolderName = null, _latestSnapshotForConflict = null, _pendingConflictFiles = null;
+let _fileItems = {}; // folderId → item, used by download/delete actions
 
-// ── INIT
 window.addEventListener('DOMContentLoaded', () => {
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -391,8 +314,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (isPro) loadWorkspace();
       else showState('upgrade');
     } else {
-      currentUser = null;
-      isPro = false;
+      currentUser = null; isPro = false;
       showSignedOutNav();
       showState('signin');
     }
@@ -410,17 +332,13 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ── STATES
 function showState(s) {
   ['loading','signin','upgrade','workspace'].forEach(id =>
     document.getElementById('state-' + id).classList.toggle('hidden', id !== s)
   );
 }
 
-// ── PRO
-function activatePro() {
-  window.location.href = 'index.html#pricing';
-}
+function activatePro() { window.location.href = 'index.html#pricing'; }
 
 // ── WORKSPACE LOAD
 async function loadWorkspace() {
@@ -440,7 +358,7 @@ async function loadWorkspace() {
       if (ws) workspace = ws;
     }
     if (!workspace) {
-      const { data: newWs, error } = await _sb.from('workspaces').insert({ name: 'My Workspace', owner_id: currentUser.id }).select().single();
+      const { data: newWs, error } = await _sb.from('workspaces').insert({ name: 'My Cloud', owner_id: currentUser.id }).select().single();
       if (error) { showToast('Could not set up workspace'); return; }
       workspace = newWs;
     }
@@ -449,38 +367,25 @@ async function loadWorkspace() {
   const isOwner = workspace.owner_id === currentUser.id;
   const created = new Date(workspace.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   document.getElementById('ws-name').textContent = workspace.name;
-  document.getElementById('ws-meta').textContent = (isOwner ? 'Your workspace' : 'Shared workspace') + ' · since ' + created;
+  document.getElementById('ws-meta').textContent = (isOwner ? 'Your cloud' : 'Shared cloud') + ' · since ' + created;
   showState('workspace');
-  loadFolders();
+  loadFiles();
   loadWsMembers();
 }
 
 // ── TAB SWITCHING
 function switchWsTab(tab) {
   activeTab = tab;
-  closeVersionPanel();
   ['files','notes','members'].forEach(t => {
     document.getElementById('wstab-' + t).className =
-      'px-4 py-1.5 rounded-lg text-sm font-medium ' + (t === tab ? 'ws-tab-active' : 'ws-tab-inactive');
+      'flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-sm font-medium ' + (t === tab ? 'ws-tab-active' : 'ws-tab-inactive');
     document.getElementById('ws-panel-' + t).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'notes')   loadWsNotes();
   if (tab === 'members') renderMembersList();
 }
 
-// ── ADD FOLDER / FILE buttons
-function clickAddFolder() {
-  _pendingFolderId = null; _pendingFolderName = null;
-  document.getElementById('folder-input').value = '';
-  document.getElementById('folder-input').click();
-}
-function clickAddFile() {
-  _pendingFolderId = null; _pendingFolderName = null;
-  document.getElementById('file-input').value = '';
-  document.getElementById('file-input').click();
-}
-
-// ── DRAG & DROP on drop zone
+// ── DRAG & DROP
 function wsDragOver(e) {
   e.preventDefault();
   document.getElementById('ws-dropzone').style.borderColor = '#8B6F47';
@@ -493,412 +398,213 @@ function wsDragLeave() {
 async function wsDrop(e) {
   e.preventDefault();
   wsDragLeave();
-  const items = Array.from(e.dataTransfer.items || []);
-  const files = [];
-  for (const item of items) {
-    const entry = item.webkitGetAsEntry?.();
-    if (entry?.isDirectory) {
-      await collectEntries(entry, entry.name, files);
-    } else if (entry?.isFile) {
-      const f = await new Promise(r => entry.file(r));
-      f._relPath = f.name;
-      files.push(f);
-    }
-  }
-  if (!files.length) return;
-  // Use the top-level folder name or file name as the entry name
-  const topName = (files[0]._relPath || '').split('/')[0] || files[0].name;
-  await handleIncomingFiles(files, topName);
-}
-async function collectEntries(entry, basePath, out) {
-  if (entry.isFile) {
-    const f = await new Promise(r => entry.file(r));
-    f._relPath = basePath;
-    out.push(f);
-  } else if (entry.isDirectory) {
-    const reader = entry.createReader();
-    const entries = await new Promise(r => reader.readEntries(r));
-    for (const child of entries) await collectEntries(child, basePath + '/' + child.name, out);
-  }
+  const files = Array.from(e.dataTransfer.files || []);
+  if (files.length) await uploadFiles(files);
 }
 
-// ── SINGLE / MULTIPLE FILES selected via file input
+// ── FILE SELECTION
 async function onFilesSelected(e) {
   const files = Array.from(e.target.files);
-  if (!files.length) return;
-  for (const f of files) f._relPath = f.name;
-  // Each file becomes its own versioned entry
-  for (const f of files) await handleIncomingFiles([f], f.name);
+  e.target.value = '';
+  if (files.length) await uploadFiles(files);
 }
 
-// ── LOAD FOLDERS
-async function loadFolders() {
+// ── UPLOAD
+async function uploadFiles(files) {
+  document.getElementById('ws-upload-progress').classList.remove('hidden');
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    document.getElementById('ws-upload-label').textContent = 'Uploading ' + file.name + '…';
+    document.getElementById('ws-prog-label').textContent   = (i + 1) + ' of ' + files.length;
+    document.getElementById('ws-prog-fill').style.width    = Math.round((i / files.length) * 100) + '%';
+
+    // Find or create a folder entry keyed by filename
+    const { data: existing } = await _sb.from('workspace_folders')
+      .select('id').eq('workspace_id', workspace.id).eq('name', file.name).maybeSingle();
+
+    let folderId;
+    if (existing) {
+      folderId = existing.id;
+    } else {
+      const { data: newF, error } = await _sb.from('workspace_folders').insert({
+        workspace_id: workspace.id, name: file.name,
+        created_by: currentUser.id, created_by_email: currentUser.email,
+      }).select('id').single();
+      if (error) { showToast('Failed: ' + error.message); break; }
+      folderId = newF.id;
+    }
+
+    // Next version number
+    const { data: snaps } = await _sb.from('workspace_folder_snapshots')
+      .select('version_number').eq('folder_id', folderId)
+      .order('version_number', { ascending: false }).limit(1);
+    const nextVersion = (snaps?.[0]?.version_number || 0) + 1;
+    const snapshotId  = crypto.randomUUID();
+
+    // Upload to storage
+    const safeKey     = file.name.replace(/[^a-zA-Z0-9._\-]/g, '_');
+    const storagePath = 'ws/' + workspace.id + '/files/' + folderId + '/' + snapshotId + '/' + safeKey;
+    const { error: upErr } = await _sb.storage.from(BUCKET).upload(storagePath, file, { upsert: false });
+    if (upErr) { showToast('Upload failed: ' + upErr.message); break; }
+
+    // Create snapshot + file record
+    await _sb.from('workspace_folder_snapshots').insert({
+      id: snapshotId, folder_id: folderId, version_number: nextVersion,
+      uploaded_by: currentUser.id, uploaded_by_email: currentUser.email,
+      file_count: 1, total_size: file.size,
+    });
+    await _sb.from('workspace_folder_files').insert({
+      snapshot_id: snapshotId, folder_id: folderId,
+      filename: file.name, storage_path: storagePath, size: file.size,
+    });
+
+    document.getElementById('ws-prog-fill').style.width = Math.round(((i + 1) / files.length) * 100) + '%';
+  }
+
+  document.getElementById('ws-upload-progress').classList.add('hidden');
+  showToast(files.length === 1 ? '"' + files[0].name + '" uploaded' : files.length + ' files uploaded');
+  loadFiles();
+}
+
+// ── LOAD FILES
+async function loadFiles() {
   if (!workspace) return;
-  document.getElementById('ws-folders-loading').classList.remove('hidden');
-  document.getElementById('ws-folders-empty').classList.add('hidden');
-  document.getElementById('ws-folders-list').classList.add('hidden');
+  document.getElementById('ws-files-loading').classList.remove('hidden');
+  document.getElementById('ws-files-empty').classList.add('hidden');
+  document.getElementById('ws-files-list').classList.add('hidden');
 
   const { data: folders } = await _sb.from('workspace_folders')
     .select('*').eq('workspace_id', workspace.id).order('created_at', { ascending: false });
 
-  document.getElementById('ws-folders-loading').classList.add('hidden');
-  if (!folders?.length) { document.getElementById('ws-folders-empty').classList.remove('hidden'); return; }
+  if (!folders?.length) {
+    document.getElementById('ws-files-loading').classList.add('hidden');
+    document.getElementById('ws-files-empty').classList.remove('hidden');
+    return;
+  }
 
-  // Load latest snapshot per folder
   const folderIds = folders.map(f => f.id);
   const { data: snapshots } = await _sb.from('workspace_folder_snapshots')
     .select('*').in('folder_id', folderIds).order('version_number', { ascending: false });
 
-  const latestByFolder = {};
-  (snapshots || []).forEach(s => {
-    if (!latestByFolder[s.folder_id]) latestByFolder[s.folder_id] = s;
-  });
+  const latestSnap = {};
+  (snapshots || []).forEach(s => { if (!latestSnap[s.folder_id]) latestSnap[s.folder_id] = s; });
 
-  const list = document.getElementById('ws-folders-list');
+  const snapIds = Object.values(latestSnap).map(s => s.id);
+  const { data: fileRecs } = snapIds.length
+    ? await _sb.from('workspace_folder_files').select('*').in('snapshot_id', snapIds)
+    : { data: [] };
+
+  const fileBySnap = {};
+  (fileRecs || []).forEach(f => { fileBySnap[f.snapshot_id] = f; });
+
+  const items = folders
+    .filter(f => latestSnap[f.id])
+    .map(f => {
+      const snap = latestSnap[f.id];
+      const rec  = fileBySnap[snap.id];
+      return {
+        folderId:        f.id,
+        filename:        rec?.filename || f.name,
+        storagePath:     rec?.storage_path || '',
+        size:            rec?.size || snap.total_size || 0,
+        uploadedByEmail: snap.uploaded_by_email || '',
+        uploadedAt:      snap.uploaded_at,
+      };
+    });
+
+  document.getElementById('ws-files-loading').classList.add('hidden');
+
+  if (!items.length) {
+    document.getElementById('ws-files-empty').classList.remove('hidden');
+    return;
+  }
+
+  // Store for use by onclick handlers
+  _fileItems = {};
+  items.forEach(item => { _fileItems[item.folderId] = item; });
+
+  const list = document.getElementById('ws-files-list');
   list.innerHTML = '';
-
-  folders.forEach(f => {
-    const snap = latestByFolder[f.id];
-    const lastSync = localStorage.getItem('fileo_folder_' + f.id + '_last_sync');
-    const outOfSync = snap && lastSync && lastSync !== snap.id;
-
+  items.forEach(item => {
     const el = document.createElement('div');
-    el.className = 'folder-row flex items-center gap-4 rounded-2xl px-5 py-4 transition-colors cursor-default';
+    el.className = 'file-row flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-colors';
     el.style.cssText = 'background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)';
-
     el.innerHTML = `
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+        ${fileTypeIcon(item.filename)}
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 mb-0.5">
-          <p class="font-semibold text-sm" style="color:#1C1917">${escHtml(f.name)}</p>
-          ${outOfSync ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#FEF3C7;color:#D97706;border:1px solid rgba(217,119,6,0.2)">Behind</span>' : ''}
-        </div>
-        ${snap
-          ? `<p class="text-xs" style="color:rgba(28,25,23,0.4)">v${snap.version_number} · ${escHtml(shortEmail(snap.uploaded_by_email))} · ${timeAgo(snap.uploaded_at)} · ${snap.file_count} file${snap.file_count !== 1 ? 's' : ''} · ${fmtSize(snap.total_size)}</p>`
-          : `<p class="text-xs" style="color:rgba(28,25,23,0.35)">No uploads yet — click Upload to add files</p>`
-        }
+        <p class="font-medium text-sm truncate" style="color:#1C1917">${escHtml(item.filename)}</p>
+        <p class="text-xs" style="color:rgba(28,25,23,0.4)">${fmtSize(item.size)} · ${escHtml(shortEmail(item.uploadedByEmail))} · ${timeAgo(item.uploadedAt)}</p>
       </div>
       <div class="row-actions flex items-center gap-1.5 flex-shrink-0">
-        ${snap ? `<button onclick="downloadLatest('${escHtml(f.id)}','${escHtml(f.name)}')" title="Download latest as ZIP" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-70" style="background:#EAE4D9;border:none;cursor:pointer;color:#1C1917;font-family:inherit">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download
-        </button>` : ''}
-        <button onclick="clickUpload('${escHtml(f.id)}','${escHtml(f.name)}')" title="Upload new version" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium hover:opacity-70" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload
+        <button onclick="downloadFile('${escHtml(item.folderId)}')" title="Download"
+          class="w-8 h-8 flex items-center justify-center rounded-lg hover:opacity-70"
+          style="background:#EAE4D9;border:none;cursor:pointer;color:#1C1917">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <button onclick="openVersionPanel('${escHtml(f.id)}','${escHtml(f.name)}')" title="Version history" class="w-7 h-7 flex items-center justify-center rounded-lg hover:opacity-70" style="background:#EAE4D9;border:none;cursor:pointer;color:#1C1917">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-        </button>
-        <button onclick="deleteFolder('${escHtml(f.id)}','${escHtml(f.name)}')" title="Delete folder" class="w-7 h-7 flex items-center justify-center rounded-lg hover:opacity-70" style="background:#EAE4D9;border:none;cursor:pointer;color:rgba(28,25,23,0.4)">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button onclick="deleteFile('${escHtml(item.folderId)}')" title="Delete"
+          class="w-8 h-8 flex items-center justify-center rounded-lg hover:opacity-70"
+          style="background:#EAE4D9;border:none;cursor:pointer;color:rgba(28,25,23,0.4)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         </button>
       </div>
     `;
     list.appendChild(el);
   });
-
   list.classList.remove('hidden');
 }
 
-// ── UPLOAD FLOW
-async function clickUpload(folderId, folderName) {
-  _pendingFolderId   = folderId;
-  _pendingFolderName = folderName;
-
-  // Get latest snapshot
-  const { data: snaps } = await _sb.from('workspace_folder_snapshots')
-    .select('*').eq('folder_id', folderId).order('version_number', { ascending: false }).limit(1);
-  const latest = snaps?.[0] || null;
-
-  if (latest) {
-    const lastSync = localStorage.getItem('fileo_folder_' + folderId + '_last_sync');
-    if (lastSync !== latest.id) {
-      // Conflict — show warning, but we need files first so open picker
-      _latestSnapshotForConflict = latest;
-      _pendingConflictFiles = null;
-      document.getElementById('conflict-detail').textContent =
-        shortEmail(latest.uploaded_by_email) + ' uploaded version ' + latest.version_number +
-        ' · ' + timeAgo(latest.uploaded_at) + '. You last synced ' +
-        (lastSync ? 'an older version' : 'nothing') + '.';
-      document.getElementById('conflict-modal').classList.add('open');
-      return;
-    }
-  }
-
-  // No conflict — open folder picker
-  document.getElementById('folder-input').value = '';
-  document.getElementById('folder-input').click();
-}
-
-// ── CONFLICT MODAL ACTIONS
-async function conflictDownloadFirst() {
-  document.getElementById('conflict-modal').classList.remove('open');
-  await downloadLatest(_pendingFolderId, _pendingFolderName);
-  if (_pendingConflictFiles) {
-    // Files already selected (came from toolbar flow) — upload immediately
-    await doUpload(_pendingFolderId, _pendingFolderName, _pendingConflictFiles);
-    _pendingConflictFiles = null;
-  } else {
-    // Came from per-folder Upload button — open picker now
-    document.getElementById('folder-input').value = '';
-    document.getElementById('folder-input').click();
-  }
-}
-
-async function conflictUploadAnyway() {
-  document.getElementById('conflict-modal').classList.remove('open');
-  if (_pendingConflictFiles) {
-    await doUpload(_pendingFolderId, _pendingFolderName, _pendingConflictFiles);
-    _pendingConflictFiles = null;
-  } else {
-    document.getElementById('folder-input').value = '';
-    document.getElementById('folder-input').click();
-  }
-}
-
-// ── FOLDER INPUT HANDLER
-async function onFolderSelected(e) {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-  if (_pendingFolderId) { await doUpload(_pendingFolderId, _pendingFolderName, files); return; }
-  const name = (files[0].webkitRelativePath || files[0].name).split('/')[0];
-  await handleIncomingFiles(files, name);
-}
-
-// ── SHARED ENTRY POINT for any files (from folder picker, file picker, or drop)
-async function handleIncomingFiles(files, entryName) {
-  const { data: existing } = await _sb.from('workspace_folders')
-    .select('*').eq('workspace_id', workspace.id).eq('name', entryName).maybeSingle();
-
-  if (existing) {
-    _pendingFolderId = existing.id; _pendingFolderName = existing.name;
-    const { data: snaps } = await _sb.from('workspace_folder_snapshots')
-      .select('*').eq('folder_id', existing.id).order('version_number', { ascending: false }).limit(1);
-    const latest = snaps?.[0] || null;
-    if (latest) {
-      const lastSync = localStorage.getItem('fileo_folder_' + existing.id + '_last_sync');
-      if (lastSync !== latest.id) {
-        _latestSnapshotForConflict = latest;
-        _pendingConflictFiles = files;
-        document.getElementById('conflict-detail').textContent =
-          shortEmail(latest.uploaded_by_email) + ' uploaded version ' + latest.version_number +
-          ' · ' + timeAgo(latest.uploaded_at) + '. You last synced ' +
-          (lastSync ? 'an older version' : 'nothing') + '.';
-        document.getElementById('conflict-modal').classList.add('open');
-        return;
-      }
-    }
-    await doUpload(existing.id, existing.name, files);
-  } else {
-    const { data: newEntry, error } = await _sb.from('workspace_folders').insert({
-      workspace_id: workspace.id, name: entryName,
-      created_by: currentUser.id, created_by_email: currentUser.email,
-    }).select().single();
-    if (error) { showToast('Could not create entry: ' + error.message); return; }
-    await doUpload(newEntry.id, newEntry.name, files);
-  }
-}
-
-// ── DO UPLOAD (creates a new snapshot)
-async function doUpload(folderId, folderName, files) {
-  // Get current latest version number
-  const { data: snaps } = await _sb.from('workspace_folder_snapshots')
-    .select('version_number').eq('folder_id', folderId).order('version_number', { ascending: false }).limit(1);
-  const newVersion = (snaps?.[0]?.version_number || 0) + 1;
-  const snapshotId = crypto.randomUUID();
-
-  const totalSize = files.reduce((s, f) => s + f.size, 0);
-
-  // Show progress
-  document.getElementById('ws-upload-progress').classList.remove('hidden');
-  document.getElementById('ws-prog-fill').style.width = '0%';
-  document.getElementById('ws-prog-label').textContent = '0 / ' + files.length + ' files';
-
-  const fileRecords = [];
-  let uploaded = 0;
-
-  for (const file of files) {
-    const relPath = file.webkitRelativePath || file.name;
-    const safeKey = relPath.replace(/[^a-zA-Z0-9._\-\/]/g, '_');
-    const storagePath = 'ws/' + workspace.id + '/folders/' + folderId + '/' + snapshotId + '/' + safeKey;
-
-    const { error } = await _sb.storage.from(BUCKET).upload(storagePath, file, { upsert: false });
-    if (error) {
-      document.getElementById('ws-upload-progress').classList.add('hidden');
-      showToast('Upload failed on ' + file.name + ': ' + error.message);
-      return;
-    }
-    fileRecords.push({ snapshot_id: snapshotId, folder_id: folderId, filename: relPath, storage_path: storagePath, size: file.size });
-    uploaded++;
-    const pct = Math.round((uploaded / files.length) * 100);
-    document.getElementById('ws-prog-fill').style.width = pct + '%';
-    document.getElementById('ws-prog-label').textContent = uploaded + ' / ' + files.length + ' files';
-    document.getElementById('ws-upload-label').textContent = 'Uploading ' + relPath + '…';
-  }
-
-  // Create snapshot record
-  await _sb.from('workspace_folder_snapshots').insert({
-    id:               snapshotId,
-    folder_id:        folderId,
-    version_number:   newVersion,
-    uploaded_by:      currentUser.id,
-    uploaded_by_email: currentUser.email,
-    file_count:       files.length,
-    total_size:       totalSize,
-  });
-
-  // Create file records
-  await _sb.from('workspace_folder_files').insert(fileRecords);
-
-  // Mark as synced
-  localStorage.setItem('fileo_folder_' + folderId + '_last_sync', snapshotId);
-
-  document.getElementById('ws-upload-progress').classList.add('hidden');
-  showToast('Version ' + newVersion + ' uploaded — ' + files.length + ' files');
-  loadFolders();
-  if (vpOpen) openVersionPanel(folderId, folderName);
-}
-
-// ── DOWNLOAD LATEST AS ZIP
-async function downloadLatest(folderId, folderName) {
-  const { data: snaps } = await _sb.from('workspace_folder_snapshots')
-    .select('*').eq('folder_id', folderId).order('version_number', { ascending: false }).limit(1);
-  if (!snaps?.length) { showToast('No versions to download yet'); return; }
-  await downloadSnapshot(snaps[0], folderName);
-}
-
-async function downloadSnapshot(snapshot, folderName) {
-  const { data: fileRecords } = await _sb.from('workspace_folder_files')
-    .select('*').eq('snapshot_id', snapshot.id);
-  if (!fileRecords?.length) { showToast('No files in this version'); return; }
-
-  document.getElementById('ws-dl-label').textContent = 'Downloading ' + fileRecords.length + ' files…';
-  document.getElementById('ws-download-progress').classList.remove('hidden');
-  document.getElementById('ws-dl-fill').style.width = '0%';
-
-  const zip = new JSZip();
-  let done = 0;
-
-  for (const f of fileRecords) {
-    const { data: urlData } = _sb.storage.from(BUCKET).getPublicUrl(f.storage_path);
-    const res  = await fetch(urlData.publicUrl);
-    const blob = await res.blob();
-    zip.file(f.filename, blob);
-    done++;
-    document.getElementById('ws-dl-fill').style.width = Math.round((done / fileRecords.length) * 100) + '%';
-    document.getElementById('ws-dl-label').textContent = 'Downloading ' + done + ' / ' + fileRecords.length + ' files…';
-  }
-
-  document.getElementById('ws-dl-label').textContent = 'Building ZIP…';
-  const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+// ── DOWNLOAD
+function downloadFile(folderId) {
+  const item = _fileItems[folderId];
+  if (!item?.storagePath) { showToast('File not found'); return; }
+  const { data } = _sb.storage.from(BUCKET).getPublicUrl(item.storagePath);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(zipBlob);
-  a.download = folderName + '_v' + snapshot.version_number + '.zip';
+  a.href = data.publicUrl;
+  a.download = item.filename;
+  a.target = '_blank';
+  document.body.appendChild(a);
   a.click();
-
-  // Mark as synced
-  localStorage.setItem('fileo_folder_' + snapshot.folder_id + '_last_sync', snapshot.id);
-
-  document.getElementById('ws-download-progress').classList.add('hidden');
-  showToast('Downloaded ' + folderName + ' v' + snapshot.version_number);
-  loadFolders(); // refresh "Behind" badge
+  document.body.removeChild(a);
 }
 
-// ── DELETE FOLDER
-async function deleteFolder(folderId, folderName) {
-  if (!confirm('Delete "' + folderName + '" and all its versions? This cannot be undone.')) return;
+// ── DELETE
+async function deleteFile(folderId) {
+  const item = _fileItems[folderId];
+  if (!item) return;
+  if (!confirm('Delete "' + item.filename + '"? This cannot be undone.')) return;
 
   const { data: snaps } = await _sb.from('workspace_folder_snapshots').select('id').eq('folder_id', folderId);
   if (snaps?.length) {
     const snapIds = snaps.map(s => s.id);
-    const { data: files } = await _sb.from('workspace_folder_files').select('storage_path').in('snapshot_id', snapIds);
-    if (files?.length) await _sb.storage.from(BUCKET).remove(files.map(f => f.storage_path));
+    const { data: recs } = await _sb.from('workspace_folder_files').select('storage_path').in('snapshot_id', snapIds);
+    if (recs?.length) await _sb.storage.from(BUCKET).remove(recs.map(r => r.storage_path));
     await _sb.from('workspace_folder_files').delete().in('snapshot_id', snapIds);
     await _sb.from('workspace_folder_snapshots').delete().eq('folder_id', folderId);
   }
   await _sb.from('workspace_folders').delete().eq('id', folderId);
+  delete _fileItems[folderId];
 
-  localStorage.removeItem('fileo_folder_' + folderId + '_last_sync');
-  closeVersionPanel();
-  showToast('"' + folderName + '" deleted');
-  loadFolders();
+  showToast('"' + item.filename + '" deleted');
+  loadFiles();
 }
 
-// ── VERSION HISTORY PANEL
-async function openVersionPanel(folderId, folderName) {
-  document.getElementById('vp-foldername').textContent = folderName;
-  document.getElementById('vp-list').innerHTML =
-    '<div class="flex items-center gap-2 p-4 text-xs" style="color:rgba(28,25,23,0.4)"><div class="w-3 h-3 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>Loading…</div>';
-
-  if (!vpOpen) {
-    vpOpen = true;
-    const p = document.getElementById('vp-panel');
-    if (window.innerWidth < 768) {
-      p.classList.remove('hidden-mobile');
-    } else {
-      p.style.width = '272px'; p.style.opacity = '1';
-    }
-    document.getElementById('vp-inner').classList.remove('hidden');
-  }
-
-  const { data: snaps } = await _sb.from('workspace_folder_snapshots')
-    .select('*').eq('folder_id', folderId).order('version_number', { ascending: false });
-
-  const list = document.getElementById('vp-list');
-  list.innerHTML = '';
-
-  if (!snaps?.length) {
-    list.innerHTML = '<p class="text-xs text-center p-4" style="color:rgba(28,25,23,0.35)">No versions yet</p>';
-    return;
-  }
-
-  const lastSync = localStorage.getItem('fileo_folder_' + folderId + '_last_sync');
-
-  snaps.forEach((s, i) => {
-    const isCurrent = i === 0;
-    const isSynced  = lastSync === s.id;
-    const div = document.createElement('div');
-    div.style.cssText = 'padding:14px 16px;border-bottom:1px solid rgba(28,25,23,0.07)';
-    div.innerHTML = `
-      <div class="flex items-start gap-2">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-1.5 mb-1 flex-wrap">
-            <span class="text-xs font-bold" style="color:#1C1917">Version ${s.version_number}</span>
-            ${isCurrent ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">Latest</span>' : ''}
-            ${isSynced  ? '<span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style="background:#EAE4D9;color:rgba(28,25,23,0.5)">Synced</span>' : ''}
-          </div>
-          <p class="text-[11px]" style="color:rgba(28,25,23,0.45)">${s.file_count} files · ${fmtSize(s.total_size)}</p>
-          <p class="text-[11px]" style="color:rgba(28,25,23,0.45)">by ${escHtml(shortEmail(s.uploaded_by_email))}</p>
-          <p class="text-[11px] mt-0.5" style="color:rgba(28,25,23,0.3)">${fullDate(s.uploaded_at)}</p>
-        </div>
-        <button onclick="downloadSnapshot(${JSON.stringify(s)},'${escHtml(folderName)}')" title="Download this version" class="w-6 h-6 flex items-center justify-center rounded-lg hover:opacity-60 flex-shrink-0" style="background:#EAE4D9;border:none;cursor:pointer;color:#1C1917;margin-top:1px">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-      </div>
-    `;
-    list.appendChild(div);
-  });
-}
-
-function closeVersionPanel() {
-  if (!vpOpen) return;
-  vpOpen = false;
-  const p = document.getElementById('vp-panel');
-  if (window.innerWidth < 768) {
-    p.classList.add('hidden-mobile');
-  } else {
-    p.style.width = '0'; p.style.opacity = '0';
-  }
-  setTimeout(() => document.getElementById('vp-inner').classList.add('hidden'), 350);
-}
-
-function toggleMobileMenu() {
-  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
-  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
-  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
+// ── FILE TYPE ICON
+function fileTypeIcon(name) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const img = ['jpg','jpeg','png','gif','webp','svg','avif','heic','heif','bmp','tiff'];
+  const vid = ['mp4','mov','avi','mkv','webm','m4v','wmv'];
+  const aud = ['mp3','wav','flac','aac','ogg','m4a','opus'];
+  const doc = ['pdf','doc','docx','txt','rtf','md','pages'];
+  const zip = ['zip','tar','gz','rar','7z','bz2'];
+  if (img.includes(ext)) return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+  if (vid.includes(ext)) return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+  if (aud.includes(ext)) return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+  if (doc.includes(ext)) return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
+  if (zip.includes(ext)) return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>`;
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
 }
 
 // ── NOTES
@@ -925,10 +631,10 @@ function notesChanged() {
 async function saveNotes() {
   if (!workspace || !_notesDirty) return;
   const content = document.getElementById('ws-notes-area').value;
-  const record = { workspace_id: workspace.id, content, updated_by: currentUser.id, updated_by_email: currentUser.email, updated_at: new Date().toISOString() };
+  const record  = { workspace_id: workspace.id, content, updated_by: currentUser.id, updated_by_email: currentUser.email, updated_at: new Date().toISOString() };
   const { data: existing } = await _sb.from('workspace_notes').select('id').eq('workspace_id', workspace.id).maybeSingle();
   if (existing) await _sb.from('workspace_notes').update(record).eq('workspace_id', workspace.id);
-  else await _sb.from('workspace_notes').insert(record);
+  else          await _sb.from('workspace_notes').insert(record);
   _notesDirty = false;
   document.getElementById('ws-notes-meta').textContent = 'Saved by you · just now';
 }
@@ -948,8 +654,7 @@ function renderAvatars() {
     const d = document.createElement('div');
     d.className = 'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0';
     d.style.cssText = `background:${bg};color:#F5F0E8;border:2px solid #F5F0E8`;
-    d.title = title; d.textContent = letter;
-    return d;
+    d.title = title; d.textContent = letter; return d;
   };
   c.appendChild(mk(currentUser.email[0].toUpperCase(), '#1C1917', currentUser.email + ' (you)'));
   wsMembers.slice(0, 4).forEach(m => c.appendChild(mk(m.email[0].toUpperCase(), '#8B6F47', m.email)));
@@ -999,7 +704,7 @@ async function inviteMember() {
   const { error } = await _sb.from('workspace_members').insert({ workspace_id: workspace.id, email, role: 'member' });
   if (error) { showToast('Could not invite: ' + error.message); return; }
   input.value = '';
-  showToast(email + ' added to workspace');
+  showToast(email + ' added');
   loadWsMembers();
 }
 async function removeMember(id) {
@@ -1019,14 +724,11 @@ function fmtSize(b) {
 }
 function timeAgo(iso) {
   const d = Date.now() - new Date(iso);
-  if (d < 60000) return 'just now';
-  if (d < 3600000) return Math.floor(d/60000) + 'm ago';
+  if (d < 60000)    return 'just now';
+  if (d < 3600000)  return Math.floor(d/60000) + 'm ago';
   if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
-  if (d < 604800000) return Math.floor(d/86400000) + 'd ago';
+  if (d < 604800000)return Math.floor(d/86400000) + 'd ago';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-function fullDate(iso) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 function shortEmail(email) {
   if (!email) return '?';
@@ -1064,12 +766,10 @@ function setAuthTab(tab) {
 async function submitAuth(e) {
   e.preventDefault();
   const errEl = document.getElementById('auth-error');
-  const now = Date.now();
+  const now   = Date.now();
   if (now < _authLockedUntil) {
-    const secs = Math.ceil((_authLockedUntil - now) / 1000);
-    errEl.textContent = `Too many attempts. Try again in ${secs}s.`;
-    errEl.classList.remove('hidden');
-    return;
+    errEl.textContent = 'Too many attempts. Try again in ' + Math.ceil((_authLockedUntil - now)/1000) + 's.';
+    errEl.classList.remove('hidden'); return;
   }
   const email = document.getElementById('auth-email').value.trim();
   const pw    = document.getElementById('auth-password').value;
@@ -1084,10 +784,7 @@ async function submitAuth(e) {
     _authAttempts++;
     if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
     errEl.textContent = error.message; errEl.classList.remove('hidden');
-  } else {
-    _authAttempts = 0;
-    closeModal();
-  }
+  } else { _authAttempts = 0; closeModal(); }
 }
 function showUserNav(email) {
   document.getElementById('btn-signin').classList.add('hidden');
@@ -1105,6 +802,11 @@ function showSignedOutNav() {
   document.getElementById('account-menu').classList.add('hidden');
 }
 function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
+function toggleMobileMenu() {
+  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
+  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
+  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
+}
 async function doSignOut() {
   await _sb.auth.signOut();
   workspace = null; wsMembers = [];
