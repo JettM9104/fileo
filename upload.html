@@ -481,6 +481,7 @@ let _authTab = 'login';
 let _cloudFiles = [];
 let _useBranding = true;
 let _hasBrandingConfig = false;
+let _pendingUpload = false;
 
 // ── INIT
 window.addEventListener('DOMContentLoaded', () => {
@@ -500,6 +501,12 @@ window.addEventListener('DOMContentLoaded', () => {
       showUserNav(session.user.email);
       loadQuota();
       if (activePanel === 'files') loadFiles();
+      // Auto-resume upload if the modal was opened because user tried to upload while signed out
+      if (_pendingUpload && selectedFile) {
+        _pendingUpload = false;
+        closeModal();
+        setTimeout(() => doUpload(), 80);
+      }
     } else {
       currentUser = null;
       isPro = false;
@@ -901,9 +908,10 @@ async function doUpload() {
 
   // Require sign-in to track storage and file history
   if (!currentUser) {
-    setAuthTab('register');
+    _pendingUpload = true;
+    setAuthTab('login');
     openModal();
-    showToast('Create a free account to upload — we need it to track your storage.');
+    showToast('Sign in to upload your file.');
     return;
   }
 
@@ -1343,7 +1351,7 @@ async function deleteFile(id) {
 // ── AUTH
 let _authAttempts = 0, _authLockedUntil = 0;
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
-function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+function closeModal() { _pendingUpload = false; document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
 
 function setAuthTab(tab) {
   _authTab = tab;
