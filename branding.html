@@ -268,10 +268,14 @@
 </div><!-- /brand-marketing -->
 
 <!-- ── SETTINGS PANEL (Pro) ── -->
-<div id="brand-settings-panel" class="hidden">
-  <div class="max-w-[900px] mx-auto px-6 pt-32 pb-24">
+<div id="brand-settings-panel" class="hidden" style="border-top:1px solid rgba(28,25,23,0.08)">
+  <div class="max-w-[900px] mx-auto px-6 pt-16 pb-24">
 
     <div class="mb-10">
+      <button onclick="document.getElementById('brand-settings-panel').classList.add('hidden');window.scrollTo({top:0,behavior:'smooth'})" class="flex items-center gap-1.5 text-xs font-medium mb-6 hover:opacity-60 transition-opacity" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to overview
+      </button>
       <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full mb-4" style="background:#8B6F47">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span class="text-xs font-semibold tracking-wide" style="color:#F5F0E8">PRO</span>
@@ -410,25 +414,41 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function showPageState() {
-  const marketing = document.getElementById('brand-marketing');
-  const settings  = document.getElementById('brand-settings-panel');
-  const mobCta    = document.getElementById('mob-cta');
+  // Always show marketing. For Pro users, update CTA label.
+  document.getElementById('brand-marketing').classList.remove('hidden');
+  const mobCta = document.getElementById('mob-cta');
   if (isPro) {
-    marketing.classList.add('hidden');
-    settings.classList.remove('hidden');
-    if (mobCta) mobCta.classList.add('hidden');
-    loadBranding();
+    const label = 'Open branding settings';
+    ['hero-cta','color-cta','bottom-cta'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = label;
+    });
+    if (mobCta) { mobCta.textContent = label; mobCta.classList.remove('hidden'); }
   } else {
-    marketing.classList.remove('hidden');
-    settings.classList.add('hidden');
-    if (mobCta) mobCta.classList.remove('hidden');
+    ['hero-cta','color-cta','bottom-cta'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'Get started';
+    });
+    if (mobCta) { mobCta.textContent = 'Get started'; mobCta.classList.remove('hidden'); }
   }
 }
 
 function handleCta() {
   if (!currentUser) { openModal(); return; }
-  if (isPro) return; // settings already visible
-  window.location.href = 'index.html#pricing';
+  if (!isPro) { window.location.href = 'index.html#pricing'; return; }
+  openBrandingSettings();
+}
+
+function openBrandingSettings() {
+  const panel = document.getElementById('brand-settings-panel');
+  if (!panel.classList.contains('hidden')) {
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  panel.classList.remove('hidden');
+  panel.style.animation = 'fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) both';
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  loadBranding();
 }
 
 function showUserNav(email) {

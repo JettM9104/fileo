@@ -141,6 +141,7 @@
     <div class="p-3 flex flex-col gap-1">
       <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
       <a href="upload.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Upload</a>
+      <a href="branding.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Branding</a>
       <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
     </div>
   </div>
@@ -253,6 +254,22 @@
                 <span id="lock-30d" class="absolute -top-1.5 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span>
               </button>
             </div>
+          </div>
+
+          <!-- Branding toggle (Pro only, shown when branding is configured) -->
+          <div id="branding-toggle-row" class="hidden mb-4">
+            <label class="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <div class="relative flex-shrink-0">
+                <input type="checkbox" id="branding-checkbox" checked class="sr-only" onchange="toggleBrandingCheck(this.checked)" />
+                <div id="branding-track" class="w-9 h-5 rounded-full transition-colors duration-200" style="background:#1C1917"></div>
+                <div id="branding-thumb" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200" style="transform:translateX(16px)"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium" style="color:#1C1917">Apply my branding</p>
+                <p id="branding-toggle-desc" class="text-xs mt-0.5" style="color:rgba(28,25,23,0.45)">Recipients will see your brand on the download page</p>
+              </div>
+              <svg width="13" height="13" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#8B6F47"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+            </label>
           </div>
 
           <!-- Advanced options toggle (Pro only) -->
@@ -462,6 +479,8 @@ let activePanel = 'upload';
 let activeFilesTab = 'links';
 let _authTab = 'login';
 let _cloudFiles = [];
+let _useBranding = true;
+let _hasBrandingConfig = false;
 
 // ── INIT
 window.addEventListener('DOMContentLoaded', () => {
@@ -517,6 +536,16 @@ function applyProUI() {
   document.getElementById('lock-7d').style.display  = 'none';
   document.getElementById('lock-30d').style.display = 'none';
   document.getElementById('adv-toggle-row').classList.remove('hidden');
+  // Check if branding is configured, show toggle if so
+  if (_sb && currentUser) {
+    _sb.from('user_branding').select('brand_name').eq('user_id', currentUser.id).maybeSingle()
+      .then(({ data }) => {
+        _hasBrandingConfig = !!(data?.brand_name);
+        if (_hasBrandingConfig && selectedFile) {
+          document.getElementById('branding-toggle-row').classList.remove('hidden');
+        }
+      });
+  }
 }
 
 function removeProUI() {
@@ -531,6 +560,8 @@ function removeProUI() {
   document.getElementById('lock-7d').style.display  = '';
   document.getElementById('lock-30d').style.display = '';
   document.getElementById('adv-toggle-row').classList.add('hidden');
+  document.getElementById('branding-toggle-row').classList.add('hidden');
+  _hasBrandingConfig = false;
   closeAdvPanel();
   if (selectedExpiry === 168 || selectedExpiry === 720) setExpiry(1);
 }
@@ -776,6 +807,10 @@ function setFile(file) {
   document.getElementById('prev-name').textContent = file.name;
   document.getElementById('prev-size').textContent = fmtSize(file.size);
   document.getElementById('file-icon').innerHTML   = fileIconSvg(file.name);
+  // Show branding toggle for Pro users with branding configured
+  if (isPro && _hasBrandingConfig) {
+    document.getElementById('branding-toggle-row').classList.remove('hidden');
+  }
 }
 
 function fileIconSvg(name) {
@@ -796,8 +831,20 @@ function clearFile() {
   closeAdvPanel();
   document.getElementById('drop-zone').classList.remove('hidden');
   document.getElementById('file-preview').classList.add('hidden');
+  document.getElementById('branding-toggle-row').classList.add('hidden');
   document.getElementById('file-input').value   = '';
   document.getElementById('folder-input').value = '';
+}
+
+function toggleBrandingCheck(checked) {
+  _useBranding = checked;
+  const track = document.getElementById('branding-track');
+  const thumb = document.getElementById('branding-thumb');
+  track.style.background = checked ? '#1C1917' : '#D4CFC9';
+  thumb.style.transform  = checked ? 'translateX(16px)' : 'translateX(0)';
+  document.getElementById('branding-toggle-desc').textContent = checked
+    ? 'Recipients will see your brand on the download page'
+    : 'Standard Fileo download page (no branding)';
 }
 
 // ── EXPIRY
@@ -967,7 +1014,7 @@ async function doUpload() {
   if (downloadLimit)               record.download_limit = downloadLimit;
   if (accessControl !== 'anyone')  record.access_control = accessControl;
   if (isPro && accessControl === 'specific' && allowedEmails.length) record.allowed_emails = allowedEmails;
-  if (isPro)                           record.is_pro         = true;
+  if (isPro && _useBranding)           record.is_pro         = true;
 
   let dbErr;
   try {
@@ -1022,12 +1069,20 @@ function copySuccessLink() {
 function resetUpload() {
   selectedFile   = null;
   selectedExpiry = 1;
+  _useBranding   = true;
   document.getElementById('upload-success').classList.add('hidden');
   document.getElementById('upload-progress').classList.add('hidden');
   document.getElementById('file-preview').classList.add('hidden');
+  document.getElementById('branding-toggle-row').classList.add('hidden');
   document.getElementById('drop-zone').classList.remove('hidden');
   document.getElementById('file-input').value   = '';
   document.getElementById('folder-input').value = '';
+  // reset toggle visual to ON
+  const track = document.getElementById('branding-track');
+  const thumb = document.getElementById('branding-thumb');
+  if (track) track.style.background = '#1C1917';
+  if (thumb) thumb.style.transform  = 'translateX(16px)';
+  document.getElementById('branding-checkbox').checked = true;
   setExpiry(1);
   closeAdvPanel();
   const _t = document.getElementById('opt-title');   if (_t) _t.value = '';

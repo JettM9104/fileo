@@ -35,6 +35,12 @@
     #download-overlay.branded .dl-card-bg{background:var(--brand-card,#FDFAF5)!important;border-color:var(--brand-border,rgba(28,25,23,0.12))!important}
     #download-overlay.branded .dl-secondary{color:var(--brand-sub,rgba(28,25,23,0.45))!important;border-color:var(--brand-border,rgba(28,25,23,0.12))!important}
     #download-overlay.branded .dl-label{color:var(--brand-label,rgba(28,25,23,0.35))!important}
+    /* ── WeTransfer-style branded layout ── */
+    #dl-domain-corner{display:none;position:absolute;top:22px;left:26px;z-index:3;font-size:13px;font-weight:600;letter-spacing:0.01em;font-family:inherit;opacity:0.55}
+    #dl-brand-bigname{display:none;position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:0;line-height:0.88;font-weight:900;pointer-events:none;user-select:none;overflow:hidden;max-width:62%;padding-right:2rem;text-align:right;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;opacity:0.10;word-break:break-word}
+    #download-overlay.wt-layout{align-items:center;justify-content:flex-start;padding-left:clamp(1.5rem,calc(50vw - 460px),8rem)}
+    #download-overlay.wt-layout #dl-inner{margin:0}
+    @media(max-width:767px){#download-overlay.wt-layout{justify-content:center;padding-left:1rem;padding-right:1rem}#dl-brand-bigname{display:none!important}}
     #upgrade-modal{display:none}
     #upgrade-modal.open{display:flex}
     @keyframes scanPulse{0%,100%{opacity:.4}50%{opacity:1}}
@@ -135,6 +141,8 @@
 <div id="download-overlay" class="fixed inset-0 z-[95] items-center justify-center p-4"
   style="background:#F5F0E8">
   <div id="brand-wallpaper-bg" style="display:none;position:absolute;inset:0;z-index:0;overflow:hidden"></div>
+  <div id="dl-domain-corner"></div>
+  <div id="dl-brand-bigname"></div>
   <div id="dl-inner" class="w-full" style="max-width:28rem;transition:max-width 0.4s cubic-bezier(0.16,1,0.3,1);position:relative;z-index:1">
     <div id="dl-header" class="flex items-center gap-2 mb-8">
       <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
@@ -1314,16 +1322,16 @@ function startWallpaperRotation(wallpapers) {
 
 function applyBranding(b) {
   if (!b) return;
-  const accent = b.accent_color || '#8B6F47';
-  const bg     = b.bg_color     || '#F5F0E8';
-  const walls  = b.wallpapers   || [];
+  const accent  = b.accent_color || '#8B6F47';
+  const bg      = b.bg_color     || '#F5F0E8';
+  const walls   = (b.wallpapers  || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp);
   const hasWall = walls.length > 0;
-  const isDark = hasWall ? true : isColorDark(bg);
-  const text   = isDark ? '#F5F0E8'                   : '#1C1917';
-  const sub    = isDark ? 'rgba(245,240,232,0.5)'     : 'rgba(28,25,23,0.45)';
-  const card   = isDark ? 'rgba(245,240,232,0.08)'    : '#FDFAF5';
-  const border = isDark ? 'rgba(245,240,232,0.15)'    : 'rgba(28,25,23,0.12)';
-  const label  = isDark ? 'rgba(245,240,232,0.35)'    : 'rgba(28,25,23,0.35)';
+  const isDark  = hasWall ? true : isColorDark(bg);
+  const text    = isDark ? '#F5F0E8'                : '#1C1917';
+  const sub     = isDark ? 'rgba(245,240,232,0.55)' : 'rgba(28,25,23,0.45)';
+  const card    = isDark ? 'rgba(245,240,232,0.10)' : '#FDFAF5';
+  const border  = isDark ? 'rgba(245,240,232,0.18)' : 'rgba(28,25,23,0.12)';
+  const label   = isDark ? 'rgba(245,240,232,0.35)' : 'rgba(28,25,23,0.35)';
 
   const root = document.documentElement;
   root.style.setProperty('--brand-text',   text);
@@ -1341,11 +1349,17 @@ function applyBranding(b) {
   // Download button accent
   document.getElementById('dl-btn').style.cssText += `;background:${accent};color:#F5F0E8`;
 
-  // Replace Fileo header with brand identity
+  // ── Domain corner (top-left, always show if set) ──
+  if (b.domain_url) {
+    const dc = document.getElementById('dl-domain-corner');
+    if (dc) { dc.textContent = b.domain_url; dc.style.color = text; dc.style.display = ''; }
+  }
+
+  // ── Brand header (replaces Fileo logo) ──
   if (b.brand_name) {
     const header = document.getElementById('dl-header');
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:32px';
+    wrap.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:28px';
 
     const logo = document.createElement('div');
     logo.style.cssText = `width:32px;height:32px;border-radius:9px;background:${accent};color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0`;
@@ -1356,24 +1370,32 @@ function applyBranding(b) {
     nameEl.style.cssText = `font-weight:700;font-size:16px;color:${text};line-height:1.1;margin:0`;
     nameEl.textContent = b.brand_name;
     info.appendChild(nameEl);
-
     if (b.tagline) {
       const tagEl = document.createElement('p');
       tagEl.style.cssText = `font-size:12px;color:${sub};margin:3px 0 0;line-height:1.3`;
       tagEl.textContent = b.tagline;
       info.appendChild(tagEl);
     }
-
-    if (b.domain_url) {
-      const domEl = document.createElement('p');
-      domEl.style.cssText = `font-size:11px;color:${sub};margin:2px 0 0;opacity:0.7`;
-      domEl.textContent = b.domain_url;
-      info.appendChild(domEl);
-    }
-
     wrap.appendChild(logo);
     wrap.appendChild(info);
     header.replaceChildren(wrap);
+
+    // ── WeTransfer-style big brand name (desktop only) ──
+    const big = document.getElementById('dl-brand-bigname');
+    if (big) {
+      // split into words, each on its own line
+      const words = b.brand_name.toUpperCase().split(/\s+/);
+      big.innerHTML = words.map(w => `<div>${w}</div>`).join('');
+      // size: base on viewport so longest word fills ~55% of screen width
+      const longestWord = words.reduce((a,c)=>c.length>a.length?c:a,'');
+      const fs = Math.min(Math.floor((window.innerWidth * 0.52) / (longestWord.length * 0.55)), 180);
+      big.style.fontSize = Math.max(fs, 72) + 'px';
+      big.style.color = text;
+      big.style.display = '';
+    }
+
+    // shift card to left side
+    overlay.classList.add('wt-layout');
   }
 }
 
