@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Branding — Fileo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{background:#F5F0E8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0}
+    a{text-decoration:none}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp 0.65s cubic-bezier(0.16,1,0.3,1) forwards}
+
+    @keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal-in{animation:modalIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards}
+
+    #auth-modal{display:none}#auth-modal.open{display:flex}
+    #toast{transform:translateX(-50%) translateY(-8px);opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none}
+
+    @media(min-width:768px){#nav-hamburger{display:none!important}}
+    @media(max-width:767px){#nav-pill-wrap{display:none!important}}
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH MODAL ── -->
+<div id="auth-modal" class="fixed inset-0 z-[100] items-center justify-center p-4"
+  style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)"
+  onclick="if(event.target===this)closeModal()">
+  <div class="modal-in w-full max-w-sm rounded-2xl p-7 flex flex-col"
+    style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex gap-1 p-1 rounded-xl" style="background:#EAE4D9">
+        <button id="tab-login" onclick="setAuthTab('login')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Sign in</button>
+        <button id="tab-register" onclick="setAuthTab('register')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:transparent;color:rgba(28,25,23,0.45)">Sign up</button>
+      </div>
+      <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="auth-title" class="text-xl font-bold mb-1" style="color:#1C1917">Welcome back</h2>
+    <p id="auth-sub" class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Sign in to access your branding settings.</p>
+    <form id="auth-form" onsubmit="submitAuth(event)" class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Email</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Password</label>
+        <input id="auth-password" type="password" placeholder="Your password" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+      </div>
+      <div id="auth-error" class="hidden text-xs px-3 py-2 rounded-lg" style="background:rgba(220,38,38,0.08);color:#DC2626"></div>
+      <button id="auth-submit" type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 mt-1" style="background:#1C1917;color:#F5F0E8">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="fixed top-5 left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="background:#1C1917;color:#F5F0E8"></div>
+
+<!-- ── NAV ── -->
+<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+  <div id="nav-main-row" class="flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+      <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
+    </a>
+    <div id="nav-pill-wrap" class="flex flex-1 justify-center">
+      <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
+        <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
+        <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Upload</a>
+        <a href="branding.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Branding</a>
+        <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Cloud</a>
+        <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+      </nav>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="relative">
+        <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-10 h-10 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-10 h-10 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
+        <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
+          <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+            <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+            <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
+          </div>
+          <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            My files
+          </button>
+          <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign out
+          </button>
+        </div>
+      </div>
+      <button id="nav-hamburger" onclick="toggleMobileMenu()" class="w-10 h-10 items-center justify-center rounded-full" style="background:#1C1917;border:none;cursor:pointer;color:#F5F0E8;flex-shrink:0">
+        <svg id="mob-icon-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg id="mob-icon-close" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mob-menu" class="hidden mt-2 rounded-2xl overflow-hidden" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.1);box-shadow:0 4px 20px rgba(28,25,23,0.1)">
+    <div class="p-3 flex flex-col gap-1">
+      <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
+      <a href="upload.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Upload</a>
+      <a href="branding.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Branding</a>
+      <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
+    </div>
+    <div class="px-3 pb-3">
+      <button id="mob-cta" onclick="handleCta()" class="w-full py-3 rounded-xl text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HERO ── -->
+<section class="relative flex flex-col items-center text-center px-6 pt-44 pb-20 overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" style="z-index:-1">
+    <div class="absolute rounded-full" style="width:700px;height:500px;top:-80px;left:50%;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(180,150,100,0.14) 0%,transparent 70%);filter:blur(60px)"></div>
+  </div>
+
+  <div class="fade-up inline-flex items-center gap-2 px-3 py-1 rounded-full mb-7" style="background:#8B6F47;animation-delay:0ms">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span class="text-xs font-semibold tracking-wide" style="color:#F5F0E8">PRO FEATURE</span>
+  </div>
+
+  <h1 class="fade-up font-bold tracking-[-0.04em] max-w-2xl mb-6" style="font-size:clamp(46px,7vw,82px);line-height:1.04;color:#1C1917;animation-delay:60ms">
+    Make every link<br><em class="not-italic" style="color:#8B6F47">yours.</em>
+  </h1>
+  <p class="fade-up max-w-[420px] leading-relaxed mb-10" style="font-size:18px;color:rgba(28,25,23,0.45);animation-delay:120ms">
+    Put your name, colors, and identity on every file you share. People recognize what they trust.
+  </p>
+  <div class="fade-up flex flex-wrap items-center justify-center gap-3" style="animation-delay:190ms">
+    <button id="hero-cta" onclick="handleCta()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started</button>
+  </div>
+</section>
+
+<!-- ── MOCKUP ── -->
+<section class="px-6 pb-28">
+  <div class="max-w-2xl mx-auto">
+    <div class="rounded-3xl overflow-hidden" style="background:#1C1917;padding:clamp(28px,5vw,52px) clamp(20px,5vw,48px)">
+      <p class="text-center text-xs font-semibold tracking-[0.12em] uppercase mb-10" style="color:rgba(245,240,232,0.3)">What your recipients see</p>
+
+      <div class="max-w-xs mx-auto rounded-2xl overflow-hidden" style="background:#F5F0E8;box-shadow:0 24px 64px rgba(0,0,0,0.4)">
+        <!-- Brand header -->
+        <div class="px-6 py-5" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+          <div class="flex items-center gap-3">
+            <div style="width:36px;height:36px;border-radius:9px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0">A</div>
+            <div>
+              <p style="font-weight:700;font-size:15px;color:#1C1917;margin:0;line-height:1.2">Acme Studio</p>
+              <p style="font-size:11px;color:rgba(28,25,23,0.4);margin:2px 0 0">Design agency · Berlin</p>
+            </div>
+          </div>
+        </div>
+        <!-- File card -->
+        <div class="px-6 py-6">
+          <p class="text-xs font-semibold uppercase tracking-[0.1em] mb-4" style="color:rgba(28,25,23,0.3)">Ready to download</p>
+          <div class="rounded-xl p-4 mb-4" style="background:rgba(28,25,23,0.05);border:1px solid rgba(28,25,23,0.07)">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:#EAE4D9">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="min-w-0">
+                <p class="font-semibold text-sm truncate" style="color:#1C1917;margin:0">brand-guidelines-v2.pdf</p>
+                <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4);margin:2px 0 0">4.8 MB · 6 days left</p>
+              </div>
+            </div>
+          </div>
+          <div class="w-full py-3 rounded-xl text-center text-sm font-semibold" style="background:#8B6F47;color:#F5F0E8">Download file</div>
+          <p class="text-center text-xs mt-4" style="color:rgba(28,25,23,0.3);margin:0">Sent via Fileo</p>
+        </div>
+      </div>
+
+      <p class="text-center text-xs mt-9" style="color:rgba(245,240,232,0.25)">Your brand, your colors — on every link you share.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features" class="px-6 py-24" style="background:#EDE8DF">
+  <div class="max-w-[900px] mx-auto">
+    <p class="text-xs uppercase tracking-[0.14em] text-center mb-3" style="color:rgba(28,25,23,0.28)">What you get</p>
+    <h2 class="text-center font-bold tracking-tight mb-14" style="font-size:clamp(28px,4vw,42px);color:#1C1917">Built for how professionals share.</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">Your name on every link</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">Set your brand name and tagline. Recipients see who sent the file before they even download it.</p>
+      </div>
+
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">Colors that match you</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">Choose an accent color and page background from curated presets — or enter any hex code you want.</p>
+      </div>
+
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">Every file, automatically</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">Branding applies to all your shared links — past and future. Set it once, look professional forever.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── COLOR SHOWCASE ── -->
+<section class="px-6 py-24">
+  <div class="max-w-[900px] mx-auto flex flex-col lg:flex-row items-center gap-14">
+    <div class="flex-1 max-w-md">
+      <p class="text-xs uppercase tracking-[0.14em] mb-4" style="color:rgba(28,25,23,0.28)">Colors</p>
+      <h2 class="font-bold tracking-tight mb-5" style="font-size:clamp(24px,3.5vw,36px);color:#1C1917">Pick colors that feel like you.</h2>
+      <p class="leading-relaxed mb-8" style="color:rgba(28,25,23,0.5);font-size:15px">
+        Warm cream, clean white, deep dark, cool blue, soft mint — or go fully custom. Your accent color appears on the download button, making your links unmistakably yours.
+      </p>
+      <button id="color-cta" onclick="handleCta()" class="px-6 py-3 rounded-full font-semibold text-sm hover:opacity-85 transition-opacity" style="background:#8B6F47;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started</button>
+    </div>
+
+    <div class="flex-shrink-0">
+      <div class="grid grid-cols-5 gap-2.5 mb-2.5">
+        <div class="rounded-xl h-12 w-12" style="background:#F5F0E8;border:1.5px solid rgba(28,25,23,0.12)" title="Warm"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#FFFFFF;border:1.5px solid rgba(28,25,23,0.12)" title="White"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#1C1917" title="Dark"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#EFF6FF;border:1.5px solid rgba(28,25,23,0.12)" title="Cool"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#F0FDF4;border:1.5px solid rgba(28,25,23,0.12)" title="Mint"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#8B6F47" title="Warm Brown"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#2563EB" title="Blue"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#059669" title="Green"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#7C3AED" title="Purple"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#DC2626" title="Red"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#EA580C" title="Orange"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#0891B2" title="Cyan"></div>
+        <div class="rounded-xl h-12 w-12" style="background:#1C1917" title="Black"></div>
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="border:2px dashed rgba(28,25,23,0.18)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.28)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+      <p class="text-xs text-center mt-1" style="color:rgba(28,25,23,0.3)">5 backgrounds · 8 accents · any custom hex</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── BOTTOM CTA ── -->
+<section class="px-6 pb-32">
+  <div class="max-w-xl mx-auto rounded-3xl text-center px-8 py-16" style="background:#1C1917">
+    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background:rgba(245,240,232,0.1)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <h2 class="font-bold tracking-tight mb-4" style="font-size:clamp(24px,3.5vw,36px);color:#F5F0E8">Start building your brand.</h2>
+    <p class="leading-relaxed mb-8" style="color:rgba(245,240,232,0.5);font-size:15px;max-width:340px;margin-left:auto;margin-right:auto">
+      Fileo Pro gives you cloud storage, custom branding, longer expiry, and more — for $10/month.
+    </p>
+    <button id="bottom-cta" onclick="handleCta()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Get started</button>
+  </div>
+</section>
+
+<script>
+const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
+const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
+
+let _sb = null, currentUser = null, isPro = false;
+let _authTab = 'login', _authAttempts = 0, _authLockedUntil = 0, _toastTimer = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    if (SUPABASE_URL && SUPABASE_ANON) _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  } catch(e) { _sb = null; }
+
+  if (_sb) {
+    _sb.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) {
+        currentUser = session.user;
+        isPro = session.user.app_metadata?.is_pro === true;
+        showUserNav(session.user.email);
+      } else {
+        currentUser = null; isPro = false;
+        showSignedOutNav();
+      }
+      updateCtaButtons();
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('account-menu');
+    const av   = document.getElementById('btn-avatar');
+    if (!menu.contains(e.target) && e.target !== av) menu.classList.add('hidden');
+  });
+});
+
+function updateCtaButtons() {
+  const label = isPro ? 'Open branding settings' : 'Get started';
+  ['hero-cta','bottom-cta','color-cta','mob-cta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
+function handleCta() {
+  if (isPro) window.location.href = 'cloud.html?tab=branding';
+  else       window.location.href = 'index.html#pricing';
+}
+
+function showUserNav(email) {
+  document.getElementById('btn-signin').classList.add('hidden');
+  const av = document.getElementById('btn-avatar');
+  av.textContent = email[0].toUpperCase();
+  av.classList.remove('hidden'); av.classList.add('flex');
+  document.getElementById('menu-email').textContent = email;
+  document.getElementById('menu-plan').textContent  = isPro ? 'Pro plan' : 'Free plan';
+  if (isPro) document.getElementById('pro-badge').classList.remove('hidden');
+}
+
+function showSignedOutNav() {
+  document.getElementById('btn-signin').classList.remove('hidden');
+  const av = document.getElementById('btn-avatar');
+  av.classList.add('hidden'); av.classList.remove('flex');
+  document.getElementById('account-menu').classList.add('hidden');
+}
+
+function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
+function toggleMobileMenu() {
+  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
+  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
+  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
+}
+async function doSignOut() {
+  if (_sb) await _sb.auth.signOut();
+}
+
+function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+function setAuthTab(tab) {
+  _authTab = tab;
+  const isL = tab === 'login';
+  document.getElementById('tab-login').style.cssText    = isL ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)' : 'background:transparent;color:rgba(28,25,23,0.45)';
+  document.getElementById('tab-register').style.cssText = isL ? 'background:transparent;color:rgba(28,25,23,0.45)' : 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)';
+  document.getElementById('auth-title').textContent     = isL ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent       = isL ? 'Sign in to access your branding settings.' : 'Create a free account to get started.';
+  document.getElementById('auth-password').placeholder  = isL ? 'Your password' : 'At least 6 characters';
+  document.getElementById('auth-submit').textContent    = isL ? 'Sign in' : 'Create account';
+  document.getElementById('auth-error').classList.add('hidden');
+}
+async function submitAuth(e) {
+  e.preventDefault();
+  if (!_sb) return;
+  const errEl = document.getElementById('auth-error');
+  const now   = Date.now();
+  if (now < _authLockedUntil) {
+    errEl.textContent = 'Too many attempts. Try again in ' + Math.ceil((_authLockedUntil - now)/1000) + 's.';
+    errEl.classList.remove('hidden'); return;
+  }
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-submit');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Please wait…';
+  const { error } = _authTab === 'login'
+    ? await _sb.auth.signInWithPassword({ email, password: pw })
+    : await _sb.auth.signUp({ email, password: pw });
+  btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
+  if (error) {
+    _authAttempts++;
+    if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
+    errEl.textContent = error.message; errEl.classList.remove('hidden');
+  } else { _authAttempts = 0; closeModal(); }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-8px)'; }, 2400);
+}
+</script>
+</body>
+</html>
