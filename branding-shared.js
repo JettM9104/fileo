@@ -1,5 +1,7 @@
 // ── BRANDING SHARED — used by cloud.html and branding.html ──────────────────
 
+const BUCKET = 'uploads';
+
 const ACCENT_PRESETS = ['#8B6F47','#1C1917','#2563EB','#059669','#DC2626','#7C3AED','#EA580C','#0891B2'];
 const BG_PRESETS = [
   { hex:'#F5F0E8', label:'Warm' }, { hex:'#FFFFFF', label:'White' },
