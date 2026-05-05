@@ -34,7 +34,8 @@ The frontend is **pure static HTML + vanilla JS** (no build step). The Flask bac
 |---|---|
 | `index.html` | Landing page — hero, how-it-works, features mockup demo, pricing section, download overlay, ToS/Privacy modals |
 | `upload.html` | Main upload UI — drag-and-drop, expiry picker, advanced options (Pro), My Files tab, progress/success states |
-| `cloud.html` | Pro-only Cloud workspace — versioned folder uploads, conflict detection, ZIP download, shared notes, member management |
+| `cloud.html` | Pro-only Cloud workspace — versioned folder uploads, conflict detection, ZIP download, shared notes, member management, branding settings |
+| `branding.html` | Marketing page for the branding Pro feature — hero, download page mockup, feature cards, color showcase, auth-aware CTA |
 | `server.py` | Flask API — presigned URLs, file deletion, Stripe checkout + webhook, Pro activation |
 | `config.js` | Runtime config injected into every page — Supabase URL/anon key, `apiBaseUrl` |
 | `gunicorn.conf.py` | Gunicorn settings: `127.0.0.1:5001`, 2 workers × 4 threads, 120s timeout |
@@ -187,13 +188,24 @@ The fallback endpoint ensures activation even if the webhook is dropped or delay
 |---|---|---|
 | Max file size | 500 MB | 10 GB |
 | Active links | 3 | 10 |
-| Total storage | 500 MB | 3 GB/week |
+| Total storage | 500 MB (active files) | 50 GB/week (uploads in rolling 7-day window, includes cloud workspace files for owned workspaces only) |
 | Expiry options | 1h, 24h | 1h, 24h, 7d, 30d |
 | Password protection | No | Yes |
 | Download limits | No | Yes |
 | Access control | No | Yes (anyone / signed-in / specific emails) |
 | Malware scanning UI | No | Yes (scan animation + "no threats" badge) |
 | Cloud workspace | No | Yes |
+
+---
+
+## My Files Tab (`upload.html`)
+
+The My Files panel has two sub-tabs (only shown when signed in):
+
+- **Links** — ephemeral shared file links (sent by you + received via `allowed_emails`)
+- **Cloud** — files stored in cloud workspaces the user owns or is a member of; Pro-only (shows upgrade prompt for free users)
+
+Cloud sub-tab loads via `loadCloudFiles()`: queries `workspaces` (owned) + `workspace_members` (member), then walks folders → latest snapshots → files. Shows filename, size, version, workspace name, and a Download button (Supabase Storage public URL via `_sb.storage.from('uploads').getPublicUrl(storagePath)`).
 
 ---
 
@@ -246,6 +258,11 @@ A simple shared file storage with notes and member management.
 - Drop zone with two upload buttons: "Upload files" (any file, multiple) and "Photos" (`accept="image/*,video/*" multiple` — allows multi-select from camera roll on iOS)
 - Upload progress bar with per-file label and count
 
+**Storage accounting**:
+- Cloud files uploaded to **owned** workspaces count toward the Pro user's weekly storage quota
+- Files in workspaces the user was **invited to** (member, not owner) do **not** count toward their quota
+- Weekly quota (50 GB/7-day rolling window) is checked at upload time: sum of `files.size` (by `created_at > 7d ago`) + `workspace_folder_snapshots.total_size` (by `uploaded_at > 7d ago`, owned workspaces only)
+
 **Upload flow**:
 - Each file is stored as a `workspace_folders` entry (name = filename) + `workspace_folder_snapshots` (version 1+) + `workspace_folder_files` record
 - Re-uploading the same filename increments the version; only latest version shown in list
@@ -258,9 +275,39 @@ A simple shared file storage with notes and member management.
 
 **Members tab**: Invite by email (inserted into `workspace_members`). Owner sees "Remove" buttons. Avatar row in header shows up to 4 members + overflow count.
 
+**Branding tab** (Pro, 4th tab): Lets a Pro user set custom branding applied to all their shared links and cloud workspace.
+- Fields: brand name, tagline, domain (shown in top-left of download page), accent color (8 presets + custom color picker), page background (5 presets), backgrounds/wallpapers (up to 5 images/videos)
+- Live preview card shows brand name, tagline, domain, accent color, and background color in real time
+- Saved to `user_branding` Supabase table — upsert on save
+- **Schema** (`user_branding`): `user_id`, `brand_name`, `tagline`, `domain_url`, `accent_color`, `bg_color`, `wallpapers` (JSONB array of `{url, type}`), `updated_at`
+- **⚠️ DB migration required**: `ALTER TABLE user_branding ADD COLUMN IF NOT EXISTS domain_url TEXT, ADD COLUMN IF NOT EXISTS wallpapers JSONB DEFAULT '[]';`
+- Applied on download page (`index.html`): when a file has `is_pro=true` and `user_id`, the download page fetches `user_branding` and calls `applyBranding()`, which: replaces Fileo header with brand logo initial + name + tagline + domain, sets accent color on download button, adapts colors for dark/light backgrounds, and if wallpapers are set starts a 30-second rotating background (`startWallpaperRotation()`) with a scrim overlay for text readability
+- Wallpaper files stored in Supabase Storage bucket `uploads` under `branding/{userId}/wp_{timestamp}.{ext}`; public URLs stored in `wallpapers` JSONB column; JPEG/PNG/MP4 only, max 5 MB each
+
 ---
 
-## Auth (`index.html`, `upload.html`, `cloud.html`)
+## Branding Page (`branding.html`)
+
+A standalone marketing page in the top nav (before Cloud) promoting the Pro branding feature.
+
+**Nav position**: Home | Upload | **Branding** | Cloud — appears in the pill nav on all four pages.
+
+**Sections**:
+1. Hero — "Make every link yours." with PRO badge pill, subtext, and CTA
+2. Download page mockup — shows a branded recipient experience (dark card, logo initial, brand name/tagline, styled download button) against a dark background
+3. Feature cards (3) — "Your name on every link", "Colors that match you", "Every file, automatically"
+4. Color showcase — swatch grid (5 backgrounds × 8+ accents) with descriptive copy
+5. Bottom CTA — dark card with "Start building your brand."
+
+**Auth-aware CTAs** (`hero-cta`, `bottom-cta`, `color-cta`, `mob-cta`):
+- Not logged in / free user → "Get started — $10/mo" → `index.html#pricing`
+- Pro user → "Open branding settings" → `cloud.html?tab=branding`
+
+**`?tab=branding` deep-link in `cloud.html`**: After `loadWorkspace()` completes it reads `new URLSearchParams(window.location.search).get('tab')` and calls `switchWsTab(tabParam)` if valid, so arriving from the branding page auto-opens the Branding tab.
+
+---
+
+## Auth (`index.html`, `upload.html`, `cloud.html`, `branding.html`)
 
 - Supabase JS SDK v2 (`onAuthStateChange`) used everywhere
 - Email/password sign-in and sign-up; Google OAuth (`signInWithOAuth`)

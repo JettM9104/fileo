@@ -104,6 +104,7 @@
       <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
         <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
         <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Upload</a>
+        <a href="branding.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Branding</a>
         <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Cloud</a>
         <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
       </nav>
@@ -168,7 +169,7 @@
         <!-- Quota card (shown when logged in) -->
         <div id="quota-card" class="hidden mb-5 rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)">
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Storage used</span>
+            <span id="storage-kind" class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Storage used</span>
             <span id="storage-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
           </div>
           <div class="w-full h-1.5 rounded-full mb-4" style="background:#EAE4D9">
@@ -323,24 +324,70 @@
           <button onclick="openModal()" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Sign in</button>
         </div>
 
-        <!-- Loading -->
-        <div id="fl-loading" class="hidden flex items-center justify-center gap-2 py-16" style="color:rgba(28,25,23,0.4)">
-          <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
-          <span class="text-sm">Loading files…</span>
-        </div>
+        <!-- Logged-in content -->
+        <div id="fl-loggedin" class="hidden">
 
-        <!-- Empty -->
-        <div id="fl-empty" class="hidden text-center py-16">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <!-- Sub-tabs: Links / Cloud -->
+          <div class="flex gap-1 p-1 rounded-xl mb-5" style="background:#EAE4D9">
+            <button id="subtab-links-btn" onclick="switchFilesTab('links')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Links</button>
+            <button id="subtab-cloud-btn" onclick="switchFilesTab('cloud')" class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all" style="background:transparent;color:rgba(28,25,23,0.45)">Cloud</button>
           </div>
-          <p class="font-semibold text-lg mb-2" style="color:#1C1917">No active files</p>
-          <p class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Files you upload will appear here.</p>
-          <button onclick="switchTab('upload')" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Upload a file</button>
-        </div>
 
-        <!-- List -->
-        <div id="fl-list" class="hidden flex flex-col gap-3"></div>
+          <!-- Links panel -->
+          <div id="fl-links-panel">
+            <!-- Loading -->
+            <div id="fl-loading" class="hidden flex items-center justify-center gap-2 py-16" style="color:rgba(28,25,23,0.4)">
+              <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+              <span class="text-sm">Loading files…</span>
+            </div>
+
+            <!-- Empty -->
+            <div id="fl-empty" class="hidden text-center py-16">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <p class="font-semibold text-lg mb-2" style="color:#1C1917">No active files</p>
+              <p class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Files you upload will appear here.</p>
+              <button onclick="switchTab('upload')" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Upload a file</button>
+            </div>
+
+            <!-- List -->
+            <div id="fl-list" class="hidden flex flex-col gap-3"></div>
+          </div><!-- /fl-links-panel -->
+
+          <!-- Cloud panel -->
+          <div id="fl-cloud-panel" class="hidden">
+            <!-- Loading -->
+            <div id="fc-loading" class="hidden flex items-center justify-center gap-2 py-16" style="color:rgba(28,25,23,0.4)">
+              <div class="w-4 h-4 rounded-full border-2 spinner" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+              <span class="text-sm">Loading cloud files…</span>
+            </div>
+
+            <!-- Not Pro -->
+            <div id="fc-nopro" class="hidden text-center py-16">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              </div>
+              <p class="font-semibold text-lg mb-2" style="color:#1C1917">Cloud is a Pro feature</p>
+              <p class="text-sm mb-6 max-w-xs mx-auto leading-relaxed" style="color:rgba(28,25,23,0.45)">Upgrade to Pro to get a persistent cloud workspace with 3 GB/week of storage.</p>
+              <a href="index.html#pricing" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity no-underline" style="background:#1C1917;color:#F5F0E8;display:inline-block">Upgrade to Pro</a>
+            </div>
+
+            <!-- Empty -->
+            <div id="fc-empty" class="hidden text-center py-16">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              </div>
+              <p class="font-semibold text-lg mb-2" style="color:#1C1917">No cloud files yet</p>
+              <p class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Files uploaded to your cloud workspace will appear here.</p>
+              <a href="cloud.html" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity no-underline" style="background:#1C1917;color:#F5F0E8;display:inline-block">Open Cloud</a>
+            </div>
+
+            <!-- List -->
+            <div id="fc-list" class="hidden flex flex-col gap-3"></div>
+          </div><!-- /fl-cloud-panel -->
+
+        </div><!-- /fl-loggedin -->
 
       </div><!-- /panel-files -->
 
@@ -412,7 +459,9 @@ const PRO_MAX_STORAGE  = 50 * 1024 * 1024 * 1024;
 let _sb = null, currentUser = null, isPro = false;
 let selectedFile = null, selectedExpiry = 1;
 let activePanel = 'upload';
+let activeFilesTab = 'links';
 let _authTab = 'login';
+let _cloudFiles = [];
 
 // ── INIT
 window.addEventListener('DOMContentLoaded', () => {
@@ -558,12 +607,27 @@ async function loadQuota() {
   const card = document.getElementById('quota-card');
   card.classList.remove('hidden');
 
+  const now = new Date().toISOString();
+
   if (isPro) {
-    card.classList.add('hidden');
+    document.getElementById('storage-kind').textContent = 'Weekly storage';
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [{ data: weekFiles }, wsUsed] = await Promise.all([
+      _sb.from('files').select('size').eq('user_id', currentUser.id).gt('created_at', weekAgo),
+      getWeeklyWorkspaceStorage(weekAgo)
+    ]);
+
+    const filesUsed = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
+    const used = filesUsed + wsUsed;
+    const pct  = Math.min(100, (used / PRO_MAX_STORAGE) * 100);
+
+    document.getElementById('storage-fill').style.width  = pct + '%';
+    document.getElementById('storage-label').textContent = fmtSize(used) + ' / 50 GB this week';
+    document.getElementById('links-label').textContent   = PRO_MAX_LINKS + ' max links';
     return;
   }
 
-  const now = new Date().toISOString();
   const { data: files } = await _sb.from('files')
     .select('size')
     .eq('user_id', currentUser.id)
@@ -573,6 +637,7 @@ async function loadQuota() {
   const count = (files || []).length;
   const pct   = Math.min(100, (used / FREE_MAX_STORAGE) * 100);
 
+  document.getElementById('storage-kind').textContent  = 'Storage used';
   document.getElementById('storage-fill').style.width  = pct + '%';
   document.getElementById('storage-label').textContent = fmtSize(used) + ' / 500 MB';
   document.getElementById('links-label').textContent   = count + ' / ' + FREE_MAX_LINKS;
@@ -798,23 +863,38 @@ async function doUpload() {
   // Quota check
   if (currentUser) {
     const now = new Date().toISOString();
-    const { data: existing } = await _sb.from('files')
-      .select('size')
-      .eq('user_id', currentUser.id)
-      .gt('expires_at', now);
-    const usedStorage = (existing || []).reduce((s, f) => s + (f.size || 0), 0);
-    const count = (existing || []).length;
-    const maxLinks   = isPro ? PRO_MAX_LINKS   : FREE_MAX_LINKS;
-    const maxStorage = isPro ? PRO_MAX_STORAGE : FREE_MAX_STORAGE;
-    const planLabel  = isPro ? 'Pro' : 'free';
-    if (count >= maxLinks) {
-      showToast('You have ' + maxLinks + ' active links — the ' + planLabel + ' plan maximum. Delete one' + (isPro ? '.' : ' or upgrade.'));
-      return;
-    }
-    if (usedStorage + selectedFile.size > maxStorage) {
-      const left = maxStorage - usedStorage;
-      showToast('Not enough storage. ' + fmtSize(left) + ' remaining on your ' + planLabel + ' plan.');
-      return;
+    if (isPro) {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
+        _sb.from('files').select('size').eq('user_id', currentUser.id).gt('created_at', weekAgo),
+        getWeeklyWorkspaceStorage(weekAgo),
+        _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
+      ]);
+      const filesUsed = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
+      const usedStorage = filesUsed + wsUsed;
+      if ((activeLinks?.length || 0) >= PRO_MAX_LINKS) {
+        showToast('You have ' + PRO_MAX_LINKS + ' active links — the Pro plan maximum. Delete one.');
+        return;
+      }
+      if (usedStorage + selectedFile.size > PRO_MAX_STORAGE) {
+        const left = Math.max(0, PRO_MAX_STORAGE - usedStorage);
+        showToast('Not enough weekly storage. ' + fmtSize(left) + ' remaining this week on your Pro plan.');
+        return;
+      }
+    } else {
+      const { data: existing } = await _sb.from('files')
+        .select('size').eq('user_id', currentUser.id).gt('expires_at', now);
+      const usedStorage = (existing || []).reduce((s, f) => s + (f.size || 0), 0);
+      const count = (existing || []).length;
+      if (count >= FREE_MAX_LINKS) {
+        showToast('You have ' + FREE_MAX_LINKS + ' active links — the free plan maximum. Delete one or upgrade.');
+        return;
+      }
+      if (usedStorage + selectedFile.size > FREE_MAX_STORAGE) {
+        const left = FREE_MAX_STORAGE - usedStorage;
+        showToast('Not enough storage. ' + fmtSize(left) + ' remaining on your free plan.');
+        return;
+      }
     }
   }
 
@@ -966,9 +1046,142 @@ function resetUpload() {
 
 // ── MY FILES
 function showFilesState(state) {
-  ['fl-login','fl-loading','fl-empty','fl-list'].forEach(id => {
-    document.getElementById(id).classList.toggle('hidden', id !== 'fl-' + state);
+  const isLogin = state === 'login';
+  document.getElementById('fl-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('fl-loggedin').classList.toggle('hidden', isLogin);
+  if (!isLogin) {
+    ['loading','empty','list'].forEach(s => {
+      document.getElementById('fl-' + s).classList.toggle('hidden', s !== state);
+    });
+  }
+}
+
+function showCloudState(state) {
+  ['loading','nopro','empty','list'].forEach(s => {
+    document.getElementById('fc-' + s).classList.toggle('hidden', s !== state);
   });
+}
+
+function switchFilesTab(tab) {
+  activeFilesTab = tab;
+  const isLinks = tab === 'links';
+  document.getElementById('fl-links-panel').classList.toggle('hidden', !isLinks);
+  document.getElementById('fl-cloud-panel').classList.toggle('hidden', isLinks);
+  document.getElementById('subtab-links-btn').style.cssText = isLinks
+    ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)'
+    : 'background:transparent;color:rgba(28,25,23,0.45)';
+  document.getElementById('subtab-cloud-btn').style.cssText = isLinks
+    ? 'background:transparent;color:rgba(28,25,23,0.45)'
+    : 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)';
+  if (tab === 'cloud') loadCloudFiles();
+}
+
+async function getWeeklyWorkspaceStorage(weekAgo) {
+  if (!currentUser) return 0;
+  try {
+    const { data: ownedWs } = await _sb.from('workspaces').select('id').eq('owner_id', currentUser.id);
+    const wsIds = (ownedWs || []).map(w => w.id);
+    if (!wsIds.length) return 0;
+    const { data: folders } = await _sb.from('workspace_folders').select('id').in('workspace_id', wsIds);
+    const folderIds = (folders || []).map(f => f.id);
+    if (!folderIds.length) return 0;
+    const { data: snaps } = await _sb.from('workspace_folder_snapshots')
+      .select('total_size').in('folder_id', folderIds).gt('uploaded_at', weekAgo);
+    return (snaps || []).reduce((s, snap) => s + (snap.total_size || 0), 0);
+  } catch { return 0; }
+}
+
+async function loadCloudFiles() {
+  if (!currentUser) return;
+  showCloudState('loading');
+  if (!isPro) { showCloudState('nopro'); return; }
+
+  // All workspaces user owns or is a member of
+  const [{ data: ownedWs }, { data: memberRows }] = await Promise.all([
+    _sb.from('workspaces').select('id, name').eq('owner_id', currentUser.id),
+    _sb.from('workspace_members').select('workspace_id').eq('email', currentUser.email.toLowerCase())
+  ]);
+
+  let memberWsIds = (memberRows || []).map(r => r.workspace_id);
+  let memberWsData = [];
+  if (memberWsIds.length) {
+    const { data: mws } = await _sb.from('workspaces').select('id, name').in('id', memberWsIds);
+    memberWsData = mws || [];
+  }
+
+  const allWorkspaces = [...(ownedWs || []), ...memberWsData];
+  if (!allWorkspaces.length) { showCloudState('empty'); return; }
+
+  const allWsIds = allWorkspaces.map(w => w.id);
+  const wsNameMap = Object.fromEntries(allWorkspaces.map(w => [w.id, w.name]));
+
+  const { data: folders } = await _sb.from('workspace_folders')
+    .select('id, name, workspace_id').in('workspace_id', allWsIds);
+  if (!folders?.length) { showCloudState('empty'); return; }
+
+  const folderIds = folders.map(f => f.id);
+  const folderWsMap = Object.fromEntries(folders.map(f => [f.id, f.workspace_id]));
+
+  const { data: snapshots } = await _sb.from('workspace_folder_snapshots')
+    .select('id, folder_id, version_number, uploaded_at')
+    .in('folder_id', folderIds).order('version_number', { ascending: false });
+  if (!snapshots?.length) { showCloudState('empty'); return; }
+
+  // Latest snapshot per folder
+  const latestSnap = {};
+  (snapshots || []).forEach(s => {
+    if (!latestSnap[s.folder_id] || s.version_number > latestSnap[s.folder_id].version_number)
+      latestSnap[s.folder_id] = s;
+  });
+  const latestSnapIds = Object.values(latestSnap).map(s => s.id);
+
+  const { data: files } = await _sb.from('workspace_folder_files')
+    .select('filename, storage_path, size, folder_id, snapshot_id')
+    .in('snapshot_id', latestSnapIds);
+  if (!files?.length) { showCloudState('empty'); return; }
+
+  _cloudFiles = files.map((f, i) => ({
+    ...f,
+    wsName: wsNameMap[folderWsMap[f.folder_id]] || 'Cloud',
+    version: latestSnap[f.folder_id]?.version_number || 1,
+    idx: i
+  }));
+
+  // Sort newest first by snapshot uploaded_at
+  const snapDateMap = Object.fromEntries(Object.values(latestSnap).map(s => [s.id, s.uploaded_at]));
+  _cloudFiles.sort((a, b) => (snapDateMap[b.snapshot_id] || '') > (snapDateMap[a.snapshot_id] || '') ? 1 : -1);
+
+  const list = document.getElementById('fc-list');
+  list.innerHTML = '';
+  _cloudFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-4 rounded-2xl p-5';
+    div.style.cssText = 'background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)';
+    div.innerHTML = `
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">${fileIconSvg(f.filename)}</div>
+      <div class="flex-1 min-w-0">
+        <p class="font-semibold text-sm truncate" style="color:#1C1917">${escHtml(f.filename)}</p>
+        <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">${fmtSize(f.size)} · v${f.version} · ${escHtml(f.wsName)}</p>
+      </div>
+      <div class="flex-shrink-0">
+        <button onclick="downloadCloudFile(${i})" class="px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Download</button>
+      </div>`;
+    list.appendChild(div);
+  });
+  showCloudState('list');
+}
+
+function downloadCloudFile(idx) {
+  const f = _cloudFiles[idx];
+  if (!f?.storage_path) return;
+  const { data } = _sb.storage.from('uploads').getPublicUrl(f.storage_path);
+  const a = document.createElement('a');
+  a.href = data.publicUrl;
+  a.download = f.filename;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 async function loadFiles() {
