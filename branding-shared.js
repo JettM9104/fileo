@@ -2,6 +2,17 @@
 
 const BUCKET = 'uploads';
 
+const ACCENT_PRESETS = [
+  '#8B6F47', // Warm brown (default)
+  '#1C1917', // Dark
+  '#2563EB', // Blue
+  '#059669', // Green
+  '#7C3AED', // Purple
+  '#DC2626', // Red
+  '#EA580C', // Orange
+  '#0891B2', // Cyan
+];
+
 // ── Profile list state ──────────────────────────────────────────────────────
 let _profiles       = [];
 let _editingId      = null;
@@ -29,6 +40,78 @@ function cyclePreviewWallpaper(dir) {
   if (_wallpapers.length < 2) return;
   _previewWallIdx = (_previewWallIdx + dir + _wallpapers.length) % _wallpapers.length;
   updateBrandPreview();
+}
+
+// ── Accent / button color helpers ────────────────────────────────────────────
+function renderAccentSwatches() {
+  const container = document.getElementById('accent-swatches');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const current = (_branding.accent_color || '#8B6F47').toLowerCase();
+  const isPreset = ACCENT_PRESETS.some(c => c.toLowerCase() === current);
+
+  ACCENT_PRESETS.forEach(color => {
+    const selected = color.toLowerCase() === current;
+    const sw = document.createElement('button');
+    sw.type = 'button';
+    sw.title = color;
+    sw.style.cssText = [
+      'width:28px;height:28px;border-radius:7px',
+      `background:${color}`,
+      'border:none;cursor:pointer;flex-shrink:0',
+      'position:relative;display:flex;align-items:center;justify-content:center',
+      'transition:transform 0.1s,box-shadow 0.1s',
+      selected ? `box-shadow:0 0 0 2px #FDFAF5,0 0 0 3.5px ${color}` : '',
+    ].filter(Boolean).join(';');
+    sw.onmouseover = () => { if (!selected) sw.style.transform = 'scale(1.12)'; };
+    sw.onmouseout  = () => { sw.style.transform = ''; };
+    if (selected) {
+      sw.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    }
+    sw.onclick = () => onAccentColorChange(color);
+    container.appendChild(sw);
+  });
+
+  // Custom swatch
+  const customSwatch = document.getElementById('accent-custom-swatch');
+  const customIcon   = document.getElementById('accent-custom-icon');
+  const picker       = document.getElementById('accent-color-picker');
+  const hexInput     = document.getElementById('accent-hex-input');
+
+  if (customSwatch) {
+    if (!isPreset) {
+      customSwatch.style.background  = current;
+      customSwatch.style.border      = `1.5px solid rgba(28,25,23,0.2)`;
+      customSwatch.style.boxShadow   = `0 0 0 2px #FDFAF5,0 0 0 3.5px ${current}`;
+      if (customIcon) customIcon.outerHTML = `<svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    } else {
+      customSwatch.style.background  = '';
+      customSwatch.style.border      = '1.5px dashed rgba(28,25,23,0.25)';
+      customSwatch.style.boxShadow   = '';
+      const icon = customSwatch.querySelector('svg');
+      if (icon) icon.outerHTML = `<svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    }
+  }
+  if (picker) picker.value = /^#[0-9a-f]{6}$/i.test(current) ? current : '#8B6F47';
+  if (hexInput && document.activeElement !== hexInput) hexInput.value = _branding.accent_color;
+}
+
+function onAccentColorChange(hex) {
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
+  _branding.accent_color = hex;
+  renderAccentSwatches();
+  updateBrandPreview();
+}
+
+function onAccentHexInput(val) {
+  const hex = val.startsWith('#') ? val : '#' + val;
+  if (/^#[0-9A-Fa-f]{6}$/.test(hex)) onAccentColorChange(hex);
+}
+
+function onAccentHexBlur() {
+  const hexInput = document.getElementById('accent-hex-input');
+  if (hexInput) hexInput.value = _branding.accent_color;
 }
 
 function updateBrandPreview() {
@@ -288,6 +371,7 @@ function _renderEditorForProfile(id) {
 
   renderWallpaperSlots();
   renderLogoPreview();
+  renderAccentSwatches();
   updateBrandPreview();
 }
 
