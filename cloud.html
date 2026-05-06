@@ -299,102 +299,128 @@
 
     <!-- ════ BRANDING TAB ════ -->
     <div id="ws-panel-branding" class="hidden">
-      <div class="flex flex-col lg:flex-row gap-5">
+  <div class="flex flex-col lg:flex-row gap-5">
 
-        <!-- Settings -->
-        <div class="flex-1 flex flex-col gap-4">
+    <!-- Settings column -->
+    <div class="flex-1 flex flex-col gap-4">
 
-          <!-- Identity -->
-          <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
-            <div class="flex flex-col gap-3">
-              <div>
-                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Brand name</label>
-                <input id="brand-name" type="text" maxlength="40" placeholder="Your company or name" oninput="updateBrandPreview()"
-                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-              </div>
-              <div>
-                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Tagline <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-                <input id="brand-tagline" type="text" maxlength="80" placeholder="e.g. Creative agency · London" oninput="updateBrandPreview()"
-                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-              </div>
-              <div>
-                <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Domain <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-                <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
-                  class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-                <p class="text-xs mt-1.5" style="color:rgba(28,25,23,0.35)">Shown in the top-left of your download links</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Colors -->
-          <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Colors</p>
-
-            <p class="text-xs font-medium mb-2.5" style="color:rgba(28,25,23,0.5)">Accent color</p>
-            <div id="accent-swatches" class="flex flex-wrap gap-2 mb-3"></div>
-            <div class="flex items-center gap-2.5 mb-5">
-              <label class="text-xs font-medium" style="color:rgba(28,25,23,0.5)">Custom</label>
-              <input id="brand-accent-input" type="color" value="#8B6F47" oninput="setAccentColor(this.value)"
-                class="w-8 h-7 rounded-lg cursor-pointer p-0.5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12)" />
-              <span id="brand-accent-hex" class="text-xs font-mono" style="color:rgba(28,25,23,0.4)">#8B6F47</span>
-            </div>
-
-            <p class="text-xs font-medium mb-2.5" style="color:rgba(28,25,23,0.5)">Page background</p>
-            <div id="bg-swatches" class="flex flex-wrap gap-2"></div>
-          </div>
-
-          <!-- Wallpapers -->
-          <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-            <div class="flex items-center justify-between mb-1">
-              <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Backgrounds</p>
-              <span id="wallpaper-count" class="text-xs" style="color:rgba(28,25,23,0.35)">0 / 5</span>
-            </div>
-            <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Images &amp; videos shown behind your download page, rotating every 30 seconds.</p>
-            <div id="wallpaper-slots" class="grid gap-2 mb-3" style="grid-template-columns:repeat(5,1fr)"></div>
-            <p class="text-xs mt-1" style="color:rgba(28,25,23,0.3)">JPEG, PNG or MP4 · max 5 MB · up to 5 backgrounds</p>
-          </div>
-
-          <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
-
-          <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save branding</button>
-          <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">Applies to all your shared links and cloud workspace</p>
-        </div>
-
-        <!-- Preview -->
-        <div style="width:100%;max-width:240px" class="mx-auto lg:mx-0 flex-shrink-0">
-          <div class="rounded-2xl overflow-hidden" style="border:1px solid rgba(28,25,23,0.10)">
-            <div class="px-4 py-3" style="background:#FDFAF5;border-bottom:1px solid rgba(28,25,23,0.08)">
-              <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Preview</p>
-            </div>
-            <div id="brand-preview-bg" style="padding:20px 16px;background:#F5F0E8;transition:background .25s">
-              <!-- Brand header -->
-              <div class="flex items-center gap-2 mb-5">
-                <div id="preview-logo" style="width:30px;height:30px;border-radius:8px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:background .25s">F</div>
-                <div>
-                  <p id="preview-name" style="font-weight:700;font-size:14px;color:#1C1917;line-height:1.2;margin:0;transition:color .25s">Your Brand</p>
-                  <p id="preview-tagline" style="font-size:11px;color:rgba(28,25,23,0.4);margin:2px 0 0;display:none;transition:color .25s"></p>
-                  <p id="preview-domain" style="font-size:10px;color:rgba(28,25,23,0.35);margin:1px 0 0;display:none;transition:color .25s"></p>
-                </div>
-              </div>
-              <!-- File card mock -->
-              <div id="preview-card" style="background:rgba(28,25,23,0.06);border-radius:12px;padding:10px 12px;margin-bottom:8px;transition:background .25s">
-                <p id="preview-card-text" style="font-weight:600;font-size:12px;color:#1C1917;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;transition:color .25s">document.pdf</p>
-                <p id="preview-card-meta" style="font-size:11px;color:rgba(28,25,23,0.4);margin:3px 0 0;transition:color .25s">2.3 MB · 7d left</p>
-              </div>
-              <!-- Button mock -->
-              <div id="preview-btn-mock" style="background:#8B6F47;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#F5F0E8;transition:background .25s">Download file</div>
-              <!-- Footer -->
-              <p id="preview-footer" style="font-size:10px;text-align:center;margin:10px 0 0;color:rgba(28,25,23,0.3);transition:color .25s">Sent via Fileo</p>
-            </div>
-          </div>
-          <p class="text-xs text-center mt-3" style="color:rgba(28,25,23,0.35)">How your download links look</p>
-        </div>
-
+      <!-- PROFILES LIST VIEW -->
+      <div id="profiles-list-view">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Branding profiles</p>
+        <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">The default profile appears on all your download links. Up to 3 profiles.</p>
+        <div id="profiles-cards" class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))"></div>
+        <button id="add-profile-btn" onclick="addNewProfile()"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-75 transition-opacity"
+          style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add profile
+        </button>
       </div>
+
+      <!-- PROFILE EDITOR VIEW -->
+      <div id="profile-editor-view" class="hidden flex flex-col gap-4">
+
+        <div class="flex items-center gap-3">
+          <button onclick="closeProfileEditor()" class="flex items-center gap-1.5 text-xs font-medium hover:opacity-60 transition-opacity flex-shrink-0" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            All profiles
+          </button>
+          <div class="w-px h-4 flex-shrink-0" style="background:rgba(28,25,23,0.12)"></div>
+          <input id="profile-name-input" type="text" maxlength="32" placeholder="Profile name"
+            class="flex-1 px-3 py-1.5 rounded-lg text-sm font-semibold"
+            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+          <label class="flex items-center gap-1.5 text-xs font-medium flex-shrink-0" style="color:rgba(28,25,23,0.5);cursor:pointer">
+            <input id="profile-is-default" type="checkbox" style="accent-color:#8B6F47" />
+            Default
+          </label>
+        </div>
+
+        <!-- Logo -->
+        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
+          <div class="flex flex-col items-center gap-3">
+            <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
+              style="width:72px;height:72px;border-radius:16px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" title="Upload logo">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
+            <p class="text-xs text-center" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
+            <button id="logo-remove-btn" class="hidden text-xs hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
+          </div>
+          <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
+        </div>
+
+        <!-- Identity -->
+        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
+          <div class="flex flex-col gap-3">
+            <div>
+              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Brand name</label>
+              <input id="brand-name" type="text" maxlength="40" placeholder="Your company or name" oninput="updateBrandPreview()"
+                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+            </div>
+            <div>
+              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Tagline <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+              <input id="brand-tagline" type="text" maxlength="80" placeholder="e.g. Creative agency · London" oninput="updateBrandPreview()"
+                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+            </div>
+            <div>
+              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Domain <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+              <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
+                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Wallpapers -->
+        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Backgrounds</p>
+            <span id="wallpaper-count" class="text-xs" style="color:rgba(28,25,23,0.35)">0 / 5</span>
+          </div>
+          <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Images &amp; videos shown behind your download page, rotating every 30 seconds.</p>
+          <div id="wallpaper-slots" class="grid gap-2 mb-3" style="grid-template-columns:repeat(5,1fr)"></div>
+          <p class="text-xs mt-1" style="color:rgba(28,25,23,0.3)">JPEG, PNG or MP4 · max 5 MB · up to 5 backgrounds</p>
+        </div>
+
+        <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
+
+        <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save profile</button>
+        <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">The default profile applies to all your shared links</p>
+
+      </div><!-- /profile-editor-view -->
+    </div>
+
+    <!-- Preview panel (unchanged) -->
+    <div style="width:100%;max-width:240px" class="mx-auto lg:mx-0 flex-shrink-0">
+      <div class="rounded-2xl overflow-hidden" style="border:1px solid rgba(28,25,23,0.10)">
+        <div class="px-4 py-3" style="background:#FDFAF5;border-bottom:1px solid rgba(28,25,23,0.08)">
+          <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Preview</p>
+        </div>
+        <div id="brand-preview-bg" style="padding:20px 16px;background:#F5F0E8;transition:background .25s">
+          <div class="flex items-center gap-2 mb-5">
+            <div id="preview-logo" style="width:30px;height:30px;border-radius:8px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:background .25s">F</div>
+            <div>
+              <p id="preview-name" style="font-weight:700;font-size:14px;color:#1C1917;line-height:1.2;margin:0;transition:color .25s">Your Brand</p>
+              <p id="preview-tagline" style="font-size:11px;color:rgba(28,25,23,0.4);margin:2px 0 0;display:none;transition:color .25s"></p>
+              <p id="preview-domain" style="font-size:10px;color:rgba(28,25,23,0.35);margin:1px 0 0;display:none;transition:color .25s"></p>
+            </div>
+          </div>
+          <div id="preview-card" style="background:rgba(28,25,23,0.06);border-radius:12px;padding:10px 12px;margin-bottom:8px;transition:background .25s">
+            <p id="preview-card-text" style="font-weight:600;font-size:12px;color:#1C1917;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;transition:color .25s">document.pdf</p>
+            <p id="preview-card-meta" style="font-size:11px;color:rgba(28,25,23,0.4);margin:3px 0 0;transition:color .25s">2.3 MB · 7d left</p>
+          </div>
+          <div id="preview-btn-mock" style="background:#8B6F47;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#F5F0E8;transition:background .25s">Download file</div>
+          <p id="preview-footer" style="font-size:10px;text-align:center;margin:10px 0 0;color:rgba(28,25,23,0.3);transition:color .25s">Sent via Fileo</p>
+        </div>
+      </div>
+      <p class="text-xs text-center mt-3" style="color:rgba(28,25,23,0.35)">How your download links look</p>
+    </div>
+
+  </div>
     </div><!-- /ws-panel-branding -->
 
   </div><!-- /state-workspace -->
