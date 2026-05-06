@@ -1408,8 +1408,8 @@ async function showDownloadPage(fileId) {
   if (error || !file) { dlShowState('dl-notfound'); return; }
   if (new Date(file.expires_at) < new Date()) { dlShowState('dl-expired'); return; }
 
-  // Apply sender's branding if they're a Pro user with custom branding set
-  if (file.is_pro && file.user_id) {
+  // Apply sender's branding if they have any set
+  if (file.user_id) {
     _sb.from('user_branding').select('*').eq('user_id', file.user_id).maybeSingle()
       .then(({ data }) => { if (data) applyBranding(data); });
   }
