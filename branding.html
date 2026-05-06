@@ -175,11 +175,11 @@
       </div>
 
       <!-- Content area -->
-      <div style="height:430px;overflow:hidden">
+      <div style="height:480px;overflow:hidden">
         <div id="bd-scroller" style="transition:transform 0.95s cubic-bezier(0.4,0,0.2,1)">
 
-          <!-- PANEL 1: Branding settings replica (430px) -->
-          <div style="height:430px;background:#F5F0E8;display:flex;flex-direction:column">
+          <!-- PANEL 1: Branding settings replica (480px) -->
+          <div style="height:480px;background:#F5F0E8;display:flex;flex-direction:column">
 
             <!-- Mini page nav -->
             <div style="padding:10px 18px;border-bottom:1px solid rgba(28,25,23,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -204,7 +204,7 @@
                 <div style="display:flex;align-items:center;gap:12px">
                   <div id="bd-logo-box" style="width:52px;height:52px;border-radius:12px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:background 0.3s">
                     <svg id="bd-logo-placeholder" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.28)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <span id="bd-logo-letter" style="display:none;font-weight:700;font-size:20px;color:#F5F0E8"></span>
+                    <svg id="bd-logo-filled" width="52" height="52" viewBox="0 0 28 28" fill="none" style="display:none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
                   </div>
                   <div>
                     <div id="bd-upload-btn" style="display:inline-block;padding:5px 10px;border-radius:8px;background:#EAE4D9;font-size:10px;font-weight:600;color:#1C1917;cursor:pointer">Upload logo</div>
@@ -222,10 +222,16 @@
                     <span id="bd-name-text"></span><span id="bd-name-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
                   </div>
                 </div>
-                <div>
+                <div style="margin-bottom:7px">
                   <label style="font-size:9.5px;font-weight:500;color:rgba(28,25,23,0.45);display:block;margin-bottom:3px">Tagline <span style="color:rgba(28,25,23,0.28)">(optional)</span></label>
-                  <div id="bd-tag-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:6px 10px;font-size:12px;color:#1C1917;height:30px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
+                  <div id="bd-tag-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:6px 10px;font-size:12px;color:#1C1917;height:28px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
                     <span id="bd-tag-text"></span><span id="bd-tag-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
+                  </div>
+                </div>
+                <div>
+                  <label style="font-size:9.5px;font-weight:500;color:rgba(28,25,23,0.45);display:block;margin-bottom:3px">Domain <span style="color:rgba(28,25,23,0.28)">(optional)</span></label>
+                  <div id="bd-domain-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:6px 10px;font-size:12px;color:#1C1917;height:28px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
+                    <span id="bd-domain-text"></span><span id="bd-domain-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
                   </div>
                 </div>
               </div>
@@ -251,17 +257,21 @@
             </div>
           </div><!-- /panel 1 -->
 
-          <!-- PANEL 2: What recipients see (430px) -->
-          <div id="bd-preview-page" style="height:430px;position:relative;overflow:hidden;background:#1C1917;transition:background-color 0.5s">
+          <!-- PANEL 2: What recipients see (480px) -->
+          <div id="bd-preview-page" style="height:480px;position:relative;overflow:hidden;background:#1C1917;background-size:cover;background-position:center;transition:background-color 0.5s">
+            <!-- Dim overlay for wallpaper -->
+            <div id="bd-wall-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.32);z-index:1"></div>
+            <!-- Domain top-right -->
+            <div id="bd-domain-corner" style="position:absolute;top:22px;right:22px;font-size:11px;font-weight:600;color:rgba(245,240,232,0.55);z-index:2;display:none"></div>
             <div style="position:absolute;top:20px;left:22px;display:flex;align-items:center;gap:9px;z-index:2">
-              <div id="bd-big-logo" style="width:34px;height:34px;border-radius:9px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;overflow:hidden;flex-shrink:0">F</div>
+              <svg id="bd-big-logo" width="34" height="34" viewBox="0 0 28 28" fill="none" style="flex-shrink:0"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
               <div>
                 <div id="bd-big-name" style="font-size:13px;font-weight:700;color:#F5F0E8;line-height:1.2"></div>
                 <div id="bd-big-tag" style="font-size:10px;color:rgba(245,240,232,0.5);margin-top:1px"></div>
               </div>
             </div>
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:2">
-              <div style="width:100%;max-width:300px;border-radius:20px;padding:22px;background:#FDFAF5;box-shadow:0 4px 32px rgba(0,0,0,0.35)">
+              <div style="width:100%;max-width:300px;border-radius:20px;padding:22px;background:rgba(253,250,245,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 40px rgba(0,0,0,0.4)">
                 <p style="font-size:9.5px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(28,25,23,0.35);margin:0 0 12px">Ready to download</p>
                 <div style="border-radius:12px;padding:12px;background:rgba(28,25,23,0.04);border:1px solid rgba(28,25,23,0.07);margin-bottom:13px;display:flex;align-items:center;gap:10px">
                   <div style="width:34px;height:34px;border-radius:9px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -786,25 +796,32 @@ function showToast(msg, persist = false) {
     var demo    = document.getElementById('brand-demo');
     if (!demo) return;
     var cur        = document.getElementById('bd-cursor');
-    var logoBox    = document.getElementById('bd-logo-box');
+    var logoBox         = document.getElementById('bd-logo-box');
     var logoPlaceholder = document.getElementById('bd-logo-placeholder');
-    var logoLetter = document.getElementById('bd-logo-letter');
-    var uploadBtn  = document.getElementById('bd-upload-btn');
-    var nameField  = document.getElementById('bd-name-field');
-    var nameText   = document.getElementById('bd-name-text');
-    var nameCur    = document.getElementById('bd-name-cur');
-    var tagField   = document.getElementById('bd-tag-field');
-    var tagText    = document.getElementById('bd-tag-text');
-    var tagCur     = document.getElementById('bd-tag-cur');
-    var slot0      = document.getElementById('bd-slot-0');
-    var slot0plus  = document.getElementById('bd-slot-0-plus');
-    var bgCount    = document.getElementById('bd-bg-count');
-    var scroller   = document.getElementById('bd-scroller');
-    var previewPage= document.getElementById('bd-preview-page');
-    var bigLogo    = document.getElementById('bd-big-logo');
-    var bigName    = document.getElementById('bd-big-name');
-    var bigTag     = document.getElementById('bd-big-tag');
-    var urlText    = document.getElementById('bd-url-text');
+    var logoFilled      = document.getElementById('bd-logo-filled');
+    var uploadBtn       = document.getElementById('bd-upload-btn');
+    var nameField       = document.getElementById('bd-name-field');
+    var nameText        = document.getElementById('bd-name-text');
+    var nameCur         = document.getElementById('bd-name-cur');
+    var tagField        = document.getElementById('bd-tag-field');
+    var tagText         = document.getElementById('bd-tag-text');
+    var tagCur          = document.getElementById('bd-tag-cur');
+    var domainField     = document.getElementById('bd-domain-field');
+    var domainText      = document.getElementById('bd-domain-text');
+    var domainCur       = document.getElementById('bd-domain-cur');
+    var slot0           = document.getElementById('bd-slot-0');
+    var slot0plus       = document.getElementById('bd-slot-0-plus');
+    var bgCount         = document.getElementById('bd-bg-count');
+    var scroller        = document.getElementById('bd-scroller');
+    var previewPage     = document.getElementById('bd-preview-page');
+    var wallOverlay     = document.getElementById('bd-wall-overlay');
+    var bigLogo         = document.getElementById('bd-big-logo');
+    var bigName         = document.getElementById('bd-big-name');
+    var bigTag          = document.getElementById('bd-big-tag');
+    var domainCorner    = document.getElementById('bd-domain-corner');
+    var urlText         = document.getElementById('bd-url-text');
+    var BG_IMG   = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80';
+    var BG_THUMB = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=120&q=70';
 
     var timers = [], visible = false;
     function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
@@ -813,17 +830,20 @@ function showToast(msg, persist = false) {
       timers.forEach(clearTimeout); timers = [];
       cur.style.transition = 'none'; cur.style.opacity = '0'; cur.style.transform = 'scale(1)';
       logoBox.style.background = '#EAE4D9';
-      logoPlaceholder.style.display = '';
-      logoLetter.style.display = 'none'; logoLetter.textContent = '';
+      logoPlaceholder.style.display = ''; logoFilled.style.display = 'none';
       nameText.textContent = ''; nameCur.style.opacity = '0'; nameCur.style.animation = 'none';
       nameField.style.borderColor = 'rgba(28,25,23,0.12)'; nameField.style.background = '#EAE4D9';
       tagText.textContent = ''; tagCur.style.opacity = '0'; tagCur.style.animation = 'none';
       tagField.style.borderColor = 'rgba(28,25,23,0.12)'; tagField.style.background = '#EAE4D9';
-      slot0.style.background = '#EAE4D9'; slot0.style.border = '1.5px dashed rgba(28,25,23,0.20)';
-      slot0plus.style.display = ''; bgCount.textContent = '0 / 5';
-      previewPage.style.background = '#1C1917';
-      bigName.textContent = ''; bigTag.textContent = ''; bigLogo.textContent = 'F';
-      bigLogo.style.background = '#8B6F47';
+      domainText.textContent = ''; domainCur.style.opacity = '0'; domainCur.style.animation = 'none';
+      domainField.style.borderColor = 'rgba(28,25,23,0.12)'; domainField.style.background = '#EAE4D9';
+      slot0.style.background = '#EAE4D9'; slot0.style.backgroundImage = '';
+      slot0.style.border = '1.5px dashed rgba(28,25,23,0.20)';
+      slot0plus.style.opacity = '1'; bgCount.textContent = '0 / 5';
+      previewPage.style.backgroundImage = ''; previewPage.style.backgroundColor = '#1C1917';
+      wallOverlay.style.display = 'none';
+      bigName.textContent = ''; bigTag.textContent = '';
+      domainCorner.style.display = 'none'; domainCorner.textContent = '';
       scroller.style.transition = 'none'; scroller.style.transform = 'translateY(0)';
       urlText.textContent = 'fileo.ca/branding';
     }
@@ -842,8 +862,9 @@ function showToast(msg, persist = false) {
     }
 
     function play() {
-      var BRAND = 'Fileo';
-      var TAG   = 'Share files · Instantly';
+      var BRAND  = 'Fileo';
+      var TAG    = 'Share files · Instantly';
+      var DOMAIN = 'fileo.ca';
       var dr = demo.getBoundingClientRect();
 
       cur.style.transition = 'none';
@@ -852,15 +873,14 @@ function showToast(msg, persist = false) {
       cur.style.opacity = '0';
 
       after(500, function(){ cur.style.transition = 'opacity 0.35s'; cur.style.opacity = '1'; });
-
       after(1000, function(){ var p = relCtr(uploadBtn); moveCursor(p.x, p.y, 0.7); });
 
       after(1820, function(){
         clickAnim(function(){
           after(350, function(){
             logoPlaceholder.style.display = 'none';
-            logoLetter.textContent = 'F'; logoLetter.style.display = '';
-            logoBox.style.background = '#8B6F47';
+            logoFilled.style.display = '';
+            logoBox.style.background = '#1C1917';
           });
         });
       });
@@ -882,49 +902,72 @@ function showToast(msg, persist = false) {
       after(T1, function(){
         nameCur.style.animation = 'none'; nameCur.style.opacity = '0';
         nameField.style.borderColor = 'rgba(28,25,23,0.12)'; nameField.style.background = '#EAE4D9';
-        var p = relCtr(tagField); moveCursor(p.x, p.y, 0.55);
+        var p = relCtr(tagField); moveCursor(p.x, p.y, 0.5);
       });
 
-      after(T1 + 680, function(){
+      after(T1 + 620, function(){
         tagField.style.borderColor = '#8B6F47'; tagField.style.background = '#fff';
         tagCur.style.opacity = '1'; tagCur.style.animation = 'bdBlink 0.85s step-end infinite';
         clickAnim();
       });
 
-      var T2 = T1 + 930;
+      var T2 = T1 + 850;
       TAG.split('').forEach(function(ch, i){
-        after(T2 + i * 65, function(){ tagText.textContent = TAG.slice(0, i + 1); });
+        after(T2 + i * 55, function(){ tagText.textContent = TAG.slice(0, i + 1); });
       });
-      var T3 = T2 + TAG.length * 65 + 250;
+      var T3 = T2 + TAG.length * 55 + 200;
 
       after(T3, function(){
         tagCur.style.animation = 'none'; tagCur.style.opacity = '0';
         tagField.style.borderColor = 'rgba(28,25,23,0.12)'; tagField.style.background = '#EAE4D9';
-        var p = relCtr(slot0); moveCursor(p.x, p.y, 0.7);
+        var p = relCtr(domainField); moveCursor(p.x, p.y, 0.45);
       });
 
-      after(T3 + 820, function(){
+      after(T3 + 580, function(){
+        domainField.style.borderColor = '#8B6F47'; domainField.style.background = '#fff';
+        domainCur.style.opacity = '1'; domainCur.style.animation = 'bdBlink 0.85s step-end infinite';
+        clickAnim();
+      });
+
+      var T4 = T3 + 800;
+      DOMAIN.split('').forEach(function(ch, i){
+        after(T4 + i * 90, function(){ domainText.textContent = DOMAIN.slice(0, i + 1); });
+      });
+      var T5 = T4 + DOMAIN.length * 90 + 250;
+
+      after(T5, function(){
+        domainCur.style.animation = 'none'; domainCur.style.opacity = '0';
+        domainField.style.borderColor = 'rgba(28,25,23,0.12)'; domainField.style.background = '#EAE4D9';
+        var p = relCtr(slot0); moveCursor(p.x, p.y, 0.65);
+      });
+
+      after(T5 + 780, function(){
         clickAnim(function(){
           after(200, function(){
-            slot0.style.background = 'linear-gradient(135deg,#2a1a0e 0%,#1C1917 60%,#0d0a07 100%)';
-            slot0.style.border = '1.5px solid rgba(255,255,255,0.08)';
-            slot0plus.style.display = 'none';
+            slot0.style.backgroundImage = 'url(' + BG_THUMB + ')';
+            slot0.style.backgroundSize = 'cover';
+            slot0.style.backgroundPosition = 'center';
+            slot0.style.border = '1.5px solid rgba(28,25,23,0.08)';
+            slot0plus.style.opacity = '0';
             bgCount.textContent = '1 / 5';
           });
         });
       });
 
-      after(T3 + 1700, function(){ cur.style.transition = 'opacity 0.4s'; cur.style.opacity = '0'; });
+      after(T5 + 1650, function(){ cur.style.transition = 'opacity 0.4s'; cur.style.opacity = '0'; });
 
-      after(T3 + 2350, function(){
+      after(T5 + 2300, function(){
         bigName.textContent = BRAND; bigTag.textContent = TAG;
-        previewPage.style.background = 'linear-gradient(160deg,#2a1a0e 0%,#1C1917 100%)';
+        domainCorner.textContent = DOMAIN; domainCorner.style.display = '';
+        previewPage.style.backgroundImage = 'url(' + BG_IMG + ')';
+        previewPage.style.backgroundColor = '#1a1a2e';
+        wallOverlay.style.display = '';
         urlText.textContent = 'fileo.ca/xK9mP2';
         scroller.style.transition = 'transform 0.95s cubic-bezier(0.4,0,0.2,1)';
-        scroller.style.transform  = 'translateY(-430px)';
+        scroller.style.transform  = 'translateY(-480px)';
       });
 
-      after(T3 + 5800, function(){ reset(); after(600, play); });
+      after(T5 + 5800, function(){ reset(); after(600, play); });
     }
 
     reset();
