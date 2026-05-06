@@ -175,11 +175,11 @@
       </div>
 
       <!-- Content area -->
-      <div style="height:520px;overflow:hidden">
+      <div style="height:580px;overflow:hidden">
         <div id="bd-scroller" style="transition:transform 0.95s cubic-bezier(0.4,0,0.2,1)">
 
           <!-- PANEL 1: Branding settings replica (520px) -->
-          <div style="height:520px;background:#F5F0E8;display:flex;flex-direction:column">
+          <div style="height:580px;background:#F5F0E8;display:flex;flex-direction:column">
 
             <!-- Mini page nav -->
             <div style="padding:10px 18px;border-bottom:1px solid rgba(28,25,23,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -196,7 +196,7 @@
             </div>
 
             <!-- Settings sections -->
-            <div style="flex:1;padding:10px 18px;display:flex;flex-direction:column;gap:6px;overflow:hidden">
+            <div style="flex:1;padding:10px 18px;display:flex;flex-direction:column;gap:6px;overflow:visible">
 
               <!-- Logo section -->
               <div style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);border-radius:14px;padding:11px 14px;flex-shrink:0">
@@ -257,7 +257,7 @@
           </div><!-- /panel 1 -->
 
           <!-- PANEL 2: What recipients see (520px) -->
-          <div id="bd-preview-page" style="height:520px;position:relative;overflow:hidden;background:#1C1917;background-size:cover;background-position:center;transition:background-color 0.5s">
+          <div id="bd-preview-page" style="height:580px;position:relative;overflow:hidden;background:#1C1917;background-size:cover;background-position:center;transition:background-color 0.5s">
             <!-- Dim overlay for wallpaper -->
             <div id="bd-wall-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.32);z-index:1"></div>
             <!-- Domain top-right -->
@@ -819,8 +819,7 @@ function showToast(msg, persist = false) {
     var bigTag          = document.getElementById('bd-big-tag');
     var domainCorner    = document.getElementById('bd-domain-corner');
     var urlText         = document.getElementById('bd-url-text');
-    var BG_IMG   = 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200&q=80';
-    var BG_THUMB = 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=120&q=70';
+    var BG_COLOR = '#0a0a0a';
 
     var timers = [], visible = false;
     function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
@@ -836,10 +835,10 @@ function showToast(msg, persist = false) {
       tagField.style.borderColor = 'rgba(28,25,23,0.12)'; tagField.style.background = '#EAE4D9';
       domainText.textContent = ''; domainCur.style.opacity = '0'; domainCur.style.animation = 'none';
       domainField.style.borderColor = 'rgba(28,25,23,0.12)'; domainField.style.background = '#EAE4D9';
-      slot0.style.background = '#EAE4D9'; slot0.style.backgroundImage = '';
+      slot0.style.background = '#EAE4D9';
       slot0.style.border = '1.5px dashed rgba(28,25,23,0.20)';
       slot0plus.style.opacity = '1'; bgCount.textContent = '0 / 5';
-      previewPage.style.backgroundImage = ''; previewPage.style.backgroundColor = '#1C1917';
+      previewPage.style.backgroundColor = '#1C1917';
       wallOverlay.style.display = 'none';
       bigName.textContent = ''; bigTag.textContent = '';
       domainCorner.style.display = 'none'; domainCorner.textContent = '';
@@ -943,10 +942,8 @@ function showToast(msg, persist = false) {
       after(T5 + 780, function(){
         clickAnim(function(){
           after(200, function(){
-            slot0.style.backgroundImage = 'url(' + BG_THUMB + ')';
-            slot0.style.backgroundSize = 'cover';
-            slot0.style.backgroundPosition = 'center';
-            slot0.style.border = '1.5px solid rgba(28,25,23,0.08)';
+            slot0.style.background = BG_COLOR;
+            slot0.style.border = '1.5px solid rgba(255,255,255,0.08)';
             slot0plus.style.opacity = '0';
             bgCount.textContent = '1 / 5';
           });
@@ -958,12 +955,11 @@ function showToast(msg, persist = false) {
       after(T5 + 2300, function(){
         bigName.textContent = BRAND; bigTag.textContent = TAG;
         domainCorner.textContent = DOMAIN; domainCorner.style.display = '';
-        previewPage.style.backgroundImage = 'url(' + BG_IMG + ')';
-        previewPage.style.backgroundColor = '#050508';
-        wallOverlay.style.display = '';
+        previewPage.style.backgroundColor = BG_COLOR;
+        wallOverlay.style.display = 'none';
         urlText.textContent = 'fileo.ca/xK9mP2';
         scroller.style.transition = 'transform 0.95s cubic-bezier(0.4,0,0.2,1)';
-        scroller.style.transform  = 'translateY(-520px)';
+        scroller.style.transform  = 'translateY(-580px)';
       });
 
       after(T5 + 5800, function(){ reset(); after(600, play); });
