@@ -284,7 +284,7 @@
         <span class="text-xs font-semibold tracking-wide" style="color:#F5F0E8">PRO</span>
       </div>
       <h1 class="font-bold tracking-tight mb-2" style="font-size:clamp(28px,4vw,40px);color:#1C1917;line-height:1.1">Branding profiles</h1>
-      <p style="color:rgba(28,25,23,0.45);font-size:15px;margin:0">Create up to 3 branding profiles. The default applies to all your download links.</p>
+      <p style="color:rgba(28,25,23,0.45);font-size:15px;margin:0">Create up to 3 branding profiles for your download links.</p>
     </div>
 
     <div class="flex flex-col gap-4">
@@ -313,10 +313,6 @@
           <input id="profile-name-input" type="text" maxlength="32" placeholder="Profile name"
             class="flex-1 px-3 py-1.5 rounded-lg text-sm font-semibold"
             style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-          <label class="flex items-center gap-1.5 text-xs font-medium flex-shrink-0" style="color:rgba(28,25,23,0.5);cursor:pointer">
-            <input id="profile-is-default" type="checkbox" style="accent-color:#8B6F47" />
-            Default
-          </label>
         </div>
 
         <!-- Logo -->
@@ -355,6 +351,29 @@
               <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
                 class="w-full px-3.5 py-2.5 rounded-xl text-sm"
                 style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+            </div>
+            <div>
+              <label class="text-xs font-medium block mb-2" style="color:rgba(28,25,23,0.5)">Button color</label>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div id="accent-swatches" class="flex items-center gap-1.5 flex-wrap"></div>
+                <!-- Custom color swatch -->
+                <div style="position:relative;flex-shrink:0">
+                  <div id="accent-custom-swatch" onclick="document.getElementById('accent-color-picker').click()"
+                    style="width:28px;height:28px;border-radius:7px;cursor:pointer;border:1.5px dashed rgba(28,25,23,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border 0.15s"
+                    title="Custom color">
+                    <svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </div>
+                  <input type="color" id="accent-color-picker" value="#8B6F47"
+                    style="position:absolute;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none"
+                    oninput="onAccentColorChange(this.value)" />
+                </div>
+                <!-- Hex text input -->
+                <input type="text" id="accent-hex-input" maxlength="7" placeholder="#8B6F47"
+                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:ui-monospace,monospace;font-size:12px;padding:5px 10px;border-radius:8px;width:82px;outline:none"
+                  oninput="onAccentHexInput(this.value)"
+                  onblur="onAccentHexBlur()"
+                  onfocus="this.select()" />
+              </div>
             </div>
           </div>
         </div>
@@ -443,7 +462,6 @@
         </div><!-- /preview -->
 
         <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save profile</button>
-        <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">The default profile applies to all your shared links</p>
 
       </div><!-- /profile-editor-view -->
 
