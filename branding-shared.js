@@ -11,6 +11,8 @@ const ACCENT_PRESETS = [
   '#DC2626', // Red
   '#EA580C', // Orange
   '#0891B2', // Cyan
+  '#F59E0B', // Amber
+  '#EC4899', // Pink
 ];
 
 // ── Profile list state ──────────────────────────────────────────────────────
@@ -48,51 +50,66 @@ function renderAccentSwatches() {
   if (!container) return;
   container.innerHTML = '';
 
-  const current = (_branding.accent_color || '#8B6F47').toLowerCase();
+  const current  = (_branding.accent_color || '#8B6F47').toLowerCase();
   const isPreset = ACCENT_PRESETS.some(c => c.toLowerCase() === current);
 
+  // ── Preset swatches ──
   ACCENT_PRESETS.forEach(color => {
     const selected = color.toLowerCase() === current;
     const sw = document.createElement('button');
     sw.type = 'button';
     sw.title = color;
     sw.style.cssText = [
-      'width:28px;height:28px;border-radius:7px',
+      'width:40px;height:40px;border-radius:10px',
       `background:${color}`,
-      'border:none;cursor:pointer;flex-shrink:0',
+      'border:none;cursor:pointer',
       'position:relative;display:flex;align-items:center;justify-content:center',
       'transition:transform 0.1s,box-shadow 0.1s',
-      selected ? `box-shadow:0 0 0 2px #FDFAF5,0 0 0 3.5px ${color}` : '',
+      selected ? `box-shadow:0 0 0 2.5px #FDFAF5,0 0 0 4.5px ${color}` : 'box-shadow:none',
     ].filter(Boolean).join(';');
-    sw.onmouseover = () => { if (!selected) sw.style.transform = 'scale(1.12)'; };
+    sw.onmouseover = () => { if (!selected) sw.style.transform = 'scale(1.08)'; };
     sw.onmouseout  = () => { sw.style.transform = ''; };
     if (selected) {
-      sw.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      sw.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
     }
     sw.onclick = () => onAccentColorChange(color);
     container.appendChild(sw);
   });
 
-  // Custom swatch
-  const customSwatch = document.getElementById('accent-custom-swatch');
-  const customIcon   = document.getElementById('accent-custom-icon');
-  const picker       = document.getElementById('accent-color-picker');
-  const hexInput     = document.getElementById('accent-hex-input');
-
-  if (customSwatch) {
-    if (!isPreset) {
-      customSwatch.style.background  = current;
-      customSwatch.style.border      = `1.5px solid rgba(28,25,23,0.2)`;
-      customSwatch.style.boxShadow   = `0 0 0 2px #FDFAF5,0 0 0 3.5px ${current}`;
-      if (customIcon) customIcon.outerHTML = `<svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-    } else {
-      customSwatch.style.background  = '';
-      customSwatch.style.border      = '1.5px dashed rgba(28,25,23,0.25)';
-      customSwatch.style.boxShadow   = '';
-      const icon = customSwatch.querySelector('svg');
-      if (icon) icon.outerHTML = `<svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-    }
+  // ── Custom (+) swatch — always last in the grid ──
+  const customBtn = document.createElement('button');
+  customBtn.type = 'button';
+  customBtn.title = 'Custom color';
+  if (!isPreset) {
+    // Showing a custom color — fill with it and show checkmark
+    customBtn.style.cssText = [
+      'width:40px;height:40px;border-radius:10px',
+      `background:${current}`,
+      'border:none;cursor:pointer',
+      'position:relative;display:flex;align-items:center;justify-content:center',
+      `box-shadow:0 0 0 2.5px #FDFAF5,0 0 0 4.5px ${current}`,
+      'transition:transform 0.1s,box-shadow 0.1s',
+    ].join(';');
+    customBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+  } else {
+    customBtn.style.cssText = [
+      'width:40px;height:40px;border-radius:10px',
+      'background:transparent',
+      'border:2px dashed rgba(28,25,23,0.2);cursor:pointer',
+      'display:flex;align-items:center;justify-content:center',
+      'box-shadow:none',
+      'transition:transform 0.1s,background 0.15s',
+    ].join(';');
+    customBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    customBtn.onmouseover = () => { customBtn.style.background = '#EAE4D9'; };
+    customBtn.onmouseout  = () => { customBtn.style.background = 'transparent'; };
   }
+  customBtn.onclick = () => document.getElementById('accent-color-picker').click();
+  container.appendChild(customBtn);
+
+  // ── Keep native picker + hex input in sync ──
+  const picker   = document.getElementById('accent-color-picker');
+  const hexInput = document.getElementById('accent-hex-input');
   if (picker) picker.value = /^#[0-9a-f]{6}$/i.test(current) ? current : '#8B6F47';
   if (hexInput && document.activeElement !== hexInput) hexInput.value = _branding.accent_color;
 }
