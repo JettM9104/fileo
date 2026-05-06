@@ -25,26 +25,87 @@ function generateProfileId() {
 }
 
 function updateBrandPreview() {
-  if (!document.getElementById('brand-preview-bg')) return;
+  const bg = document.getElementById('brand-preview-bg');
+  if (!bg) return;
+
   const name    = document.getElementById('brand-name')?.value.trim()    || 'Your Brand';
   const tagline = document.getElementById('brand-tagline')?.value.trim() || '';
   const domain  = document.getElementById('brand-domain')?.value.trim()  || '';
   const initial = name[0]?.toUpperCase() || 'F';
-  const isDark  = isColorDark(_branding.bg_color);
-  const text    = isDark ? '#F5F0E8' : '#1C1917';
-  const sub     = isDark ? 'rgba(245,240,232,0.45)' : 'rgba(28,25,23,0.4)';
-  const cardBg  = isDark ? 'rgba(245,240,232,0.08)' : 'rgba(28,25,23,0.06)';
-  const footer  = isDark ? 'rgba(245,240,232,0.25)' : 'rgba(28,25,23,0.3)';
 
-  document.getElementById('brand-preview-bg').style.background     = _branding.bg_color;
-  document.getElementById('preview-name').textContent              = name;
-  document.getElementById('preview-name').style.color              = text;
-  document.getElementById('preview-btn-mock').style.background     = _branding.accent_color;
-  document.getElementById('preview-card').style.background         = cardBg;
-  document.getElementById('preview-card-text').style.color         = text;
-  document.getElementById('preview-card-meta').style.color         = sub;
-  document.getElementById('preview-footer').style.color            = footer;
+  const hasWall   = _wallpapers.length > 0;
+  const firstWall = hasWall ? _wallpapers[0] : null;
 
+  // ── Background ──
+  if (hasWall && firstWall.type === 'image') {
+    bg.style.backgroundImage    = `url('${firstWall.url}')`;
+    bg.style.backgroundSize     = 'cover';
+    bg.style.backgroundPosition = 'center';
+    bg.style.backgroundColor    = '#000';
+  } else if (hasWall && firstWall.type === 'video') {
+    bg.style.backgroundImage = '';
+    bg.style.backgroundColor = '#1C1917';
+  } else {
+    bg.style.backgroundImage = '';
+    bg.style.backgroundColor = _branding.bg_color;
+  }
+
+  // ── Dim overlay ──
+  const overlay = document.getElementById('preview-wall-overlay');
+  if (overlay) overlay.style.display = hasWall ? '' : 'none';
+
+  // ── Color scheme ──
+  let text, sub, cardBg, footerColor, nameColor, taglineColor, domainColor;
+  if (hasWall) {
+    // Glass card over wallpaper — card is white/frosted, corners are white text
+    text        = '#1C1917';
+    sub         = 'rgba(28,25,23,0.45)';
+    cardBg      = 'rgba(255,255,255,0.90)';
+    footerColor = 'rgba(28,25,23,0.35)';
+    nameColor   = '#fff';
+    taglineColor= 'rgba(255,255,255,0.72)';
+    domainColor = 'rgba(255,255,255,0.72)';
+  } else {
+    const isDark = isColorDark(_branding.bg_color);
+    text        = isDark ? '#F5F0E8'                  : '#1C1917';
+    sub         = isDark ? 'rgba(245,240,232,0.45)'   : 'rgba(28,25,23,0.4)';
+    cardBg      = isDark ? 'rgba(245,240,232,0.08)'   : 'rgba(28,25,23,0.05)';
+    footerColor = isDark ? 'rgba(245,240,232,0.25)'   : 'rgba(28,25,23,0.3)';
+    nameColor   = text;
+    taglineColor= sub;
+    domainColor = sub;
+  }
+
+  // ── Card ──
+  const card = document.getElementById('preview-card');
+  if (card) {
+    card.style.background    = cardBg;
+    card.style.backdropFilter = hasWall ? 'blur(24px)' : '';
+    card.style.webkitBackdropFilter = hasWall ? 'blur(24px)' : '';
+    card.style.boxShadow     = hasWall ? '0 8px 40px rgba(0,0,0,0.22)' : '';
+  }
+
+  // ── Label ──
+  const labelEl = document.getElementById('preview-ready-label');
+  if (labelEl) labelEl.style.color = sub;
+
+  // ── Card content ──
+  document.getElementById('preview-card-text').style.color  = text;
+  document.getElementById('preview-card-meta').style.color  = sub;
+  document.getElementById('preview-btn-mock').style.background = _branding.accent_color;
+  document.getElementById('preview-footer').style.color     = footerColor;
+
+  // ── Brand corner ──
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-name').style.color = nameColor;
+
+  const tagEl = document.getElementById('preview-tagline');
+  if (tagEl) { tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = taglineColor; }
+
+  const domEl = document.getElementById('preview-domain');
+  if (domEl) { domEl.textContent = domain; domEl.style.display = domain ? '' : 'none'; domEl.style.color = domainColor; }
+
+  // ── Logo ──
   const logoEl = document.getElementById('preview-logo');
   if (logoEl) {
     if (_logoUrl) {
@@ -56,11 +117,6 @@ function updateBrandPreview() {
       logoEl.style.background = _branding.accent_color;
     }
   }
-
-  const tagEl = document.getElementById('preview-tagline');
-  tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = sub;
-  const domEl = document.getElementById('preview-domain');
-  if (domEl) { domEl.textContent = domain; domEl.style.display = domain ? '' : 'none'; domEl.style.color = sub; }
 }
 
 // ── Profile list ─────────────────────────────────────────────────────────────
@@ -364,6 +420,7 @@ async function onWallpaperSelected(e) {
     if (!publicUrl) { showToast('Upload failed: could not get URL'); return; }
     _wallpapers.push({ url: publicUrl, type: isImage ? 'image' : 'video' });
     renderWallpaperSlots();
+    updateBrandPreview();
     showToast('Background added — tap Save to apply');
   } catch (err) {
     showToast('Upload failed: ' + (err.message || err));
@@ -373,6 +430,7 @@ async function onWallpaperSelected(e) {
 function removeWallpaper(idx) {
   _wallpapers.splice(idx, 1);
   renderWallpaperSlots();
+  updateBrandPreview();
 }
 
 function renderWallpaperSlots() {
