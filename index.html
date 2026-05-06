@@ -262,7 +262,7 @@
       <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
         <a href="#" onclick="scrollTop(event)" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline active" id="nav-home">Home</a>
         <a href="#how" onclick="scrollTo2(event,'how')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-how">How it works</a>
-        <a href="#features" onclick="scrollTo2(event,'features')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-features">Features</a>
+
         <a href="#pricing" onclick="scrollTo2(event,'pricing')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-pricing">Pricing</a>
         <a href="#faq" onclick="scrollTo2(event,'faq')" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-faq">FAQ</a>
         <a href="branding.html" class="nav-link text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline inactive" id="nav-branding">Branding</a>
@@ -303,7 +303,7 @@
     <div class="p-3 flex flex-col gap-1">
       <a href="#" onclick="scrollTop(event);closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
       <a href="#how" onclick="scrollTo2(event,'how');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">How it works</a>
-      <a href="#features" onclick="scrollTo2(event,'features');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Features</a>
+
       <a href="#pricing" onclick="scrollTo2(event,'pricing');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Pricing</a>
       <a href="#faq" onclick="scrollTo2(event,'faq');closeMobileMenu()" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">FAQ</a>
       <a href="branding.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Branding</a>
@@ -942,7 +942,7 @@ window.addEventListener('DOMContentLoaded', () => {
   checkDownloadHash();
 
   // Nav scroll
-  const NAV_IDS = ['how','features','pricing','faq'];
+  const NAV_IDS = ['how','pricing','faq'];
   NAV_IDS.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
