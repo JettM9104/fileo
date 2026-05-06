@@ -1449,6 +1449,12 @@ function applyBranding(b) {
       header.replaceChildren(wrap);
     }
   }
+
+  // ── Card alignment ──
+  const align = b.card_align || 'center';
+  overlay.style.justifyContent = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+  overlay.style.paddingLeft    = align === 'left'  ? 'clamp(40px,8vw,120px)' : '';
+  overlay.style.paddingRight   = align === 'right' ? 'clamp(40px,8vw,120px)' : '';
 }
 
 // ── DOWNLOAD PAGE ─────────────────────────────────────
