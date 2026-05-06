@@ -1374,7 +1374,7 @@ function applyBranding(b) {
       if (dc) {
         const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
         dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
-        dc.style.color = '#fff'; dc.style.textShadow = '0 1px 4px rgba(0,0,0,0.4)'; dc.style.display = '';
+        dc.style.color = '#fff'; dc.style.textShadow = '0 1px 4px rgba(0,0,0,0.4)'; dc.style.display = 'block';
       }
     }
 
@@ -1402,7 +1402,7 @@ function applyBranding(b) {
       if (dc) {
         const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
         dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
-        dc.style.color = text; dc.style.display = '';
+        dc.style.color = text; dc.style.display = 'block';
       }
     }
 
