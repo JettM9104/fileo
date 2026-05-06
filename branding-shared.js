@@ -70,8 +70,8 @@ function updateBrandPreview() {
   if (prevBtn) prevBtn.style.display = multiWall ? 'flex' : 'none';
   if (nextBtn) nextBtn.style.display = multiWall ? 'flex' : 'none';
   if (dotsEl) {
-    dotsEl.style.display = multiWall ? 'flex' : 'none';
-    if (multiWall) {
+    dotsEl.style.display = hasWall ? 'flex' : 'none';
+    if (hasWall) {
       dotsEl.innerHTML = _wallpapers.map((_, i) =>
         `<div style="width:${i === _previewWallIdx ? '18px' : '6px'};height:6px;border-radius:3px;background:rgba(255,255,255,${i === _previewWallIdx ? '0.95' : '0.45'});transition:width 0.2s,background 0.2s"></div>`
       ).join('');
