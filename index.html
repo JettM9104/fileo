@@ -155,7 +155,7 @@
   <div id="dl-domain-corner"></div>
   <div id="dl-inner" class="w-full" style="max-width:28rem;transition:max-width 0.4s cubic-bezier(0.16,1,0.3,1);position:relative;z-index:1">
     <div id="dl-header" class="flex items-center gap-2 mb-8">
-      <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,6 21,18 7,18" fill="#F5F0E8"/></svg>
       <span class="text-lg font-bold tracking-tight" style="color:#1C1917">Fileo</span>
     </div>
     <div id="dl-loading" class="flex items-center gap-2" style="color:rgba(28,25,23,0.45)">
@@ -265,7 +265,7 @@
 <div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
   <div id="nav-main-row" class="flex items-center justify-between gap-3">
     <a href="#" onclick="scrollTop(event)" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,6 21,18 7,18" fill="#F5F0E8"/></svg>
       <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
     </a>
     <div id="nav-pill-wrap" class="flex flex-1 justify-center">
@@ -392,7 +392,7 @@
         <!-- Mini nav (always visible) -->
         <div class="px-8 pt-8 flex items-center justify-between mb-6">
           <div class="flex items-center gap-2">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center" style="background:#1C1917"><svg width="13" height="13" viewBox="0 0 28 28" fill="none"><polygon points="14,6 21,20 7,20" fill="#F5F0E8"/></svg></div>
+            <div class="w-5 h-5 rounded-full flex items-center justify-center" style="background:#1C1917"><svg width="13" height="13" viewBox="0 0 28 28" fill="none"><polygon points="14,4 21,18 7,18" fill="#F5F0E8"/></svg></div>
             <span class="text-sm font-bold" style="color:#1C1917">Fileo</span>
           </div>
           <div class="flex items-center gap-1 px-2 py-1.5 rounded-full" style="background:rgba(245,240,232,0.85);border:1px solid rgba(28,25,23,0.08)">
@@ -726,7 +726,7 @@
       <!-- Brand -->
       <div class="flex flex-col gap-3 max-w-[220px]">
         <div class="flex items-center gap-2">
-          <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,8 21,20 7,20" fill="#F5F0E8"/></svg>
+          <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,6 21,18 7,18" fill="#F5F0E8"/></svg>
           <span class="font-bold text-base" style="color:#1C1917">Fileo</span>
         </div>
         <p class="text-xs leading-relaxed" style="color:rgba(28,25,23,0.4)">The simplest way to share a file. Drop it, link it, done.</p>
@@ -1362,8 +1362,18 @@ function applyBranding(b) {
         </div>`;
       } else {
         // No brand name — show Fileo logo inverted for dark bg
-        corner.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.9)"/><polygon points="14,8 21,20 7,20" fill="#1C1917"/></svg>
+        corner.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="rgba(255,255,255,0.9)"/><polygon points="14,6 21,18 7,18" fill="#1C1917"/></svg>
           <span style="font-weight:700;font-size:16px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.35)">Fileo</span>`;
+      }
+    }
+
+    // Domain corner (wallpaper mode — white text over image)
+    if (b.domain_url) {
+      const dc = document.getElementById('dl-domain-corner');
+      if (dc) {
+        const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
+        dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
+        dc.style.color = '#fff'; dc.style.textShadow = '0 1px 4px rgba(0,0,0,0.4)'; dc.style.display = '';
       }
     }
 
@@ -1388,7 +1398,11 @@ function applyBranding(b) {
     // Domain corner
     if (b.domain_url) {
       const dc = document.getElementById('dl-domain-corner');
-      if (dc) { dc.textContent = b.domain_url; dc.style.color = text; dc.style.display = ''; }
+      if (dc) {
+        const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
+        dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
+        dc.style.color = text; dc.style.display = '';
+      }
     }
 
     // Brand header (replaces Fileo logo inside card)
