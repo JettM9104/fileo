@@ -21,7 +21,7 @@ let _editingId      = null;
 let _profilesLoaded = false;
 
 // ── Per-editor session state ────────────────────────────────────────────────
-let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null };
+let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null, card_align:'center' };
 let _wallpapers = [];
 let _logoUrl   = null;
 let _logoFile  = null;
@@ -41,6 +41,24 @@ function generateProfileId() {
 function cyclePreviewWallpaper(dir) {
   if (_wallpapers.length < 2) return;
   _previewWallIdx = (_previewWallIdx + dir + _wallpapers.length) % _wallpapers.length;
+  updateBrandPreview();
+}
+
+// ── Card alignment helpers ───────────────────────────────────────────────────
+function renderAlignPicker() {
+  const btns = document.querySelectorAll('#align-picker button');
+  if (!btns.length) return;
+  const current = _branding.card_align || 'center';
+  btns.forEach(btn => {
+    const active = btn.dataset.align === current;
+    btn.style.background = active ? '#1C1917' : '#EAE4D9';
+    btn.style.color      = active ? '#F5F0E8' : 'rgba(28,25,23,0.6)';
+  });
+}
+
+function onCardAlignChange(align) {
+  _branding.card_align = align;
+  renderAlignPicker();
   updateBrandPreview();
 }
 
@@ -245,6 +263,15 @@ function updateBrandPreview() {
   }
 
   document.getElementById('preview-btn-mock').style.background = _branding.accent_color;
+
+  // ── Card alignment ──
+  const wrap = document.getElementById('preview-card-wrap');
+  if (wrap) {
+    const a = _branding.card_align || 'center';
+    wrap.style.justifyContent = a === 'left' ? 'flex-start' : a === 'right' ? 'flex-end' : 'center';
+    wrap.style.paddingLeft    = a === 'left'  ? '48px' : '20px';
+    wrap.style.paddingRight   = a === 'right' ? '48px' : '20px';
+  }
 }
 
 // ── Profile list ─────────────────────────────────────────────────────────────
@@ -377,6 +404,7 @@ function _renderEditorForProfile(id) {
   _branding.accent_color = p.accent_color || '#8B6F47';
   _branding.bg_color     = p.bg_color     || '#F5F0E8';
   _branding.logo_url     = p.logo_url     || null;
+  _branding.card_align   = p.card_align   || 'center';
   _wallpapers = (p.wallpapers || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp);
   _logoUrl = _branding.logo_url;
   _logoFile = null;
@@ -389,6 +417,7 @@ function _renderEditorForProfile(id) {
   renderWallpaperSlots();
   renderLogoPreview();
   renderAccentSwatches();
+  renderAlignPicker();
   updateBrandPreview();
 }
 
@@ -438,6 +467,7 @@ async function saveBranding() {
     bg_color:     _branding.bg_color,
     logo_url:     savedLogoUrl,
     wallpapers:   _wallpapers,
+    card_align:   _branding.card_align || 'center',
   };
 
   _profiles[idx] = updated;
