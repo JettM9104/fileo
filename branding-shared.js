@@ -28,10 +28,10 @@ function updateBrandPreview() {
   const bg = document.getElementById('brand-preview-bg');
   if (!bg) return;
 
-  const name    = document.getElementById('brand-name')?.value.trim()    || 'Your Brand';
+  const name    = document.getElementById('brand-name')?.value.trim()    || '';
   const tagline = document.getElementById('brand-tagline')?.value.trim() || '';
   const domain  = document.getElementById('brand-domain')?.value.trim()  || '';
-  const initial = name[0]?.toUpperCase() || 'F';
+  const initial = (name || 'F')[0].toUpperCase();
 
   const hasWall   = _wallpapers.length > 0;
   const firstWall = hasWall ? _wallpapers[0] : null;
@@ -54,69 +54,73 @@ function updateBrandPreview() {
   const overlay = document.getElementById('preview-wall-overlay');
   if (overlay) overlay.style.display = hasWall ? '' : 'none';
 
-  // ── Color scheme ──
-  let text, sub, cardBg, footerColor, nameColor, taglineColor, domainColor;
-  if (hasWall) {
-    // Glass card over wallpaper — card is white/frosted, corners are white text
-    text        = '#1C1917';
-    sub         = 'rgba(28,25,23,0.45)';
-    cardBg      = 'rgba(255,255,255,0.90)';
-    footerColor = 'rgba(28,25,23,0.35)';
-    nameColor   = '#fff';
-    taglineColor= 'rgba(255,255,255,0.72)';
-    domainColor = 'rgba(255,255,255,0.72)';
-  } else {
-    const isDark = isColorDark(_branding.bg_color);
-    text        = isDark ? '#F5F0E8'                  : '#1C1917';
-    sub         = isDark ? 'rgba(245,240,232,0.45)'   : 'rgba(28,25,23,0.4)';
-    cardBg      = isDark ? 'rgba(245,240,232,0.08)'   : 'rgba(28,25,23,0.05)';
-    footerColor = isDark ? 'rgba(245,240,232,0.25)'   : 'rgba(28,25,23,0.3)';
-    nameColor   = text;
-    taglineColor= sub;
-    domainColor = sub;
-  }
-
-  // ── Card ──
-  const card = document.getElementById('preview-card');
-  if (card) {
-    card.style.background    = cardBg;
-    card.style.backdropFilter = hasWall ? 'blur(24px)' : '';
-    card.style.webkitBackdropFilter = hasWall ? 'blur(24px)' : '';
-    card.style.boxShadow     = hasWall ? '0 8px 40px rgba(0,0,0,0.22)' : '';
-  }
-
-  // ── Label ──
-  const labelEl = document.getElementById('preview-ready-label');
-  if (labelEl) labelEl.style.color = sub;
-
-  // ── Card content ──
-  document.getElementById('preview-card-text').style.color  = text;
-  document.getElementById('preview-card-meta').style.color  = sub;
-  document.getElementById('preview-btn-mock').style.background = _branding.accent_color;
-  document.getElementById('preview-footer').style.color     = footerColor;
-
-  // ── Brand corner ──
-  document.getElementById('preview-name').textContent = name;
-  document.getElementById('preview-name').style.color = nameColor;
-
-  const tagEl = document.getElementById('preview-tagline');
-  if (tagEl) { tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = taglineColor; }
-
-  const domEl = document.getElementById('preview-domain');
-  if (domEl) { domEl.textContent = domain; domEl.style.display = domain ? '' : 'none'; domEl.style.color = domainColor; }
-
-  // ── Logo ──
-  const logoEl = document.getElementById('preview-logo');
-  if (logoEl) {
+  // ── Logo helper ──
+  function _setLogo(el) {
+    if (!el) return;
     if (_logoUrl) {
-      logoEl.innerHTML = `<img src="${_logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block">`;
-      logoEl.style.background = 'transparent';
+      el.innerHTML = `<img src="${_logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      el.style.background = 'transparent';
     } else {
-      logoEl.innerHTML = '';
-      logoEl.textContent = initial;
-      logoEl.style.background = _branding.accent_color;
+      el.innerHTML = ''; el.textContent = initial;
+      el.style.background = _branding.accent_color;
     }
   }
+
+  if (hasWall) {
+    // ── Wallpaper mode: corner brand, glass card ──
+    // Show corner elements
+    const cornerBrand = document.getElementById('preview-logo')?.parentElement;
+    if (cornerBrand) cornerBrand.style.display = 'flex';
+    _setLogo(document.getElementById('preview-logo'));
+    const nameEl = document.getElementById('preview-name');
+    if (nameEl) { nameEl.textContent = name || 'Your Brand'; nameEl.style.color = '#fff'; nameEl.style.textShadow = '0 1px 4px rgba(0,0,0,0.3)'; }
+    const tagEl = document.getElementById('preview-tagline');
+    if (tagEl) { tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = 'rgba(255,255,255,0.72)'; tagEl.style.textShadow = '0 1px 3px rgba(0,0,0,0.3)'; }
+    const domEl = document.getElementById('preview-domain');
+    if (domEl) { domEl.textContent = domain; domEl.style.display = domain ? '' : 'none'; domEl.style.color = 'rgba(255,255,255,0.8)'; domEl.style.textShadow = '0 1px 3px rgba(0,0,0,0.3)'; }
+
+    // Glass card — hide in-card brand header
+    const card = document.getElementById('preview-card');
+    if (card) {
+      card.style.background = 'rgba(255,255,255,0.90)';
+      card.style.backdropFilter = 'blur(28px)';
+      card.style.webkitBackdropFilter = 'blur(28px)';
+      card.style.boxShadow = '0 12px 56px rgba(0,0,0,0.28)';
+    }
+    const cardBrand = document.getElementById('preview-card-brand');
+    if (cardBrand) cardBrand.style.display = 'none';
+    document.getElementById('preview-card-text').style.color = '#1C1917';
+    document.getElementById('preview-card-meta').style.color = 'rgba(28,25,23,0.4)';
+    document.getElementById('preview-ready-label').style.color = 'rgba(28,25,23,0.35)';
+    document.getElementById('preview-footer').style.color = 'rgba(28,25,23,0.3)';
+
+  } else {
+    // ── Flat mode: hide corner brand, show brand inside card header ──
+    const cornerWrap = document.getElementById('preview-logo')?.parentElement;
+    if (cornerWrap) cornerWrap.style.display = name ? 'none' : 'none'; // always hide corner in flat
+    const domEl = document.getElementById('preview-domain');
+    if (domEl) domEl.style.display = 'none';
+
+    // Card — flat style
+    const card = document.getElementById('preview-card');
+    if (card) { card.style.background = '#FDFAF5'; card.style.backdropFilter = ''; card.style.webkitBackdropFilter = ''; card.style.boxShadow = '0 4px 24px rgba(28,25,23,0.08)'; }
+
+    // In-card brand header
+    const cardBrand = document.getElementById('preview-card-brand');
+    if (cardBrand) cardBrand.style.display = name ? 'flex' : 'none';
+    _setLogo(document.getElementById('preview-card-logo'));
+    const brandNameEl = document.getElementById('preview-card-brand-name');
+    if (brandNameEl) brandNameEl.textContent = name;
+    const brandTagEl = document.getElementById('preview-card-brand-tag');
+    if (brandTagEl) { brandTagEl.textContent = tagline; brandTagEl.style.display = tagline ? '' : 'none'; }
+
+    document.getElementById('preview-card-text').style.color = '#1C1917';
+    document.getElementById('preview-card-meta').style.color = 'rgba(28,25,23,0.4)';
+    document.getElementById('preview-ready-label').style.color = 'rgba(28,25,23,0.35)';
+    document.getElementById('preview-footer').style.color = 'rgba(28,25,23,0.3)';
+  }
+
+  document.getElementById('preview-btn-mock').style.background = _branding.accent_color;
 }
 
 // ── Profile list ─────────────────────────────────────────────────────────────
