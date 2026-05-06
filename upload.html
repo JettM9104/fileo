@@ -859,13 +859,13 @@ function _populateBrandingDropdown() {
   _brandingProfiles.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
-    opt.textContent = p.name + (p.is_default ? ' (default)' : '');
-    if (p.is_default) opt.selected = true;
+    opt.textContent = p.name;
     sel.appendChild(opt);
   });
-  // Set initial selection to default profile
-  const def = _brandingProfiles.find(p => p.is_default) || _brandingProfiles[0];
-  _selectedBrandingId = def ? def.id : null;
+  // Auto-select first profile
+  const def = _brandingProfiles[0];
+  if (def) { sel.value = def.id; _selectedBrandingId = def.id; }
+  else      { _selectedBrandingId = null; }
 }
 
 function onBrandingProfileChange(val) {
