@@ -29,7 +29,7 @@
     #auth-modal.open{display:flex}
     .drop-zone-dragging{border-color:#8B6F47!important;background:rgba(139,111,71,0.04)!important}
     #download-overlay{display:none}
-    #download-overlay.open{display:flex}
+    #download-overlay.open{display:flex;align-items:center;justify-content:center}
     #download-overlay.branded #dl-filename,#download-overlay.branded #dl-title{color:var(--brand-text,#1C1917)!important}
     #download-overlay.branded #dl-meta,#download-overlay.branded #dl-message{color:var(--brand-sub,rgba(28,25,23,0.45))!important}
     #download-overlay.branded .dl-card-bg{background:var(--brand-card,#FDFAF5)!important;border-color:var(--brand-border,rgba(28,25,23,0.12))!important}
@@ -38,8 +38,8 @@
     /* ── WeTransfer-style branded layout ── */
     #dl-domain-corner{display:none;position:absolute;top:22px;right:26px;z-index:3;font-size:13px;font-weight:600;letter-spacing:0.01em;font-family:inherit;opacity:0.55}
     #dl-brand-bigname{display:none}
-    #download-overlay.wt-layout{align-items:center;justify-content:center}
-    #download-overlay.wt-layout #dl-inner{margin:0}
+    #download-overlay.wt-layout{align-items:center;justify-content:center;padding:0}
+    #download-overlay.wt-layout #dl-inner{margin:0;padding:16px}
     /* Glass card when wallpaper is present */
     #download-overlay.branded-wall #dl-inner{background:rgba(255,255,255,0.90);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-radius:28px;padding:36px;box-shadow:0 12px 56px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.65);border:1px solid rgba(255,255,255,0.55)}
     #download-overlay.branded-wall #dl-header{display:none}
