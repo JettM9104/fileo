@@ -372,6 +372,11 @@
 const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
 const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
 
+let _sb = null, currentUser = null, isPro = false;
+let _authTab = 'login';
+let _authAttempts = 0, _authLockedUntil = 0;
+let _toastTimer = null;
+
 
 window.addEventListener('DOMContentLoaded', () => {
   try {
