@@ -27,7 +27,7 @@
     #auth-modal.open{display:flex}
     .dz-over{border-color:#8B6F47!important;background:rgba(139,111,71,0.05)!important}
     .expiry-btn{transition:background .15s,color .15s,border-color .15s}
-    #toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-8px)}
+    #toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-6px)}
     #nav-hamburger{display:none}
     @media(max-width:767px){
       #nav-bar{left:16px!important;right:16px!important;transform:none!important;width:auto!important}
@@ -46,7 +46,7 @@
 <!-- ── AUTH MODAL ── -->
 <div id="auth-modal" class="fixed inset-0 z-[100] items-center justify-center p-4"
   style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)"
-  onclick="if(event.target===this)closeModal()">
+  onclick="if(event.target===this){_pendingUpload=false;closeModal()}">
   <div class="modal-in w-full max-w-sm rounded-2xl p-7 flex flex-col"
     style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
     <div class="flex items-center justify-between mb-6">
@@ -54,7 +54,7 @@
         <button id="tab-login" onclick="setAuthTab('login')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Sign in</button>
         <button id="tab-register" onclick="setAuthTab('register')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:transparent;color:rgba(28,25,23,0.45)">Sign up</button>
       </div>
-      <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+      <button onclick="_pendingUpload=false;closeModal()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -91,7 +91,7 @@
 </div>
 
 <!-- ── TOAST ── -->
-<div id="toast" class="fixed top-5 left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="background:#1C1917;color:#F5F0E8"></div>
+<div id="toast" class="fixed left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="top:80px;background:#1C1917;color:#F5F0E8"></div>
 
 <!-- ── NAV ── -->
 <div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
@@ -1356,7 +1356,7 @@ async function deleteFile(id) {
 // ── AUTH
 let _authAttempts = 0, _authLockedUntil = 0;
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
-function closeModal() { _pendingUpload = false; document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
 
 function setAuthTab(tab) {
   _authTab = tab;
