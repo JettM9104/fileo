@@ -1367,6 +1367,16 @@ function applyBranding(b) {
       }
     }
 
+    // Domain corner (wallpaper mode — white text over image)
+    if (b.domain_url) {
+      const dc = document.getElementById('dl-domain-corner');
+      if (dc) {
+        const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
+        dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
+        dc.style.color = '#fff'; dc.style.textShadow = '0 1px 4px rgba(0,0,0,0.4)'; dc.style.display = '';
+      }
+    }
+
   } else {
     // ── Flat color mode: solid bg + brand inside card header ──
     const isDark = isColorDark(bg);
@@ -1388,7 +1398,11 @@ function applyBranding(b) {
     // Domain corner
     if (b.domain_url) {
       const dc = document.getElementById('dl-domain-corner');
-      if (dc) { dc.textContent = b.domain_url; dc.style.color = text; dc.style.display = ''; }
+      if (dc) {
+        const href = /^https?:\/\//i.test(b.domain_url) ? b.domain_url : 'https://' + b.domain_url;
+        dc.innerHTML = `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">${b.domain_url}</a>`;
+        dc.style.color = text; dc.style.display = '';
+      }
     }
 
     // Brand header (replaces Fileo logo inside card)

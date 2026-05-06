@@ -37,8 +37,6 @@ function updateBrandPreview() {
   const footer  = isDark ? 'rgba(245,240,232,0.25)' : 'rgba(28,25,23,0.3)';
 
   document.getElementById('brand-preview-bg').style.background     = _branding.bg_color;
-  document.getElementById('preview-logo').style.background         = _branding.accent_color;
-  document.getElementById('preview-logo').textContent              = initial;
   document.getElementById('preview-name').textContent              = name;
   document.getElementById('preview-name').style.color              = text;
   document.getElementById('preview-btn-mock').style.background     = _branding.accent_color;
@@ -46,6 +44,18 @@ function updateBrandPreview() {
   document.getElementById('preview-card-text').style.color         = text;
   document.getElementById('preview-card-meta').style.color         = sub;
   document.getElementById('preview-footer').style.color            = footer;
+
+  const logoEl = document.getElementById('preview-logo');
+  if (logoEl) {
+    if (_logoUrl) {
+      logoEl.innerHTML = `<img src="${_logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      logoEl.style.background = 'transparent';
+    } else {
+      logoEl.innerHTML = '';
+      logoEl.textContent = initial;
+      logoEl.style.background = _branding.accent_color;
+    }
+  }
 
   const tagEl = document.getElementById('preview-tagline');
   tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = sub;
@@ -319,12 +329,14 @@ function onLogoSelected(e) {
   _logoFile = file;
   _logoUrl  = URL.createObjectURL(file);
   renderLogoPreview();
+  updateBrandPreview();
   showToast('Logo selected — tap Save to apply');
 }
 
 function removeLogo() {
   _logoFile = null; _logoUrl = null; _branding.logo_url = null;
   renderLogoPreview();
+  updateBrandPreview();
 }
 
 // ── Wallpaper helpers ─────────────────────────────────────────────────────────
