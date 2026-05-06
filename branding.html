@@ -283,30 +283,58 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span class="text-xs font-semibold tracking-wide" style="color:#F5F0E8">PRO</span>
       </div>
-      <h1 class="font-bold tracking-tight mb-2" style="font-size:clamp(28px,4vw,40px);color:#1C1917;line-height:1.1">Branding settings</h1>
-      <p style="color:rgba(28,25,23,0.45);font-size:15px;margin:0">Customize how your links look to everyone who receives a file from you.</p>
+      <h1 class="font-bold tracking-tight mb-2" style="font-size:clamp(28px,4vw,40px);color:#1C1917;line-height:1.1">Branding profiles</h1>
+      <p style="color:rgba(28,25,23,0.45);font-size:15px;margin:0">Create up to 3 branding profiles. The default applies to all your download links.</p>
     </div>
 
     <div class="flex flex-col gap-4">
 
-      <!-- Logo -->
-      <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-        <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
-        <div class="flex items-center gap-4">
-          <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
-            style="width:56px;height:56px;border-radius:12px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;flex-shrink:0" title="Upload logo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
-            <p class="text-xs mt-2" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
-            <button id="logo-remove-btn" class="hidden text-xs mt-1.5 hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
-          </div>
-        </div>
-        <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
+      <!-- ── PROFILES LIST VIEW ── -->
+      <div id="profiles-list-view">
+        <div id="profiles-cards" class="grid gap-4 mb-5" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))"></div>
+        <button id="add-profile-btn" onclick="addNewProfile()"
+          class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-75 transition-opacity"
+          style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add profile
+        </button>
       </div>
 
-      <!-- Identity -->
+      <!-- ── PROFILE EDITOR VIEW ── -->
+      <div id="profile-editor-view" class="hidden flex flex-col gap-4">
+
+        <!-- Back + name + default row -->
+        <div class="flex items-center gap-3">
+          <button onclick="closeProfileEditor()" class="flex items-center gap-1.5 text-xs font-medium hover:opacity-60 transition-opacity flex-shrink-0" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            All profiles
+          </button>
+          <div class="w-px h-4 flex-shrink-0" style="background:rgba(28,25,23,0.12)"></div>
+          <input id="profile-name-input" type="text" maxlength="32" placeholder="Profile name"
+            class="flex-1 px-3 py-1.5 rounded-lg text-sm font-semibold"
+            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+          <label class="flex items-center gap-1.5 text-xs font-medium flex-shrink-0" style="color:rgba(28,25,23,0.5);cursor:pointer">
+            <input id="profile-is-default" type="checkbox" style="accent-color:#8B6F47" />
+            Default
+          </label>
+        </div>
+
+        <!-- Logo -->
+        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
+          <div class="flex flex-col items-center gap-3">
+            <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
+              style="width:72px;height:72px;border-radius:16px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" title="Upload logo">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
+            <p class="text-xs" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
+            <button id="logo-remove-btn" class="hidden text-xs hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
+          </div>
+          <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
+        </div>
+
+        <!-- Identity -->
         <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
           <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
           <div class="flex flex-col gap-3">
@@ -327,24 +355,8 @@
               <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
                 class="w-full px-3.5 py-2.5 rounded-xl text-sm"
                 style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-              <p class="text-xs mt-1.5" style="color:rgba(28,25,23,0.35)">Shown in the top-left of your download links</p>
             </div>
           </div>
-        </div>
-
-        <!-- Colors -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Colors</p>
-          <p class="text-xs font-medium mb-2.5" style="color:rgba(28,25,23,0.5)">Accent color</p>
-          <div id="accent-swatches" class="flex flex-wrap gap-2 mb-3"></div>
-          <div class="flex items-center gap-2.5 mb-5">
-            <label class="text-xs font-medium" style="color:rgba(28,25,23,0.5)">Custom</label>
-            <input id="brand-accent-input" type="color" value="#8B6F47" oninput="setAccentColor(this.value)"
-              class="w-8 h-7 rounded-lg cursor-pointer p-0.5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12)" />
-            <span id="brand-accent-hex" class="text-xs font-mono" style="color:rgba(28,25,23,0.4)">#8B6F47</span>
-          </div>
-          <p class="text-xs font-medium mb-2.5" style="color:rgba(28,25,23,0.5)">Page background</p>
-          <div id="bg-swatches" class="flex flex-wrap gap-2"></div>
         </div>
 
         <!-- Wallpapers -->
@@ -360,8 +372,10 @@
 
         <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
 
-        <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save branding</button>
-        <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">Applies to all your shared links</p>
+        <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save profile</button>
+        <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">The default profile applies to all your shared links</p>
+
+      </div><!-- /profile-editor-view -->
 
     </div>
   </div>

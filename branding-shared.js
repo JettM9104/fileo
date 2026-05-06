@@ -2,17 +2,16 @@
 
 const BUCKET = 'uploads';
 
-const ACCENT_PRESETS = ['#8B6F47','#1C1917','#2563EB','#059669','#DC2626','#7C3AED','#EA580C','#0891B2'];
-const BG_PRESETS = [
-  { hex:'#F5F0E8', label:'Warm' }, { hex:'#FFFFFF', label:'White' },
-  { hex:'#1C1917', label:'Dark' }, { hex:'#EFF6FF', label:'Cool'  }, { hex:'#F0FDF4', label:'Mint' }
-];
+// ── Profile list state ──────────────────────────────────────────────────────
+let _profiles       = [];
+let _editingId      = null;
+let _profilesLoaded = false;
 
-let _branding = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null };
-let _brandingLoaded = false;
+// ── Per-editor session state ────────────────────────────────────────────────
+let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null };
 let _wallpapers = [];
-let _logoUrl  = null;   // current logo URL (saved or object URL for new pick)
-let _logoFile = null;   // File object waiting to be uploaded on Save
+let _logoUrl   = null;
+let _logoFile  = null;
 
 function isColorDark(hex) {
   try {
@@ -21,73 +20,32 @@ function isColorDark(hex) {
   } catch { return false; }
 }
 
-function initBrandingSwatches() {
-  const ac = document.getElementById('accent-swatches');
-  if (ac.children.length) return;
-  ACCENT_PRESETS.forEach(hex => {
-    const btn = document.createElement('button');
-    btn.dataset.swatchType = 'accent'; btn.dataset.color = hex;
-    btn.onclick = () => setAccentColor(hex);
-    btn.title = hex;
-    btn.style.cssText = `width:28px;height:28px;border-radius:8px;background:${hex};border:none;cursor:pointer;transition:all .15s;flex-shrink:0`;
-    ac.appendChild(btn);
-  });
-  const bg = document.getElementById('bg-swatches');
-  BG_PRESETS.forEach(({ hex, label }) => {
-    const btn = document.createElement('button');
-    btn.dataset.swatchType = 'bg'; btn.dataset.color = hex;
-    btn.onclick = () => setBgColor(hex);
-    btn.title = label;
-    btn.style.cssText = `width:28px;height:28px;border-radius:8px;background:${hex};border:1px solid rgba(28,25,23,0.18);cursor:pointer;transition:all .15s;flex-shrink:0`;
-    bg.appendChild(btn);
-  });
-}
-
-function updateSwatchSelection(type, selectedHex) {
-  document.querySelectorAll('[data-swatch-type="' + type + '"]').forEach(btn => {
-    const sel = btn.dataset.color.toLowerCase() === selectedHex.toLowerCase();
-    btn.style.outline      = sel ? '2px solid #1C1917' : 'none';
-    btn.style.outlineOffset = '2px';
-    btn.style.transform    = sel ? 'scale(1.18)' : 'scale(1)';
-  });
-}
-
-function setAccentColor(hex) {
-  _branding.accent_color = hex;
-  document.getElementById('brand-accent-input').value = hex;
-  document.getElementById('brand-accent-hex').textContent = hex.toUpperCase();
-  updateSwatchSelection('accent', hex);
-  updateBrandPreview();
-}
-
-function setBgColor(hex) {
-  _branding.bg_color = hex;
-  updateSwatchSelection('bg', hex);
-  updateBrandPreview();
+function generateProfileId() {
+  return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7);
 }
 
 function updateBrandPreview() {
-  if (!document.getElementById('brand-preview-bg')) return;  // preview panel may be absent
+  if (!document.getElementById('brand-preview-bg')) return;
   const name    = document.getElementById('brand-name')?.value.trim()    || 'Your Brand';
   const tagline = document.getElementById('brand-tagline')?.value.trim() || '';
   const domain  = document.getElementById('brand-domain')?.value.trim()  || '';
   const initial = name[0]?.toUpperCase() || 'F';
   const isDark  = isColorDark(_branding.bg_color);
-  const text    = isDark ? '#F5F0E8'                    : '#1C1917';
-  const sub     = isDark ? 'rgba(245,240,232,0.45)'     : 'rgba(28,25,23,0.4)';
-  const cardBg  = isDark ? 'rgba(245,240,232,0.08)'     : 'rgba(28,25,23,0.06)';
-  const footer  = isDark ? 'rgba(245,240,232,0.25)'     : 'rgba(28,25,23,0.3)';
+  const text    = isDark ? '#F5F0E8' : '#1C1917';
+  const sub     = isDark ? 'rgba(245,240,232,0.45)' : 'rgba(28,25,23,0.4)';
+  const cardBg  = isDark ? 'rgba(245,240,232,0.08)' : 'rgba(28,25,23,0.06)';
+  const footer  = isDark ? 'rgba(245,240,232,0.25)' : 'rgba(28,25,23,0.3)';
 
-  document.getElementById('brand-preview-bg').style.background = _branding.bg_color;
-  document.getElementById('preview-logo').style.background     = _branding.accent_color;
-  document.getElementById('preview-logo').textContent          = initial;
-  document.getElementById('preview-name').textContent          = name;
-  document.getElementById('preview-name').style.color          = text;
-  document.getElementById('preview-btn-mock').style.background = _branding.accent_color;
-  document.getElementById('preview-card').style.background     = cardBg;
-  document.getElementById('preview-card-text').style.color     = text;
-  document.getElementById('preview-card-meta').style.color     = sub;
-  document.getElementById('preview-footer').style.color        = footer;
+  document.getElementById('brand-preview-bg').style.background     = _branding.bg_color;
+  document.getElementById('preview-logo').style.background         = _branding.accent_color;
+  document.getElementById('preview-logo').textContent              = initial;
+  document.getElementById('preview-name').textContent              = name;
+  document.getElementById('preview-name').style.color              = text;
+  document.getElementById('preview-btn-mock').style.background     = _branding.accent_color;
+  document.getElementById('preview-card').style.background         = cardBg;
+  document.getElementById('preview-card-text').style.color         = text;
+  document.getElementById('preview-card-meta').style.color         = sub;
+  document.getElementById('preview-footer').style.color            = footer;
 
   const tagEl = document.getElementById('preview-tagline');
   tagEl.textContent = tagline; tagEl.style.display = tagline ? '' : 'none'; tagEl.style.color = sub;
@@ -95,49 +53,204 @@ function updateBrandPreview() {
   if (domEl) { domEl.textContent = domain; domEl.style.display = domain ? '' : 'none'; domEl.style.color = sub; }
 }
 
+// ── Profile list ─────────────────────────────────────────────────────────────
 async function loadBranding() {
-  initBrandingSwatches();
-  if (_brandingLoaded) { renderWallpaperSlots(); updateBrandPreview(); return; }
+  if (_profilesLoaded) {
+    if (_editingId !== null) _renderEditorForProfile(_editingId);
+    else renderProfilesList();
+    return;
+  }
   const { data } = await _sb.from('user_branding').select('*').eq('user_id', currentUser.id).maybeSingle();
   if (data) {
-    _branding.brand_name   = data.brand_name   || '';
-    _branding.tagline      = data.tagline       || '';
-    _branding.domain_url   = data.domain_url    || '';
-    _branding.accent_color = data.accent_color  || '#8B6F47';
-    _branding.bg_color     = data.bg_color      || '#F5F0E8';
-    _branding.logo_url     = data.logo_url      || null;
-    _logoUrl               = _branding.logo_url;
-    _wallpapers = (data.wallpapers || []).map(wp =>
-      typeof wp === 'string' ? { url: wp, type: 'image' } : wp
-    );
+    if (Array.isArray(data.profiles) && data.profiles.length > 0) {
+      _profiles = data.profiles.map(p => ({
+        ...p,
+        wallpapers: (p.wallpapers || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp),
+      }));
+    } else {
+      _profiles = [{
+        id:           generateProfileId(),
+        name:         'Default',
+        is_default:   true,
+        brand_name:   data.brand_name   || '',
+        tagline:      data.tagline       || '',
+        domain_url:   data.domain_url    || '',
+        accent_color: data.accent_color  || '#8B6F47',
+        bg_color:     data.bg_color      || '#F5F0E8',
+        logo_url:     data.logo_url      || null,
+        wallpapers:   (data.wallpapers   || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp),
+      }];
+    }
   }
-  document.getElementById('brand-name').value    = _branding.brand_name;
-  document.getElementById('brand-tagline').value = _branding.tagline;
-  document.getElementById('brand-domain').value  = _branding.domain_url;
-  setAccentColor(_branding.accent_color);
-  setBgColor(_branding.bg_color);
+  if (_profiles.length > 0 && !_profiles.some(p => p.is_default)) _profiles[0].is_default = true;
+  _profilesLoaded = true;
+  renderProfilesList();
+}
+
+function renderProfilesList() {
+  const listView   = document.getElementById('profiles-list-view');
+  const editorView = document.getElementById('profile-editor-view');
+  if (!listView) return;
+  listView.classList.remove('hidden');
+  if (editorView) editorView.classList.add('hidden');
+
+  const grid = document.getElementById('profiles-cards');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  _profiles.forEach(p => {
+    const card = document.createElement('div');
+    card.style.cssText = 'border-radius:16px;overflow:hidden;border:1px solid rgba(28,25,23,0.10);background:#FDFAF5;cursor:pointer;transition:transform .15s,box-shadow .15s';
+    card.onmouseover = () => { card.style.transform='translateY(-2px)'; card.style.boxShadow='0 6px 20px rgba(28,25,23,0.10)'; };
+    card.onmouseout  = () => { card.style.transform=''; card.style.boxShadow=''; };
+
+    // Colored strip
+    const strip = document.createElement('div');
+    strip.style.cssText = `height:80px;background:${p.bg_color || '#F5F0E8'};display:flex;align-items:center;justify-content:center`;
+    if (p.logo_url) {
+      strip.innerHTML = `<img src="${p.logo_url}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.15)">`;
+    } else {
+      const initial = (p.brand_name || p.name || '?')[0].toUpperCase();
+      strip.innerHTML = `<div style="width:48px;height:48px;border-radius:12px;background:${p.accent_color||'#8B6F47'};color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.12)">${initial}</div>`;
+    }
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:10px 12px';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'flex:1;font-size:13px;font-weight:600;color:#1C1917;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    nameSpan.textContent = p.name || 'Untitled';
+
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0';
+
+    if (p.is_default) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:#8B6F47;color:#F5F0E8';
+      badge.textContent = 'Default';
+      actions.appendChild(badge);
+    }
+
+    const editBtn = document.createElement('button');
+    editBtn.title = 'Edit';
+    editBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1C1917';
+    editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    editBtn.onclick = e => { e.stopPropagation(); openProfileEditor(p.id); };
+    actions.appendChild(editBtn);
+
+    if (_profiles.length > 1) {
+      const delBtn = document.createElement('button');
+      delBtn.title = 'Delete';
+      delBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(28,25,23,0.45)';
+      delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+      delBtn.onclick = e => { e.stopPropagation(); deleteProfile(p.id); };
+      actions.appendChild(delBtn);
+    }
+
+    row.appendChild(nameSpan);
+    row.appendChild(actions);
+    card.appendChild(strip);
+    card.appendChild(row);
+    card.onclick = () => openProfileEditor(p.id);
+    grid.appendChild(card);
+  });
+
+  const addBtn = document.getElementById('add-profile-btn');
+  if (addBtn) addBtn.style.display = _profiles.length >= 3 ? 'none' : '';
+}
+
+function addNewProfile() {
+  if (_profiles.length >= 3) { showToast('Maximum 3 branding profiles'); return; }
+  const p = {
+    id: generateProfileId(), name: 'Profile ' + (_profiles.length + 1),
+    is_default: _profiles.length === 0,
+    brand_name:'', tagline:'', domain_url:'',
+    accent_color:'#8B6F47', bg_color:'#F5F0E8',
+    logo_url:null, wallpapers:[],
+  };
+  _profiles.push(p);
+  openProfileEditor(p.id);
+}
+
+function openProfileEditor(id) {
+  _editingId = id;
+  _renderEditorForProfile(id);
+}
+
+function _renderEditorForProfile(id) {
+  const listView   = document.getElementById('profiles-list-view');
+  const editorView = document.getElementById('profile-editor-view');
+  if (!editorView) return;
+  if (listView) listView.classList.add('hidden');
+  editorView.classList.remove('hidden');
+
+  const p = _profiles.find(x => x.id === id);
+  if (!p) return;
+
+  const nameInput = document.getElementById('profile-name-input');
+  if (nameInput) nameInput.value = p.name || '';
+
+  const defCheck = document.getElementById('profile-is-default');
+  if (defCheck) { defCheck.checked = !!p.is_default; defCheck.disabled = !!p.is_default; }
+
+  _branding.accent_color = p.accent_color || '#8B6F47';
+  _branding.bg_color     = p.bg_color     || '#F5F0E8';
+  _branding.logo_url     = p.logo_url     || null;
+  _wallpapers = (p.wallpapers || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp);
+  _logoUrl = _branding.logo_url;
+  _logoFile = null;
+
+  document.getElementById('brand-name').value    = p.brand_name  || '';
+  document.getElementById('brand-tagline').value = p.tagline      || '';
+  document.getElementById('brand-domain').value  = p.domain_url   || '';
+
   renderWallpaperSlots();
   renderLogoPreview();
   updateBrandPreview();
-  _brandingLoaded = true;
+}
+
+function closeProfileEditor() {
+  _editingId = null;
+  _logoFile  = null;
+  renderProfilesList();
+}
+
+async function deleteProfile(id) {
+  const p = _profiles.find(x => x.id === id);
+  if (!p) return;
+  if (_profiles.length <= 1) { showToast('You must keep at least one profile'); return; }
+  if (!confirm('Delete "' + (p.name || 'this profile') + '"? This cannot be undone.')) return;
+  _profiles = _profiles.filter(x => x.id !== id);
+  if (p.is_default && _profiles.length > 0) _profiles[0].is_default = true;
+  await _persistProfiles();
+  renderProfilesList();
+  showToast('Branding deleted');
 }
 
 async function saveBranding() {
-  // Upload logo if a new file was picked
+  if (_editingId === null) return;
+  const idx = _profiles.findIndex(x => x.id === _editingId);
+  if (idx === -1) return;
+
   let savedLogoUrl = _branding.logo_url;
   if (_logoFile) {
     showToast('Uploading logo…', true);
     const ext  = _logoFile.type === 'image/jpeg' ? 'jpg' : 'png';
-    const path = currentUser.id + '/branding/logo.' + ext;
+    const path = currentUser.id + '/branding/logo_' + _editingId + '.' + ext;
     const { error: upErr } = await _sb.storage.from(BUCKET).upload(path, _logoFile, { contentType: _logoFile.type, upsert: true });
     if (upErr) { showToast('Logo upload failed: ' + upErr.message); return; }
     const { data: { publicUrl } } = _sb.storage.from(BUCKET).getPublicUrl(path);
-    savedLogoUrl = publicUrl + '?t=' + Date.now(); // cache-bust
+    savedLogoUrl = publicUrl + '?t=' + Date.now();
     _logoFile = null;
   }
 
-  const record = {
-    user_id:      currentUser.id,
+  const nameInput = document.getElementById('profile-name-input');
+  const defCheck  = document.getElementById('profile-is-default');
+  const makeDefault = defCheck?.checked ?? _profiles[idx].is_default;
+
+  const updated = {
+    ..._profiles[idx],
+    name:         nameInput?.value.trim() || _profiles[idx].name,
     brand_name:   document.getElementById('brand-name').value.trim(),
     tagline:      document.getElementById('brand-tagline').value.trim(),
     domain_url:   document.getElementById('brand-domain').value.trim(),
@@ -145,23 +258,45 @@ async function saveBranding() {
     bg_color:     _branding.bg_color,
     logo_url:     savedLogoUrl,
     wallpapers:   _wallpapers,
-    updated_at:   new Date().toISOString()
+  };
+
+  if (makeDefault) {
+    _profiles.forEach(p => { p.is_default = false; });
+    updated.is_default = true;
+  }
+
+  _profiles[idx] = updated;
+  _branding.logo_url = savedLogoUrl;
+  _logoUrl = savedLogoUrl;
+  renderLogoPreview();
+
+  const ok = await _persistProfiles();
+  if (ok) showToast('Branding saved');
+}
+
+async function _persistProfiles() {
+  const def = _profiles.find(p => p.is_default) || _profiles[0];
+  const record = {
+    user_id:      currentUser.id,
+    profiles:     _profiles,
+    brand_name:   def?.brand_name   || '',
+    tagline:      def?.tagline       || '',
+    domain_url:   def?.domain_url    || '',
+    accent_color: def?.accent_color  || '#8B6F47',
+    bg_color:     def?.bg_color      || '#F5F0E8',
+    logo_url:     def?.logo_url      || null,
+    wallpapers:   def?.wallpapers    || [],
+    updated_at:   new Date().toISOString(),
   };
   const { data: existing } = await _sb.from('user_branding').select('user_id').eq('user_id', currentUser.id).maybeSingle();
   const { error } = existing
     ? await _sb.from('user_branding').update(record).eq('user_id', currentUser.id)
     : await _sb.from('user_branding').insert(record);
-  if (error) { showToast('Could not save: ' + error.message); return; }
-  _branding.brand_name = record.brand_name;
-  _branding.tagline    = record.tagline;
-  _branding.domain_url = record.domain_url;
-  _branding.logo_url   = savedLogoUrl;
-  _logoUrl             = savedLogoUrl;
-  renderLogoPreview();
-  showToast('Branding saved');
+  if (error) { showToast('Could not save: ' + error.message); return false; }
+  return true;
 }
 
-// ── Logo helpers ─────────────────────────────────────────────────────────────
+// ── Logo helpers ──────────────────────────────────────────────────────────────
 function renderLogoPreview() {
   const preview   = document.getElementById('logo-preview');
   const removeBtn = document.getElementById('logo-remove-btn');
@@ -188,12 +323,11 @@ function onLogoSelected(e) {
 }
 
 function removeLogo() {
-  _logoFile          = null;
-  _logoUrl           = null;
-  _branding.logo_url = null;
+  _logoFile = null; _logoUrl = null; _branding.logo_url = null;
   renderLogoPreview();
 }
 
+// ── Wallpaper helpers ─────────────────────────────────────────────────────────
 function addWallpaper() {
   if (_wallpapers.length >= 5) { showToast('Maximum 5 backgrounds'); return; }
   document.getElementById('wallpaper-input').click();
@@ -208,7 +342,6 @@ async function onWallpaperSelected(e) {
   const isVideo = file.type === 'video/mp4';
   if (!isImage && !isVideo) { showToast('Only JPEG, PNG or MP4 allowed'); return; }
   const ext  = isImage ? (file.type === 'image/jpeg' ? 'jpg' : 'png') : 'mp4';
-  // Path must start with userId/ to satisfy storage RLS policy
   const path = currentUser.id + '/branding/wp_' + Date.now() + '.' + ext;
   showToast('Uploading background…', true);
   try {
