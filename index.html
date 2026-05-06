@@ -1301,23 +1301,34 @@ function startWallpaperRotation(wallpapers) {
       el = document.createElement('img');
       el.src = url;
     }
-    el.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i === 0 ? '1' : '0'};transition:opacity 1.5s ease`;
+    // All images sit in their own z layer; first is visible, rest hidden
+    el.style.cssText = `position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:${i === 0 ? '1' : '0'};z-index:${i === 0 ? '1' : '0'};transition:opacity 1.2s ease`;
     bg.appendChild(el);
     return el;
   });
 
-  // semi-transparent scrim so text stays readable
+  // semi-transparent scrim — always on top of images
   const scrim = document.createElement('div');
-  scrim.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.28)';
+  scrim.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.28);z-index:10';
   bg.appendChild(scrim);
 
   if (els.length > 1) {
     let cur = 0;
     clearInterval(_wallpaperInterval);
     _wallpaperInterval = setInterval(() => {
-      els[cur].style.opacity = '0';
-      cur = (cur + 1) % els.length;
-      els[cur].style.opacity = '1';
+      const next = (cur + 1) % els.length;
+      // Bring next image on top and fade it IN — current stays fully opaque
+      // so the background never bleeds through during the transition
+      els[next].style.zIndex = '2';
+      els[next].style.opacity = '1';
+      // Only after the fade completes, hide the old image and reset z layers
+      const prev = cur;
+      setTimeout(() => {
+        els[prev].style.opacity = '0';
+        els[prev].style.zIndex = '0';
+        els[next].style.zIndex  = '1';
+      }, 1250); // slightly longer than the transition duration
+      cur = next;
     }, 30000);
   }
 }
