@@ -506,11 +506,11 @@ async function submitAuth(e) {
   } else { _authAttempts = 0; closeModal(); }
 }
 
-function showToast(msg) {
+function showToast(msg, persist = false) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
   clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-8px)'; }, 2400);
+  if (!persist) _toastTimer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-8px)'; }, 2400);
 }
 
 

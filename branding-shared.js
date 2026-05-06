@@ -126,9 +126,9 @@ async function saveBranding() {
   // Upload logo if a new file was picked
   let savedLogoUrl = _branding.logo_url;
   if (_logoFile) {
-    showToast('Uploading logo…');
+    showToast('Uploading logo…', true);
     const ext  = _logoFile.type === 'image/jpeg' ? 'jpg' : 'png';
-    const path = 'branding/' + currentUser.id + '/logo.' + ext;
+    const path = currentUser.id + '/branding/logo.' + ext;
     const { error: upErr } = await _sb.storage.from(BUCKET).upload(path, _logoFile, { contentType: _logoFile.type, upsert: true });
     if (upErr) { showToast('Logo upload failed: ' + upErr.message); return; }
     const { data: { publicUrl } } = _sb.storage.from(BUCKET).getPublicUrl(path);
@@ -208,14 +208,21 @@ async function onWallpaperSelected(e) {
   const isVideo = file.type === 'video/mp4';
   if (!isImage && !isVideo) { showToast('Only JPEG, PNG or MP4 allowed'); return; }
   const ext  = isImage ? (file.type === 'image/jpeg' ? 'jpg' : 'png') : 'mp4';
-  const path = 'branding/' + currentUser.id + '/wp_' + Date.now() + '.' + ext;
-  showToast('Uploading background…');
-  const { error } = await _sb.storage.from(BUCKET).upload(path, file, { contentType: file.type });
-  if (error) { showToast('Upload failed: ' + error.message); return; }
-  const { data: { publicUrl } } = _sb.storage.from(BUCKET).getPublicUrl(path);
-  _wallpapers.push({ url: publicUrl, type: isImage ? 'image' : 'video' });
-  renderWallpaperSlots();
-  showToast('Background added — tap Save to apply');
+  // Path must start with userId/ to satisfy storage RLS policy
+  const path = currentUser.id + '/branding/wp_' + Date.now() + '.' + ext;
+  showToast('Uploading background…', true);
+  try {
+    const { error } = await _sb.storage.from(BUCKET).upload(path, file, { contentType: file.type });
+    if (error) { showToast('Upload failed: ' + error.message); return; }
+    const { data } = _sb.storage.from(BUCKET).getPublicUrl(path);
+    const publicUrl = data?.publicUrl;
+    if (!publicUrl) { showToast('Upload failed: could not get URL'); return; }
+    _wallpapers.push({ url: publicUrl, type: isImage ? 'image' : 'video' });
+    renderWallpaperSlots();
+    showToast('Background added — tap Save to apply');
+  } catch (err) {
+    showToast('Upload failed: ' + (err.message || err));
+  }
 }
 
 function removeWallpaper(idx) {
