@@ -388,6 +388,17 @@
             <!-- Dim overlay (wallpaper mode) -->
             <div id="preview-wall-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.28);z-index:1"></div>
 
+            <!-- Wallpaper nav arrows (shown when >1 wallpaper) -->
+            <button id="preview-wall-prev" onclick="cyclePreviewWallpaper(-1)" style="display:none;position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;cursor:pointer;color:#fff;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background 0.15s">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button id="preview-wall-next" onclick="cyclePreviewWallpaper(1)" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.45);border:none;cursor:pointer;color:#fff;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background 0.15s">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <!-- Dot indicators -->
+            <div id="preview-wall-dots" style="display:none;position:absolute;bottom:14px;left:0;right:0;z-index:10;justify-content:center;gap:5px;pointer-events:none"></div>
+
             <!-- Top-left: logo + name + tagline -->
             <div style="position:absolute;top:22px;left:26px;display:flex;align-items:center;gap:10px;z-index:2">
               <div id="preview-logo" style="width:36px;height:36px;border-radius:9px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;overflow:hidden;flex-shrink:0">F</div>

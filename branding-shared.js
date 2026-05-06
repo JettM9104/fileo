@@ -12,6 +12,7 @@ let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F
 let _wallpapers = [];
 let _logoUrl   = null;
 let _logoFile  = null;
+let _previewWallIdx = 0;
 
 function isColorDark(hex) {
   try {
@@ -24,6 +25,12 @@ function generateProfileId() {
   return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7);
 }
 
+function cyclePreviewWallpaper(dir) {
+  if (_wallpapers.length < 2) return;
+  _previewWallIdx = (_previewWallIdx + dir + _wallpapers.length) % _wallpapers.length;
+  updateBrandPreview();
+}
+
 function updateBrandPreview() {
   const bg = document.getElementById('brand-preview-bg');
   if (!bg) return;
@@ -34,15 +41,16 @@ function updateBrandPreview() {
   const initial = (name || 'F')[0].toUpperCase();
 
   const hasWall   = _wallpapers.length > 0;
-  const firstWall = hasWall ? _wallpapers[0] : null;
+  if (_previewWallIdx >= _wallpapers.length) _previewWallIdx = 0;
+  const curWall   = hasWall ? _wallpapers[_previewWallIdx] : null;
 
   // ── Background ──
-  if (hasWall && firstWall.type === 'image') {
-    bg.style.backgroundImage    = `url('${firstWall.url}')`;
+  if (hasWall && curWall.type === 'image') {
+    bg.style.backgroundImage    = `url('${curWall.url}')`;
     bg.style.backgroundSize     = 'cover';
     bg.style.backgroundPosition = 'center';
     bg.style.backgroundColor    = '#000';
-  } else if (hasWall && firstWall.type === 'video') {
+  } else if (hasWall && curWall.type === 'video') {
     bg.style.backgroundImage = '';
     bg.style.backgroundColor = '#1C1917';
   } else {
@@ -53,6 +61,22 @@ function updateBrandPreview() {
   // ── Dim overlay ──
   const overlay = document.getElementById('preview-wall-overlay');
   if (overlay) overlay.style.display = hasWall ? '' : 'none';
+
+  // ── Nav arrows + dots ──
+  const multiWall = _wallpapers.length > 1;
+  const prevBtn = document.getElementById('preview-wall-prev');
+  const nextBtn = document.getElementById('preview-wall-next');
+  const dotsEl  = document.getElementById('preview-wall-dots');
+  if (prevBtn) prevBtn.style.display = multiWall ? 'flex' : 'none';
+  if (nextBtn) nextBtn.style.display = multiWall ? 'flex' : 'none';
+  if (dotsEl) {
+    dotsEl.style.display = multiWall ? 'flex' : 'none';
+    if (multiWall) {
+      dotsEl.innerHTML = _wallpapers.map((_, i) =>
+        `<div style="width:${i === _previewWallIdx ? '18px' : '6px'};height:6px;border-radius:3px;background:rgba(255,255,255,${i === _previewWallIdx ? '0.95' : '0.45'});transition:width 0.2s,background 0.2s"></div>`
+      ).join('');
+    }
+  }
 
   // ── Logo helper ──
   function _setLogo(el) {
@@ -269,6 +293,7 @@ function _renderEditorForProfile(id) {
   _wallpapers = (p.wallpapers || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp);
   _logoUrl = _branding.logo_url;
   _logoFile = null;
+  _previewWallIdx = 0;
 
   document.getElementById('brand-name').value    = p.brand_name  || '';
   document.getElementById('brand-tagline').value = p.tagline      || '';
