@@ -656,18 +656,20 @@ async function loadQuota() {
     document.getElementById('storage-kind').textContent = 'Weekly storage';
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [{ data: weekFiles }, wsUsed] = await Promise.all([
+    const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
       _sb.from('files').select('size').eq('user_id', currentUser.id).gt('created_at', weekAgo),
-      getWeeklyWorkspaceStorage(weekAgo)
+      getWeeklyWorkspaceStorage(weekAgo),
+      _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
     ]);
 
-    const filesUsed = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
-    const used = filesUsed + wsUsed;
-    const pct  = Math.min(100, (used / PRO_MAX_STORAGE) * 100);
+    const filesUsed   = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
+    const used        = filesUsed + wsUsed;
+    const pct         = Math.min(100, (used / PRO_MAX_STORAGE) * 100);
+    const linkCount   = (activeLinks || []).length;
 
     document.getElementById('storage-fill').style.width  = pct + '%';
     document.getElementById('storage-label').textContent = fmtSize(used) + ' / 50 GB this week';
-    document.getElementById('links-label').textContent   = PRO_MAX_LINKS + ' max links';
+    document.getElementById('links-label').textContent   = linkCount + ' / ' + PRO_MAX_LINKS + ' active';
     return;
   }
 
@@ -683,7 +685,7 @@ async function loadQuota() {
   document.getElementById('storage-kind').textContent  = 'Storage used';
   document.getElementById('storage-fill').style.width  = pct + '%';
   document.getElementById('storage-label').textContent = fmtSize(used) + ' / 500 MB';
-  document.getElementById('links-label').textContent   = count + ' / ' + FREE_MAX_LINKS;
+  document.getElementById('links-label').textContent   = count + ' / ' + FREE_MAX_LINKS + ' active';
 }
 
 // ── HELPERS
