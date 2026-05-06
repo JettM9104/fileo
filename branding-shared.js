@@ -8,9 +8,11 @@ const BG_PRESETS = [
   { hex:'#1C1917', label:'Dark' }, { hex:'#EFF6FF', label:'Cool'  }, { hex:'#F0FDF4', label:'Mint' }
 ];
 
-let _branding = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8' };
+let _branding = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null };
 let _brandingLoaded = false;
 let _wallpapers = [];
+let _logoUrl  = null;   // current logo URL (saved or object URL for new pick)
+let _logoFile = null;   // File object waiting to be uploaded on Save
 
 function isColorDark(hex) {
   try {
@@ -65,6 +67,7 @@ function setBgColor(hex) {
 }
 
 function updateBrandPreview() {
+  if (!document.getElementById('brand-preview-bg')) return;  // preview panel may be absent
   const name    = document.getElementById('brand-name')?.value.trim()    || 'Your Brand';
   const tagline = document.getElementById('brand-tagline')?.value.trim() || '';
   const domain  = document.getElementById('brand-domain')?.value.trim()  || '';
@@ -102,6 +105,8 @@ async function loadBranding() {
     _branding.domain_url   = data.domain_url    || '';
     _branding.accent_color = data.accent_color  || '#8B6F47';
     _branding.bg_color     = data.bg_color      || '#F5F0E8';
+    _branding.logo_url     = data.logo_url      || null;
+    _logoUrl               = _branding.logo_url;
     _wallpapers = (data.wallpapers || []).map(wp =>
       typeof wp === 'string' ? { url: wp, type: 'image' } : wp
     );
@@ -112,11 +117,25 @@ async function loadBranding() {
   setAccentColor(_branding.accent_color);
   setBgColor(_branding.bg_color);
   renderWallpaperSlots();
+  renderLogoPreview();
   updateBrandPreview();
   _brandingLoaded = true;
 }
 
 async function saveBranding() {
+  // Upload logo if a new file was picked
+  let savedLogoUrl = _branding.logo_url;
+  if (_logoFile) {
+    showToast('Uploading logo…');
+    const ext  = _logoFile.type === 'image/jpeg' ? 'jpg' : 'png';
+    const path = 'branding/' + currentUser.id + '/logo.' + ext;
+    const { error: upErr } = await _sb.storage.from(BUCKET).upload(path, _logoFile, { contentType: _logoFile.type, upsert: true });
+    if (upErr) { showToast('Logo upload failed: ' + upErr.message); return; }
+    const { data: { publicUrl } } = _sb.storage.from(BUCKET).getPublicUrl(path);
+    savedLogoUrl = publicUrl + '?t=' + Date.now(); // cache-bust
+    _logoFile = null;
+  }
+
   const record = {
     user_id:      currentUser.id,
     brand_name:   document.getElementById('brand-name').value.trim(),
@@ -124,6 +143,7 @@ async function saveBranding() {
     domain_url:   document.getElementById('brand-domain').value.trim(),
     accent_color: _branding.accent_color,
     bg_color:     _branding.bg_color,
+    logo_url:     savedLogoUrl,
     wallpapers:   _wallpapers,
     updated_at:   new Date().toISOString()
   };
@@ -135,7 +155,43 @@ async function saveBranding() {
   _branding.brand_name = record.brand_name;
   _branding.tagline    = record.tagline;
   _branding.domain_url = record.domain_url;
+  _branding.logo_url   = savedLogoUrl;
+  _logoUrl             = savedLogoUrl;
+  renderLogoPreview();
   showToast('Branding saved');
+}
+
+// ── Logo helpers ─────────────────────────────────────────────────────────────
+function renderLogoPreview() {
+  const preview   = document.getElementById('logo-preview');
+  const removeBtn = document.getElementById('logo-remove-btn');
+  if (!preview) return;
+  if (_logoUrl) {
+    preview.innerHTML = `<img src="${_logoUrl}" style="width:100%;height:100%;object-fit:cover;display:block" />`;
+    if (removeBtn) removeBtn.classList.remove('hidden');
+  } else {
+    preview.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    if (removeBtn) removeBtn.classList.add('hidden');
+  }
+}
+
+function onLogoSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  e.target.value = '';
+  if (file.size > 2 * 1024 * 1024) { showToast('Logo must be under 2 MB'); return; }
+  if (file.type !== 'image/jpeg' && file.type !== 'image/png') { showToast('Only JPEG or PNG allowed'); return; }
+  _logoFile = file;
+  _logoUrl  = URL.createObjectURL(file);
+  renderLogoPreview();
+  showToast('Logo selected — tap Save to apply');
+}
+
+function removeLogo() {
+  _logoFile          = null;
+  _logoUrl           = null;
+  _branding.logo_url = null;
+  renderLogoPreview();
 }
 
 function addWallpaper() {
