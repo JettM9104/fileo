@@ -319,58 +319,106 @@
           </label>
         </div>
 
-        <!-- Logo -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
-          <div class="flex flex-col items-center gap-3">
-            <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
-              style="width:72px;height:72px;border-radius:16px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" title="Upload logo">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            </div>
-            <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
-            <p class="text-xs" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
-            <button id="logo-remove-btn" class="hidden text-xs hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
-          </div>
-          <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
-        </div>
+        <!-- 2-column: form left, preview right -->
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
 
-        <!-- Identity -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
-          <div class="flex flex-col gap-3">
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Brand name</label>
-              <input id="brand-name" type="text" maxlength="40" placeholder="Your company or name" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Tagline <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="brand-tagline" type="text" maxlength="80" placeholder="e.g. Creative agency · London" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Domain <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-          </div>
-        </div>
+          <!-- LEFT: form cards -->
+          <div class="flex flex-col gap-4 flex-1 min-w-0">
 
-        <!-- Wallpapers -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <div class="flex items-center justify-between mb-1">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Backgrounds</p>
-            <span id="wallpaper-count" class="text-xs" style="color:rgba(28,25,23,0.35)">0 / 5</span>
-          </div>
-          <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Images &amp; videos shown behind your download page, rotating every 30 seconds.</p>
-          <div id="wallpaper-slots" class="grid gap-2 mb-3" style="grid-template-columns:repeat(5,1fr)"></div>
-          <p class="text-xs mt-1" style="color:rgba(28,25,23,0.3)">JPEG, PNG or MP4 · max 5 MB · up to 5 backgrounds</p>
-        </div>
+            <!-- Logo -->
+            <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
+              <div class="flex flex-col items-center gap-3">
+                <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
+                  style="width:72px;height:72px;border-radius:16px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" title="Upload logo">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+                <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
+                <p class="text-xs" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
+                <button id="logo-remove-btn" class="hidden text-xs hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
+              </div>
+              <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
+            </div>
 
-        <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
+            <!-- Identity -->
+            <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
+              <div class="flex flex-col gap-3">
+                <div>
+                  <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Brand name</label>
+                  <input id="brand-name" type="text" maxlength="40" placeholder="Your company or name" oninput="updateBrandPreview()"
+                    class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+                </div>
+                <div>
+                  <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Tagline <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+                  <input id="brand-tagline" type="text" maxlength="80" placeholder="e.g. Creative agency · London" oninput="updateBrandPreview()"
+                    class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+                </div>
+                <div>
+                  <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Domain <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
+                  <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
+                    class="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                    style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Wallpapers -->
+            <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <div class="flex items-center justify-between mb-1">
+                <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Backgrounds</p>
+                <span id="wallpaper-count" class="text-xs" style="color:rgba(28,25,23,0.35)">0 / 5</span>
+              </div>
+              <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Images &amp; videos shown behind your download page, rotating every 30 seconds.</p>
+              <div id="wallpaper-slots" class="grid gap-2 mb-3" style="grid-template-columns:repeat(5,1fr)"></div>
+              <p class="text-xs mt-1" style="color:rgba(28,25,23,0.3)">JPEG, PNG or MP4 · max 5 MB · up to 5 backgrounds</p>
+            </div>
+
+            <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
+
+          </div><!-- /form cards -->
+
+          <!-- RIGHT: live preview -->
+          <div class="w-full lg:w-[260px] flex-shrink-0" style="position:sticky;top:88px">
+            <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Preview</p>
+            <div id="brand-preview-bg" style="position:relative;border-radius:20px;overflow:hidden;padding:54px 16px 20px;background:#F5F0E8;transition:background 0.25s;border:1px solid rgba(28,25,23,0.09)">
+
+              <!-- Top-left: logo + name + tagline -->
+              <div style="position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px)">
+                <div id="preview-logo" style="width:30px;height:30px;border-radius:8px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;overflow:hidden;flex-shrink:0">F</div>
+                <div style="min-width:0">
+                  <div id="preview-name" style="font-size:12px;font-weight:700;color:#1C1917;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Your Brand</div>
+                  <div id="preview-tagline" style="display:none;font-size:10px;color:rgba(28,25,23,0.45);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                </div>
+              </div>
+
+              <!-- Top-right: domain -->
+              <div id="preview-domain" style="display:none;position:absolute;top:18px;right:12px;font-size:10px;font-weight:600;color:rgba(28,25,23,0.45);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis"></div>
+
+              <!-- File card -->
+              <div id="preview-card" style="border-radius:14px;padding:14px;background:rgba(28,25,23,0.06)">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <div style="width:32px;height:32px;border-radius:8px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <div style="min-width:0">
+                    <div id="preview-card-text" style="font-size:12px;font-weight:600;color:#1C1917;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">brand-assets.zip</div>
+                    <div id="preview-card-meta" style="font-size:10px;color:rgba(28,25,23,0.4);margin-top:2px">48 MB · 6 days left</div>
+                  </div>
+                </div>
+                <div id="preview-btn-mock" style="margin-top:11px;background:#8B6F47;color:#F5F0E8;border-radius:10px;text-align:center;padding:9px 0;font-size:12px;font-weight:600">Download file</div>
+              </div>
+
+              <!-- Footer -->
+              <div id="preview-footer" style="text-align:center;font-size:10px;color:rgba(28,25,23,0.3);margin-top:11px">Sent via Fileo</div>
+
+            </div>
+            <p class="text-xs mt-2.5" style="color:rgba(28,25,23,0.3)">Add backgrounds above to see the full wallpaper look.</p>
+          </div><!-- /preview -->
+
+        </div><!-- /2-col -->
 
         <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save profile</button>
         <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">The default profile applies to all your shared links</p>
