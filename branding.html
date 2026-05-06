@@ -352,27 +352,19 @@
                 style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
             </div>
             <div>
-              <label class="text-xs font-medium block mb-2" style="color:rgba(28,25,23,0.5)">Button color</label>
-              <div class="flex items-center gap-2 flex-wrap">
-                <div id="accent-swatches" class="flex items-center gap-1.5 flex-wrap"></div>
-                <!-- Custom color swatch -->
-                <div style="position:relative;flex-shrink:0">
-                  <div id="accent-custom-swatch" onclick="document.getElementById('accent-color-picker').click()"
-                    style="width:28px;height:28px;border-radius:7px;cursor:pointer;border:1.5px dashed rgba(28,25,23,0.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border 0.15s"
-                    title="Custom color">
-                    <svg id="accent-custom-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </div>
-                  <input type="color" id="accent-color-picker" value="#8B6F47"
-                    style="position:absolute;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none"
-                    oninput="onAccentColorChange(this.value)" />
-                </div>
-                <!-- Hex text input -->
-                <input type="text" id="accent-hex-input" maxlength="7" placeholder="#8B6F47"
-                  style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:ui-monospace,monospace;font-size:12px;padding:5px 10px;border-radius:8px;width:82px;outline:none"
-                  oninput="onAccentHexInput(this.value)"
-                  onblur="onAccentHexBlur()"
-                  onfocus="this.select()" />
-              </div>
+              <label class="text-xs font-medium block mb-2.5" style="color:rgba(28,25,23,0.5)">Button color</label>
+              <!-- Swatch grid — preset swatches + custom (+) rendered by JS -->
+              <div id="accent-swatches" style="display:grid;grid-template-columns:repeat(5,40px);gap:8px;margin-bottom:10px"></div>
+              <!-- Hidden native color picker, triggered by the + swatch -->
+              <input type="color" id="accent-color-picker" value="#8B6F47"
+                style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none"
+                oninput="onAccentColorChange(this.value)" />
+              <!-- Hex input -->
+              <input type="text" id="accent-hex-input" maxlength="7" placeholder="#8B6F47"
+                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:ui-monospace,monospace;font-size:12px;padding:5px 10px;border-radius:8px;width:90px;outline:none"
+                oninput="onAccentHexInput(this.value)"
+                onblur="onAccentHexBlur()"
+                onfocus="this.select()" />
             </div>
           </div>
         </div>
