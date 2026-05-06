@@ -165,7 +165,6 @@ async function loadBranding() {
       _profiles = [{
         id:           generateProfileId(),
         name:         'Default',
-        is_default:   true,
         brand_name:   data.brand_name   || '',
         tagline:      data.tagline       || '',
         domain_url:   data.domain_url    || '',
@@ -176,7 +175,6 @@ async function loadBranding() {
       }];
     }
   }
-  if (_profiles.length > 0 && !_profiles.some(p => p.is_default)) _profiles[0].is_default = true;
   _profilesLoaded = true;
   renderProfilesList();
 }
@@ -218,13 +216,6 @@ function renderProfilesList() {
     const actions = document.createElement('div');
     actions.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0';
 
-    if (p.is_default) {
-      const badge = document.createElement('span');
-      badge.style.cssText = 'font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:#8B6F47;color:#F5F0E8';
-      badge.textContent = 'Default';
-      actions.appendChild(badge);
-    }
-
     const editBtn = document.createElement('button');
     editBtn.title = 'Edit';
     editBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1C1917';
@@ -257,7 +248,6 @@ function addNewProfile() {
   if (_profiles.length >= 3) { showToast('Maximum 3 branding profiles'); return; }
   const p = {
     id: generateProfileId(), name: 'Profile ' + (_profiles.length + 1),
-    is_default: _profiles.length === 0,
     brand_name:'', tagline:'', domain_url:'',
     accent_color:'#8B6F47', bg_color:'#F5F0E8',
     logo_url:null, wallpapers:[],
@@ -283,9 +273,6 @@ function _renderEditorForProfile(id) {
 
   const nameInput = document.getElementById('profile-name-input');
   if (nameInput) nameInput.value = p.name || '';
-
-  const defCheck = document.getElementById('profile-is-default');
-  if (defCheck) { defCheck.checked = !!p.is_default; defCheck.disabled = !!p.is_default; }
 
   _branding.accent_color = p.accent_color || '#8B6F47';
   _branding.bg_color     = p.bg_color     || '#F5F0E8';
@@ -316,7 +303,6 @@ async function deleteProfile(id) {
   if (_profiles.length <= 1) { showToast('You must keep at least one profile'); return; }
   if (!confirm('Delete "' + (p.name || 'this profile') + '"? This cannot be undone.')) return;
   _profiles = _profiles.filter(x => x.id !== id);
-  if (p.is_default && _profiles.length > 0) _profiles[0].is_default = true;
   await _persistProfiles();
   renderProfilesList();
   showToast('Branding deleted');
@@ -340,8 +326,6 @@ async function saveBranding() {
   }
 
   const nameInput = document.getElementById('profile-name-input');
-  const defCheck  = document.getElementById('profile-is-default');
-  const makeDefault = defCheck?.checked ?? _profiles[idx].is_default;
 
   const updated = {
     ..._profiles[idx],
@@ -355,11 +339,6 @@ async function saveBranding() {
     wallpapers:   _wallpapers,
   };
 
-  if (makeDefault) {
-    _profiles.forEach(p => { p.is_default = false; });
-    updated.is_default = true;
-  }
-
   _profiles[idx] = updated;
   _branding.logo_url = savedLogoUrl;
   _logoUrl = savedLogoUrl;
@@ -370,7 +349,7 @@ async function saveBranding() {
 }
 
 async function _persistProfiles() {
-  const def = _profiles.find(p => p.is_default) || _profiles[0];
+  const def = _profiles[0];
   const record = {
     user_id:      currentUser.id,
     profiles:     _profiles,
