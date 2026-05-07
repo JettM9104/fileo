@@ -21,6 +21,7 @@ let _editingId      = null;
 let _profilesLoaded = false;
 let _selectedProfileId = null;
 let _onProfileCardClick = id => openProfileEditor(id);
+let _hideProfileActions = false;
 
 // ── Per-editor session state ────────────────────────────────────────────────
 let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null, card_align:'center' };
@@ -323,9 +324,7 @@ function renderProfilesList() {
     const card = document.createElement('div');
     card.style.cssText = 'border-radius:16px;overflow:hidden;border:1px solid rgba(28,25,23,0.10);background:#FDFAF5;cursor:pointer;transition:transform .15s,box-shadow .15s';
     const isSelected = p.id === _selectedProfileId;
-    if (isSelected) {
-      card.style.border = '2px solid #1C1917';
-    }
+    card.style.border = isSelected ? '2px solid #1C1917' : '1px solid rgba(28,25,23,0.10)';
     card.onmouseover = () => { card.style.transform='translateY(-2px)'; card.style.boxShadow='0 6px 20px rgba(28,25,23,0.10)'; };
     card.onmouseout  = () => { card.style.transform=''; card.style.boxShadow=''; };
 
@@ -349,20 +348,22 @@ function renderProfilesList() {
     const actions = document.createElement('div');
     actions.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0';
 
-    const editBtn = document.createElement('button');
-    editBtn.title = 'Edit';
-    editBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1C1917';
-    editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
-    editBtn.onclick = e => { e.stopPropagation(); openProfileEditor(p.id); };
-    actions.appendChild(editBtn);
+    if (!_hideProfileActions) {
+      const editBtn = document.createElement('button');
+      editBtn.title = 'Edit';
+      editBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1C1917';
+      editBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+      editBtn.onclick = e => { e.stopPropagation(); openProfileEditor(p.id); };
+      actions.appendChild(editBtn);
 
-    if (_profiles.length > 1) {
-      const delBtn = document.createElement('button');
-      delBtn.title = 'Delete';
-      delBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(28,25,23,0.45)';
-      delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
-      delBtn.onclick = e => { e.stopPropagation(); deleteProfile(p.id); };
-      actions.appendChild(delBtn);
+      if (_profiles.length > 1) {
+        const delBtn = document.createElement('button');
+        delBtn.title = 'Delete';
+        delBtn.style.cssText = 'width:28px;height:28px;border-radius:8px;background:#EAE4D9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(28,25,23,0.45)';
+        delBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+        delBtn.onclick = e => { e.stopPropagation(); deleteProfile(p.id); };
+        actions.appendChild(delBtn);
+      }
     }
 
     row.appendChild(nameSpan);
