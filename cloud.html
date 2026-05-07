@@ -104,7 +104,7 @@
 <input type="file" id="photo-input" class="hidden" accept="image/*,video/*" multiple onchange="onFilesSelected(event)" />
 
 <!-- ── NAV ── -->
-<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+<div id="nav-bar" class="fixed top-4 z-50 scrolled" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
   <div id="nav-main-row" class="flex items-center justify-between gap-3">
     <a href="index.html" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
@@ -216,9 +216,11 @@
       <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden relative" style="background:#8B6F47;color:#F5F0E8;z-index:1"></div>
       <div class="flex-1 min-w-0 relative" style="z-index:1">
         <p id="ws-brand-name" class="text-sm font-semibold truncate" style="color:#1C1917"></p>
-        <p id="ws-brand-sub" class="text-xs truncate" style="color:rgba(28,25,23,0.45)"></p>
       </div>
-      <button onclick="clearWorkspaceBranding()" class="text-xs hover:opacity-60 flex-shrink-0 relative" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;font-family:inherit;z-index:1">Remove</button>
+      <p id="ws-brand-domain" class="text-xs truncate flex-shrink-0 relative" style="color:rgba(28,25,23,0.4);z-index:1;max-width:140px"></p>
+      <button id="ws-brand-remove" onclick="clearWorkspaceBranding()" title="Remove branding" class="hidden w-6 h-6 items-center justify-center rounded-full hover:opacity-60 flex-shrink-0 relative" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;z-index:1">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <!-- Header -->
@@ -1255,7 +1257,8 @@ function applyWorkspaceBranding(profile) {
   const barScrim = document.getElementById('ws-brand-bar-scrim');
   const logoEl   = document.getElementById('ws-brand-logo');
   const nameEl   = document.getElementById('ws-brand-name');
-  const subEl    = document.getElementById('ws-brand-sub');
+  const domainEl = document.getElementById('ws-brand-domain');
+  const removeBtn= document.getElementById('ws-brand-remove');
   const wsBg     = document.getElementById('ws-wallpaper-bg');
 
   const clearBg = () => {
@@ -1302,8 +1305,12 @@ function applyWorkspaceBranding(profile) {
   }
 
   nameEl.textContent = profile.brand_name || profile.name || '';
-  subEl.textContent  = profile.tagline || profile.domain_url || '';
-  subEl.style.display = (profile.tagline || profile.domain_url) ? '' : 'none';
+
+  const domain = profile.domain_url || profile.tagline || '';
+  if (domainEl) { domainEl.textContent = domain; domainEl.style.display = domain ? '' : 'none'; }
+
+  const isOwner = workspace?.owner_id === currentUser?.id;
+  if (removeBtn) { removeBtn.classList.toggle('hidden', !isOwner); removeBtn.classList.toggle('flex', isOwner); }
 
   bar.classList.remove('hidden'); bar.classList.add('flex');
 }
