@@ -139,6 +139,10 @@
   </div>
 </div>
 
+<!-- ── WALLPAPER BACKGROUND (behind everything, shown when brand has a wallpaper) ── -->
+<div id="ws-wallpaper-bg" style="position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;background-repeat:no-repeat;display:none"></div>
+<div id="ws-wallpaper-scrim" style="position:fixed;inset:0;z-index:-1;background:rgba(245,240,232,0.80);display:none"></div>
+
 <!-- ── MAIN ── -->
 <main class="min-h-screen pt-24 pb-20 px-4">
 
@@ -184,13 +188,15 @@
     <div id="ws-switcher" class="hidden gap-1 p-1 rounded-xl mb-4" style="background:#EAE4D9;max-width:100%;overflow-x:auto"></div>
 
     <!-- Active brand bar -->
-    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-4" style="border:1.5px solid var(--ws-accent);background:color-mix(in srgb,var(--ws-accent) 8%,transparent)">
-      <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden" style="background:var(--ws-accent);color:#F5F0E8"></div>
-      <div class="flex-1 min-w-0">
+    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-4 overflow-hidden relative" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+      <div id="ws-brand-bar-bg" class="absolute inset-0" style="background-size:cover;background-position:center;display:none"></div>
+      <div id="ws-brand-bar-scrim" class="absolute inset-0 hidden" style="background:rgba(253,250,245,0.82)"></div>
+      <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden relative" style="background:#8B6F47;color:#F5F0E8;z-index:1"></div>
+      <div class="flex-1 min-w-0 relative" style="z-index:1">
         <p id="ws-brand-name" class="text-sm font-semibold truncate" style="color:#1C1917"></p>
         <p id="ws-brand-sub" class="text-xs truncate" style="color:rgba(28,25,23,0.45)"></p>
       </div>
-      <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style="background:var(--ws-accent);color:#F5F0E8;opacity:0.85">Active brand</span>
+      <button onclick="clearWorkspaceBranding()" class="text-xs hover:opacity-60 flex-shrink-0 relative" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;font-family:inherit;z-index:1">Remove</button>
     </div>
 
     <!-- Header -->
@@ -237,11 +243,11 @@
       <!-- Upload progress -->
       <div id="ws-upload-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
         <div class="flex items-center gap-3 mb-2.5">
-          <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:#8B6F47"></div>
+          <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:var(--ws-accent)"></div>
           <p id="ws-upload-label" class="text-sm font-medium flex-1 truncate" style="color:#1C1917">Uploading…</p>
         </div>
         <div class="w-full h-1.5 rounded-full" style="background:#EAE4D9">
-          <div id="ws-prog-fill" class="h-1.5 rounded-full transition-all" style="background:#8B6F47;width:0%"></div>
+          <div id="ws-prog-fill" class="h-1.5 rounded-full transition-all" style="background:var(--ws-accent);width:0%"></div>
         </div>
         <p id="ws-prog-label" class="text-xs mt-1.5" style="color:rgba(28,25,23,0.35)"></p>
       </div>
@@ -257,7 +263,7 @@
         <p class="text-sm font-medium mb-0.5" style="color:#1C1917">Drop files here</p>
         <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">or use the buttons below · up to 10 GB</p>
         <div class="flex gap-2 flex-wrap justify-center">
-          <button onclick="document.getElementById('file-input').click()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">
+          <button onclick="document.getElementById('file-input').click()" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity" style="background:var(--ws-accent);color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Upload files
           </button>
@@ -376,6 +382,16 @@
     </div>
   </div>
 
+  <!-- ── NO CLOUDS STATE (Pro user deleted all workspaces) ── -->
+  <div id="state-noclouds" class="hidden max-w-xs mx-auto text-center pt-36 fade-up opacity-0">
+    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+    </div>
+    <h2 class="text-2xl font-bold mb-2" style="color:#1C1917">No clouds yet</h2>
+    <p class="text-sm mb-6" style="color:rgba(28,25,23,0.5)">Create a workspace to start storing and collaborating.</p>
+    <button onclick="createFirstCloud()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Create cloud</button>
+  </div>
+
 </main>
 
 <script src="branding-shared.js"></script>
@@ -437,7 +453,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function showState(s) {
-  ['loading','signin','upgrade','workspace','join'].forEach(id =>
+  ['loading','signin','upgrade','workspace','join','noclouds'].forEach(id =>
     document.getElementById('state-' + id).classList.toggle('hidden', id !== s)
   );
 }
@@ -513,13 +529,8 @@ function renderWorkspace() {
   // Branding tab: Pro owners only
   document.getElementById('wstab-branding').style.display = (isPro && isOwner) ? '' : 'none';
 
-  // Apply saved branding if any
-  if (workspace.branding_profile_id && _profiles.length) {
-    const p = _profiles.find(x => x.id === workspace.branding_profile_id);
-    if (p) applyWorkspaceBranding(p);
-  }
-
   renderWsSwitcher();
+  loadWorkspaceBrand();
   _fileItems = {};
   showState('workspace');
   loadFiles();
@@ -968,7 +979,7 @@ async function loadOrCreateInviteLink() {
   if (!inviteId) {
     const { data: inv, error } = await _sb.from('workspace_invites')
       .insert({ workspace_id: workspace.id, created_by: currentUser.id }).select('id').single();
-    if (error) { showToast('Could not create invite link'); return; }
+    if (error) { console.warn('workspace_invites:', error.message); return; }
     inviteId = inv.id;
   }
 
@@ -1117,7 +1128,7 @@ async function deleteWorkspace() {
   await _sb.from('workspaces').delete().eq('id', wsId);
   allWorkspaces = allWorkspaces.filter(w => w.id !== wsId);
   ownedWorkspaces = ownedWorkspaces.filter(w => w.id !== wsId);
-  if (!allWorkspaces.length) { workspace = null; applyWorkspaceBranding(null); showState('upgrade'); return; }
+  if (!allWorkspaces.length) { workspace = null; applyWorkspaceBranding(null); showState(isPro ? 'noclouds' : 'upgrade'); return; }
   currentWorkspaceIndex = 0;
   workspace = allWorkspaces[0];
   showToast('Cloud deleted');
@@ -1145,20 +1156,48 @@ async function selectWorkspaceBranding(id) {
 }
 
 function applyWorkspaceBranding(profile) {
-  const bar     = document.getElementById('ws-brand-bar');
-  const logoEl  = document.getElementById('ws-brand-logo');
-  const nameEl  = document.getElementById('ws-brand-name');
-  const subEl   = document.getElementById('ws-brand-sub');
+  const bar      = document.getElementById('ws-brand-bar');
+  const barBg    = document.getElementById('ws-brand-bar-bg');
+  const barScrim = document.getElementById('ws-brand-bar-scrim');
+  const logoEl   = document.getElementById('ws-brand-logo');
+  const nameEl   = document.getElementById('ws-brand-name');
+  const subEl    = document.getElementById('ws-brand-sub');
+  const wsBg     = document.getElementById('ws-wallpaper-bg');
+  const wsScrim  = document.getElementById('ws-wallpaper-scrim');
+
+  const clearBg = () => {
+    if (wsBg)    { wsBg.style.backgroundImage = ''; wsBg.style.display = 'none'; }
+    if (wsScrim) wsScrim.style.display = 'none';
+    document.body.style.backgroundColor = '';
+  };
+
   if (!bar) return;
 
   if (!profile) {
     bar.classList.add('hidden'); bar.classList.remove('flex');
-    document.documentElement.style.removeProperty('--ws-accent');
+    document.documentElement.style.setProperty('--ws-accent', '#8B6F47');
+    clearBg();
     return;
   }
 
   const accent = profile.accent_color || '#8B6F47';
   document.documentElement.style.setProperty('--ws-accent', accent);
+
+  // Wallpaper — apply to full-page background
+  const wallpaper = (profile.wallpapers || []).find(wp => wp.type === 'image');
+  if (wallpaper && wsBg) {
+    wsBg.style.backgroundImage = `url('${wallpaper.url}')`;
+    wsBg.style.display = 'block';
+    if (wsScrim) wsScrim.style.display = 'block';
+    // Mirror wallpaper on the brand bar too
+    if (barBg)    { barBg.style.backgroundImage = `url('${wallpaper.url}')`; barBg.style.display = 'block'; }
+    if (barScrim) barScrim.classList.remove('hidden');
+  } else {
+    clearBg();
+    document.body.style.backgroundColor = profile.bg_color || '#F5F0E8';
+    if (barBg)    barBg.style.display = 'none';
+    if (barScrim) barScrim.classList.add('hidden');
+  }
 
   // Logo
   if (profile.logo_url) {
@@ -1172,10 +1211,44 @@ function applyWorkspaceBranding(profile) {
   }
 
   nameEl.textContent = profile.brand_name || profile.name || '';
-  subEl.textContent  = profile.tagline || (profile.domain_url ? profile.domain_url : '');
+  subEl.textContent  = profile.tagline || profile.domain_url || '';
   subEl.style.display = (profile.tagline || profile.domain_url) ? '' : 'none';
 
   bar.classList.remove('hidden'); bar.classList.add('flex');
+}
+
+async function loadWorkspaceBrand() {
+  if (!workspace?.branding_profile_id) { applyWorkspaceBranding(null); return; }
+  const ownerId = workspace.owner_id;
+  const { data } = await _sb.from('user_branding').select('profiles').eq('user_id', ownerId).maybeSingle();
+  if (!data?.profiles) return;
+  const p = data.profiles.find(x => x.id === workspace.branding_profile_id);
+  if (p) {
+    p.wallpapers = (p.wallpapers || []).map(wp => typeof wp === 'string' ? { url: wp, type: 'image' } : wp);
+    applyWorkspaceBranding(p);
+  }
+}
+
+async function clearWorkspaceBranding() {
+  await _sb.from('workspaces').update({ branding_profile_id: null }).eq('id', workspace.id);
+  workspace.branding_profile_id = null;
+  allWorkspaces[currentWorkspaceIndex].branding_profile_id = null;
+  _selectedProfileId = null;
+  if (_profilesLoaded) renderProfilesList();
+  applyWorkspaceBranding(null);
+  showToast('Branding removed');
+}
+
+async function createFirstCloud() {
+  const name = (prompt('Name your cloud:', 'My Cloud') || '').trim() || 'My Cloud';
+  const { data: newWs, error } = await _sb.from('workspaces')
+    .insert({ name, owner_id: currentUser.id }).select().single();
+  if (error) { showToast('Could not create: ' + error.message); return; }
+  ownedWorkspaces = [newWs];
+  allWorkspaces   = [{ ...newWs, _owned: true }];
+  currentWorkspaceIndex = 0;
+  workspace = allWorkspaces[0];
+  renderWorkspace();
 }
 
 // ── BRANDING (remaining functions in branding-shared.js)
