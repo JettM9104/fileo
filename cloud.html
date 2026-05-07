@@ -207,12 +207,13 @@
 
   <!-- Workspace -->
   <div id="state-workspace" class="hidden max-w-3xl mx-auto fade-up opacity-0">
+  <div id="ws-card" class="rounded-3xl" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.08);box-shadow:0 4px 32px rgba(28,25,23,0.09);padding:20px">
 
     <!-- Workspace switcher -->
-    <div id="ws-switcher" class="hidden gap-1 p-1 rounded-xl mb-4" style="background:#EAE4D9;max-width:100%;overflow-x:auto"></div>
+    <div id="ws-switcher" class="hidden gap-1 p-1 rounded-xl mb-5" style="background:#EAE4D9;max-width:100%;overflow-x:auto"></div>
 
     <!-- Active brand bar -->
-    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-4 overflow-hidden relative" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-5 overflow-hidden relative" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.08)">
       <div id="ws-brand-bar-bg" class="absolute inset-0" style="background-size:cover;background-position:center;display:none"></div>
       <div id="ws-brand-bar-scrim" class="absolute inset-0 hidden" style="background:rgba(253,250,245,0.82)"></div>
       <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden relative" style="background:#8B6F47;color:#F5F0E8;z-index:1"></div>
@@ -276,7 +277,7 @@
     <div id="ws-panel-files">
 
       <!-- Upload progress -->
-      <div id="ws-upload-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+      <div id="ws-upload-progress" class="hidden rounded-2xl px-5 py-4 mb-4" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.08)">
         <div class="flex items-center gap-3 mb-2.5">
           <div class="w-4 h-4 rounded-full border-2 spinner flex-shrink-0" style="border-color:#EAE4D9;border-top-color:var(--ws-accent)"></div>
           <p id="ws-upload-label" class="text-sm font-medium flex-1 truncate" style="color:#1C1917">Uploading…</p>
@@ -290,7 +291,7 @@
       <!-- Drop zone -->
       <div id="ws-dropzone"
         class="flex flex-col items-center justify-center rounded-2xl text-center mb-4 transition-all"
-        style="border:2px dashed rgba(28,25,23,0.16);background:#FDFAF5;padding:28px 24px;cursor:default"
+        style="border:2px dashed rgba(28,25,23,0.14);background:#F5F0E8;padding:28px 24px;cursor:default"
         ondragover="wsDragOver(event)" ondragleave="wsDragLeave(event)" ondrop="wsDrop(event)">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center mb-2.5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.09);color:#8B6F47">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -395,6 +396,7 @@
       </div>
     </div><!-- /ws-panel-branding -->
 
+  </div><!-- /ws-card -->
   </div><!-- /state-workspace -->
 
   <!-- ── JOIN REQUEST STATE (visiting ?invite=TOKEN) ── -->
