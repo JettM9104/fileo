@@ -91,7 +91,7 @@
         <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
         <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Upload</a>
         <a href="branding.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Branding</a>
-        <a href="cloud.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
+        <a href="cloud-info.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
         <a href="index.html#pricing" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Pricing</a>
         <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
         <a href="upload.html" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap no-underline" style="background:#1C1917;color:#F5F0E8">Get started</a>
@@ -129,7 +129,7 @@
       <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
       <a href="upload.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Upload</a>
       <a href="branding.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Branding</a>
-      <a href="cloud.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
+      <a href="cloud-info.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
       <a href="index.html#pricing" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Pricing</a>
     </div>
     <div class="px-3 pb-3">
@@ -157,39 +157,48 @@
     <button onclick="openModal()" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Sign in</button>
   </div>
 
-  <!-- Not Pro -->
+  <!-- Not Pro / not a member -->
   <div id="state-upgrade" class="hidden max-w-sm mx-auto pt-32 fade-up opacity-0">
     <div class="rounded-2xl p-8 text-center" style="background:#1C1917">
       <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(245,240,232,0.1)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
       </div>
       <h2 class="text-xl font-bold mb-2" style="color:#F5F0E8">Cloud Storage is Pro</h2>
-      <p class="text-sm mb-6 leading-relaxed" style="color:rgba(245,240,232,0.5)">Upgrade to get a permanent shared space for files, notes, and your team.</p>
+      <p class="text-sm mb-6 leading-relaxed" style="color:rgba(245,240,232,0.5)">Upgrade to get up to two permanent cloud workspaces — or get invited to someone's cloud for free.</p>
       <div class="flex flex-col gap-2.5 mb-7 text-left">
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Upload &amp; store files permanently</div>
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Upload photos from your phone</div>
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Download or delete any file</div>
-        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Invite collaborators · shared notes</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Two private cloud workspaces</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Invite anyone — members don't need Pro</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>50 GB weekly · shared across both clouds</div>
+        <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Shared notes · version history</div>
       </div>
       <button onclick="activatePro()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upgrade to Pro — $10/mo</button>
+      <a href="cloud-info.html" class="block mt-3 text-xs hover:opacity-70 transition-opacity" style="color:rgba(245,240,232,0.4)">Learn more about Cloud →</a>
     </div>
   </div>
 
   <!-- Workspace -->
   <div id="state-workspace" class="hidden max-w-3xl mx-auto fade-up opacity-0">
 
+    <!-- Workspace switcher (shown when Pro owner has 2 clouds) -->
+    <div id="ws-switcher" class="hidden gap-1 p-1 rounded-xl mb-4" style="background:#EAE4D9;max-width:fit-content"></div>
+
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-7 gap-3">
       <div>
         <div class="flex items-center gap-2.5 mb-1">
           <h1 id="ws-name" class="text-2xl font-bold tracking-tight" style="color:#1C1917">My Cloud</h1>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+          <span id="ws-pro-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+          <span id="ws-shared-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:#EAE4D9;color:rgba(28,25,23,0.5)">SHARED</span>
         </div>
         <p id="ws-meta" class="text-sm" style="color:rgba(28,25,23,0.45)">—</p>
       </div>
-      <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+        <button id="ws-add-btn" onclick="addSecondWorkspace()" class="hidden items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium hover:opacity-75 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add cloud
+        </button>
         <div id="ws-avatars" class="flex -space-x-2"></div>
-        <button onclick="switchWsTab('members')" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium hover:opacity-70 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
+        <button id="ws-invite-btn" onclick="switchWsTab('members')" class="hidden items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium hover:opacity-70 transition-opacity" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit;cursor:pointer">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
           Invite
         </button>
@@ -434,6 +443,7 @@ const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
 
 let _sb = null, currentUser = null, isPro = false;
 let workspace = null, wsMembers = [];
+let ownedWorkspaces = [], currentWorkspaceIndex = 0;
 let activeTab = 'files';
 let _notesTimer = null, _notesDirty = false;
 let _authTab = 'login';
@@ -447,10 +457,10 @@ window.addEventListener('DOMContentLoaded', () => {
       currentUser = session.user;
       isPro = session.user.app_metadata?.is_pro === true;
       showUserNav(session.user.email);
-      if (isPro) loadWorkspace();
-      else showState('upgrade');
+      loadWorkspace();
     } else {
       currentUser = null; isPro = false;
+      ownedWorkspaces = []; workspace = null;
       showSignedOutNav();
       showState('signin');
     }
@@ -478,39 +488,150 @@ function activatePro() { window.location.href = 'index.html#pricing'; }
 // ── WORKSPACE LOAD
 async function loadWorkspace() {
   showState('loading');
+
   if (isPro) {
     document.getElementById('pro-badge').classList.remove('hidden');
     document.getElementById('menu-plan').textContent = 'Pro plan';
-  }
 
-  const { data: owned } = await _sb.from('workspaces').select('*').eq('owner_id', currentUser.id).limit(1);
-  if (owned?.length) {
-    workspace = owned[0];
-  } else {
-    const { data: memberships } = await _sb.from('workspace_members').select('workspace_id').eq('email', currentUser.email).limit(1);
-    if (memberships?.length) {
-      const { data: ws } = await _sb.from('workspaces').select('*').eq('id', memberships[0].workspace_id).single();
-      if (ws) workspace = ws;
-    }
-    if (!workspace) {
-      const { data: newWs, error } = await _sb.from('workspaces').insert({ name: 'My Cloud', owner_id: currentUser.id }).select().single();
+    // Load up to 2 owned workspaces
+    const { data: owned } = await _sb.from('workspaces').select('*')
+      .eq('owner_id', currentUser.id).order('created_at').limit(2);
+    if (owned?.length) {
+      ownedWorkspaces = owned;
+    } else {
+      const { data: newWs, error } = await _sb.from('workspaces')
+        .insert({ name: 'My Cloud', owner_id: currentUser.id }).select().single();
       if (error) { showToast('Could not set up workspace'); return; }
-      workspace = newWs;
+      ownedWorkspaces = [newWs];
+    }
+    workspace = ownedWorkspaces[currentWorkspaceIndex] || ownedWorkspaces[0];
+    currentWorkspaceIndex = ownedWorkspaces.indexOf(workspace);
+
+  } else {
+    // Non-Pro: check if invited as a member of any workspace
+    const { data: memberships } = await _sb.from('workspace_members')
+      .select('workspace_id').eq('email', currentUser.email).limit(1);
+    if (memberships?.length) {
+      const { data: ws } = await _sb.from('workspaces').select('*')
+        .eq('id', memberships[0].workspace_id).single();
+      if (ws) {
+        workspace = ws;
+        ownedWorkspaces = [];
+      } else {
+        showState('upgrade'); return;
+      }
+    } else {
+      showState('upgrade'); return;
     }
   }
 
+  renderWorkspace();
+}
+
+function renderWorkspace() {
   const isOwner = workspace.owner_id === currentUser.id;
   const created = new Date(workspace.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   document.getElementById('ws-name').textContent = workspace.name;
   document.getElementById('ws-meta').textContent = (isOwner ? 'Your cloud' : 'Shared cloud') + ' · since ' + created;
+
+  // Badges
+  document.getElementById('ws-pro-badge').classList.toggle('hidden', !isPro);
+  document.getElementById('ws-shared-badge').classList.toggle('hidden', isPro || isOwner);
+
+  // Invite button: owners only
+  const invBtn = document.getElementById('ws-invite-btn');
+  invBtn.classList.toggle('hidden', !isOwner);
+  invBtn.classList.toggle('flex', isOwner);
+
+  // Branding tab: Pro owners only
+  document.getElementById('wstab-branding').style.display = (isPro && isOwner) ? '' : 'none';
+
+  // Workspace switcher / add button
+  renderWsSwitcher();
+
+  _fileItems = {};
   showState('workspace');
   loadFiles();
   loadWsMembers();
 
   const tabParam = new URLSearchParams(window.location.search).get('tab');
   if (tabParam && ['files','notes','members','branding'].includes(tabParam)) {
+    if (tabParam === 'branding' && !(isPro && isOwner)) return;
     switchWsTab(tabParam);
   }
+}
+
+// ── WORKSPACE SWITCHER
+function renderWsSwitcher() {
+  const switcher = document.getElementById('ws-switcher');
+  const addBtn   = document.getElementById('ws-add-btn');
+
+  if (!isPro || !ownedWorkspaces.length) {
+    switcher.classList.remove('flex'); switcher.classList.add('hidden');
+    addBtn.classList.remove('flex');   addBtn.classList.add('hidden');
+    return;
+  }
+
+  if (ownedWorkspaces.length < 2) {
+    switcher.classList.remove('flex'); switcher.classList.add('hidden');
+    addBtn.classList.remove('hidden'); addBtn.classList.add('flex');
+  } else {
+    addBtn.classList.remove('flex');   addBtn.classList.add('hidden');
+    switcher.classList.remove('hidden'); switcher.classList.add('flex');
+    switcher.innerHTML = '';
+    ownedWorkspaces.forEach((ws, i) => {
+      const btn = document.createElement('button');
+      btn.textContent = ws.name;
+      btn.style.cssText = 'border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;padding:5px 12px;border-radius:8px;' +
+        (i === currentWorkspaceIndex
+          ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)'
+          : 'background:transparent;color:rgba(28,25,23,0.45)');
+      btn.onclick = () => switchToWorkspace(i);
+      switcher.appendChild(btn);
+    });
+  }
+}
+
+async function switchToWorkspace(idx) {
+  if (idx === currentWorkspaceIndex) return;
+  currentWorkspaceIndex = idx;
+  workspace = ownedWorkspaces[idx];
+  switchWsTab('files');
+  renderWorkspace();
+}
+
+async function addSecondWorkspace() {
+  if (ownedWorkspaces.length >= 2) { showToast('Maximum 2 clouds per account'); return; }
+  const name = (prompt('Name your second cloud:', 'Work Files') || '').trim() || 'Work Files';
+  const { data: newWs, error } = await _sb.from('workspaces')
+    .insert({ name, owner_id: currentUser.id }).select().single();
+  if (error) { showToast('Could not create: ' + error.message); return; }
+  ownedWorkspaces.push(newWs);
+  currentWorkspaceIndex = ownedWorkspaces.length - 1;
+  workspace = newWs;
+  renderWorkspace();
+  showToast('"' + name + '" created');
+}
+
+// ── OWNER QUOTA CHECK (storage always charged to workspace owner)
+async function checkOwnerQuota(newBytes) {
+  const GB50 = 50 * 1024 * 1024 * 1024;
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const ownerId = workspace.owner_id;
+
+  const { data: allWs } = await _sb.from('workspaces').select('id').eq('owner_id', ownerId);
+  if (!allWs?.length) return { ok: true, used: 0 };
+  const wsIds = allWs.map(w => w.id);
+
+  const { data: folders } = await _sb.from('workspace_folders').select('id').in('workspace_id', wsIds);
+  if (!folders?.length) return { ok: true, used: 0 };
+  const folderIds = folders.map(f => f.id);
+
+  const { data: snaps } = await _sb.from('workspace_folder_snapshots')
+    .select('total_size').in('folder_id', folderIds).gte('uploaded_at', sevenDaysAgo);
+
+  const used = (snaps || []).reduce((s, r) => s + (r.total_size || 0), 0);
+  return { ok: used + newBytes <= GB50, used };
 }
 
 // ── TAB SWITCHING
@@ -552,6 +673,14 @@ async function onFilesSelected(e) {
 
 // ── UPLOAD
 async function uploadFiles(files) {
+  const totalSize = files.reduce((s, f) => s + f.size, 0);
+  const { ok, used } = await checkOwnerQuota(totalSize);
+  if (!ok) {
+    const usedGB = (used / 1e9).toFixed(1);
+    showToast('Storage limit reached — ' + usedGB + ' GB of 50 GB used this week');
+    return;
+  }
+
   document.getElementById('ws-upload-progress').classList.remove('hidden');
 
   for (let i = 0; i < files.length; i++) {

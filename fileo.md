@@ -34,7 +34,8 @@ The frontend is **pure static HTML + vanilla JS** (no build step). The Flask bac
 |---|---|
 | `index.html` | Landing page — hero, how-it-works, features mockup demo, pricing section, download overlay, ToS/Privacy modals |
 | `upload.html` | Main upload UI — drag-and-drop, expiry picker, advanced options (Pro), My Files tab, progress/success states |
-| `cloud.html` | Pro-only Cloud workspace — versioned folder uploads, conflict detection, ZIP download, shared notes, member management, branding settings |
+| `cloud.html` | Cloud workspace — versioned folder uploads, shared notes, member management, branding settings. Pro owners get up to 2 workspaces with a switcher. Non-Pro members can access a workspace they were invited to without needing Pro. Storage quota always charged to the workspace owner (not the uploader). |
+| `cloud-info.html` | Marketing page for the Cloud feature — hero, workspace mockup, feature cards (2 clouds, member access, notes/versioning), storage diagram, collaboration explainer, FAQ, auth-aware CTA. Accessible to all users. "Cloud" nav link on all pages points here. |
 | `branding.html` | Marketing page for the branding Pro feature — hero, download page mockup, feature cards, color showcase, auth-aware CTA |
 | `server.py` | Flask API — presigned URLs, file deletion, Stripe checkout + webhook, Pro activation |
 | `config.js` | Runtime config injected into every page — Supabase URL/anon key, `apiBaseUrl` |
@@ -246,10 +247,10 @@ A simple shared file storage with notes and member management.
 
 **States**: loading → sign-in required → upgrade prompt (not Pro) → workspace
 
-**On load (Pro users)**:
-- Looks for owned workspace in `workspaces` table
-- Falls back to workspace where user is a member (`workspace_members`)
-- Creates new workspace if none found
+**On load**:
+- Pro users: loads up to 2 owned workspaces; shows a workspace switcher if 2 exist; shows "+ Add cloud" button if only 1 exists (up to 2). Creates first workspace if none found.
+- Non-Pro users: checks `workspace_members` for an invite; if found, loads that workspace (no Pro required). If not found, shows upgrade prompt.
+- Branding tab and Invite button are hidden for non-owner members.
 
 **Files tab** (default):
 - Flat list of all uploaded files, sorted newest-first
@@ -259,9 +260,9 @@ A simple shared file storage with notes and member management.
 - Upload progress bar with per-file label and count
 
 **Storage accounting**:
-- Cloud files uploaded to **owned** workspaces count toward the Pro user's weekly storage quota
-- Files in workspaces the user was **invited to** (member, not owner) do **not** count toward their quota
-- Weekly quota (50 GB/7-day rolling window) is checked at upload time: sum of `files.size` (by `created_at > 7d ago`) + `workspace_folder_snapshots.total_size` (by `uploaded_at > 7d ago`, owned workspaces only)
+- ALL uploads to a workspace — by the owner or any member — count against the **workspace owner's** 50 GB weekly quota.
+- Storage check (`checkOwnerQuota`) runs before every upload: queries all workspaces owned by `workspace.owner_id`, sums `workspace_folder_snapshots.total_size` from the last 7 days across all of them, and rejects the upload if `used + newBytes > 50 GB`.
+- Members uploading to someone else's workspace use the owner's quota, not their own.
 
 **Upload flow**:
 - Each file is stored as a `workspace_folders` entry (name = filename) + `workspace_folder_snapshots` (version 1+) + `workspace_folder_files` record
@@ -290,7 +291,7 @@ A simple shared file storage with notes and member management.
 
 A standalone marketing page in the top nav (before Cloud) promoting the Pro branding feature.
 
-**Nav position**: Home | Upload | **Branding** | Cloud — appears in the pill nav on all four pages.
+**Nav position**: Home | Upload | **Branding** | Cloud — appears in the pill nav on all pages. The "Cloud" nav link points to `cloud-info.html` (not `cloud.html`) on all pages.
 
 **Sections**:
 1. Hero — "Make every link yours." with PRO badge pill, subtext, and CTA

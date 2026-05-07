@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Cloud Storage — Fileo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{background:#F5F0E8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0}
+    a{text-decoration:none}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp 0.65s cubic-bezier(0.16,1,0.3,1) forwards}
+
+    @keyframes modalIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal-in{animation:modalIn 0.3s cubic-bezier(0.16,1,0.3,1) forwards}
+
+    #auth-modal{display:none}#auth-modal.open{display:flex}
+    #toast{transform:translateX(-50%) translateY(-8px);opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none}
+
+    @media(min-width:768px){#nav-hamburger{display:none!important}}
+    @media(max-width:767px){#nav-pill-wrap{display:none!important}}
+
+    /* Faq */
+    .faq-body{overflow:hidden;max-height:0;transition:max-height 0.3s ease}
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH MODAL ── -->
+<div id="auth-modal" class="fixed inset-0 z-[100] items-center justify-center p-4"
+  style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)"
+  onclick="if(event.target===this)closeModal()">
+  <div class="modal-in w-full max-w-sm rounded-2xl p-7 flex flex-col"
+    style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex gap-1 p-1 rounded-xl" style="background:#EAE4D9">
+        <button id="tab-login" onclick="setAuthTab('login')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)">Sign in</button>
+        <button id="tab-register" onclick="setAuthTab('register')" class="px-4 py-1.5 rounded-lg text-sm font-medium" style="background:transparent;color:rgba(28,25,23,0.45)">Sign up</button>
+      </div>
+      <button onclick="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-full hover:opacity-60" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="auth-title" class="text-xl font-bold mb-1" style="color:#1C1917">Welcome back</h2>
+    <p id="auth-sub" class="text-sm mb-6" style="color:rgba(28,25,23,0.45)">Sign in to access your cloud storage.</p>
+    <form id="auth-form" onsubmit="submitAuth(event)" class="flex flex-col gap-3">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Email</label>
+        <input id="auth-email" type="email" placeholder="you@example.com" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-medium" style="color:rgba(28,25,23,0.45)">Password</label>
+        <input id="auth-password" type="password" placeholder="Your password" required class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
+      </div>
+      <div id="auth-error" class="hidden text-xs px-3 py-2 rounded-lg" style="background:rgba(220,38,38,0.08);color:#DC2626"></div>
+      <button id="auth-submit" type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 mt-1" style="background:#1C1917;color:#F5F0E8">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="fixed left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="top:80px;background:#1C1917;color:#F5F0E8"></div>
+
+<!-- ── NAV ── -->
+<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+  <div id="nav-main-row" class="flex items-center justify-between gap-3">
+    <a href="index.html" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
+      <span class="text-[22px] font-bold tracking-tight" style="color:#1C1917">Fileo</span>
+    </a>
+    <div id="nav-pill-wrap" class="flex flex-1 justify-center">
+      <nav class="flex items-center gap-1 px-2 py-2 rounded-full" style="background:rgba(245,240,232,0.85);backdrop-filter:blur(20px);border:1px solid rgba(28,25,23,0.08);box-shadow:0 1px 3px rgba(28,25,23,0.05)">
+        <a href="index.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Home</a>
+        <a href="upload.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Upload</a>
+        <a href="branding.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Branding</a>
+        <a href="cloud-info.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
+        <a href="index.html#pricing" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Pricing</a>
+        <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
+        <a href="upload.html" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap no-underline" style="background:#1C1917;color:#F5F0E8">Get started</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="relative">
+        <button id="btn-signin" onclick="openModal()" class="flex items-center justify-center w-10 h-10 rounded-full hover:opacity-70" style="background:#1C1917" title="Sign in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button id="btn-avatar" onclick="toggleAccountMenu()" class="hidden items-center justify-center w-10 h-10 rounded-full font-semibold text-base hover:opacity-80 select-none" style="background:#1C1917;color:#F5F0E8;font-family:inherit;border:none;cursor:pointer"></button>
+        <div id="account-menu" class="hidden absolute right-0 z-50 min-w-[200px] rounded-2xl overflow-hidden" style="top:calc(100% + 8px);background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 24px rgba(28,25,23,0.10)">
+          <div class="px-4 py-3" style="border-bottom:1px solid rgba(28,25,23,0.08)">
+            <p id="menu-email" class="text-xs font-medium truncate" style="color:rgba(28,25,23,0.45)"></p>
+            <p id="menu-plan" class="text-xs font-semibold mt-0.5" style="color:#8B6F47"></p>
+          </div>
+          <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            My files
+          </button>
+          <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign out
+          </button>
+        </div>
+      </div>
+      <button id="nav-hamburger" onclick="toggleMobileMenu()" class="w-10 h-10 items-center justify-center rounded-full" style="background:#1C1917;border:none;cursor:pointer;color:#F5F0E8;flex-shrink:0">
+        <svg id="mob-icon-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg id="mob-icon-close" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mob-menu" class="hidden mt-2 rounded-2xl overflow-hidden" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.1);box-shadow:0 4px 20px rgba(28,25,23,0.1)">
+    <div class="p-3 flex flex-col gap-1">
+      <a href="index.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Home</a>
+      <a href="upload.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Upload</a>
+      <a href="branding.html" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Branding</a>
+      <a href="cloud-info.html" class="block px-4 py-2.5 rounded-xl text-sm font-semibold no-underline" style="color:#1C1917" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Cloud</a>
+      <a href="index.html#pricing" class="block px-4 py-2.5 rounded-xl text-sm font-medium no-underline" style="color:rgba(28,25,23,0.6)" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">Pricing</a>
+    </div>
+    <div class="px-3 pb-3">
+      <button id="mob-cta" onclick="handleCta()" class="w-full py-3 rounded-xl text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HERO ── -->
+<section class="relative flex flex-col items-center text-center px-6 pt-44 pb-20 overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none overflow-hidden" style="z-index:-1">
+    <div class="absolute rounded-full" style="width:700px;height:500px;top:-80px;left:50%;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(100,140,180,0.13) 0%,transparent 70%);filter:blur(60px)"></div>
+  </div>
+
+  <div class="fade-up inline-flex items-center gap-2 px-3 py-1 rounded-full mb-7" style="background:#8B6F47;animation-delay:0ms">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span class="text-xs font-semibold tracking-wide" style="color:#F5F0E8">PRO FEATURE</span>
+  </div>
+
+  <h1 class="fade-up font-bold tracking-[-0.04em] max-w-2xl mb-6" style="font-size:clamp(46px,7vw,82px);line-height:1.04;color:#1C1917;animation-delay:60ms">
+    Your team's<br><em class="not-italic" style="color:#8B6F47">permanent cloud.</em>
+  </h1>
+  <p class="fade-up max-w-[440px] leading-relaxed mb-10" style="font-size:18px;color:rgba(28,25,23,0.45);animation-delay:120ms">
+    Two private cloud workspaces, shared notes, and collaborators who don't need Pro. Everything in one place, forever.
+  </p>
+  <div class="fade-up flex flex-wrap items-center justify-center gap-3" style="animation-delay:190ms">
+    <button id="hero-cta" onclick="handleCta()" class="px-7 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started — $10/mo</button>
+  </div>
+</section>
+
+<!-- ── WORKSPACE MOCKUP ── -->
+<section class="px-6 pb-28">
+  <div class="max-w-3xl mx-auto">
+    <div class="rounded-3xl overflow-hidden" style="border:1px solid rgba(28,25,23,0.10);box-shadow:0 24px 80px rgba(28,25,23,0.12)">
+
+      <!-- Browser chrome -->
+      <div class="flex items-center gap-3 px-4 py-3" style="background:#E8E3DB;border-bottom:1px solid rgba(28,25,23,0.10)">
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 rounded-full" style="background:#FF5F57"></div>
+          <div class="w-3 h-3 rounded-full" style="background:#FEBC2E"></div>
+          <div class="w-3 h-3 rounded-full" style="background:#28C840"></div>
+        </div>
+        <div class="flex-1 flex justify-center">
+          <div class="flex items-center gap-2 px-3 py-1 rounded-md text-xs" style="background:rgba(28,25,23,0.07);color:rgba(28,25,23,0.4);font-family:ui-monospace,monospace;min-width:220px;max-width:340px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>fileo.ca/cloud</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mockup content -->
+      <div style="background:#F5F0E8;height:520px;overflow:hidden">
+
+        <!-- Mini nav -->
+        <div style="padding:10px 18px;border-bottom:1px solid rgba(28,25,23,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
+            <span style="font-size:12px;font-weight:700;color:#1C1917">Fileo</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1px;padding:3px;border-radius:8px;background:rgba(28,25,23,0.06);border:1px solid rgba(28,25,23,0.07)">
+            <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;color:rgba(28,25,23,0.38)">Upload</span>
+            <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;color:rgba(28,25,23,0.38)">Branding</span>
+            <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;background:#1C1917;color:#F5F0E8;font-weight:600">Cloud</span>
+          </div>
+          <div style="width:24px;height:24px;border-radius:50%;background:#1C1917;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">A</div>
+        </div>
+
+        <!-- Workspace area -->
+        <div style="padding:14px 18px 0;max-width:100%">
+
+          <!-- Workspace switcher -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:15px;font-weight:700;color:#1C1917">My Cloud</span>
+              <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;background:#8B6F47;color:#F5F0E8">PRO</span>
+            </div>
+            <!-- Two cloud tabs -->
+            <div style="display:flex;gap:2px;padding:2px;border-radius:8px;background:#EAE4D9">
+              <span style="font-size:9.5px;padding:3px 9px;border-radius:6px;background:#F5F0E8;color:#1C1917;font-weight:600;box-shadow:0 1px 2px rgba(28,25,23,0.08)">My Cloud</span>
+              <span style="font-size:9.5px;padding:3px 9px;border-radius:6px;color:rgba(28,25,23,0.45)">Work Files</span>
+            </div>
+          </div>
+
+          <!-- Tab bar -->
+          <div style="display:flex;gap:2px;padding:3px;border-radius:10px;background:#EAE4D9;margin-bottom:10px">
+            <span style="font-size:10px;padding:4px 10px;border-radius:7px;background:#F5F0E8;color:#1C1917;font-weight:600;flex:1;text-align:center;box-shadow:0 1px 2px rgba(28,25,23,0.07)">Files</span>
+            <span style="font-size:10px;padding:4px 10px;border-radius:7px;color:rgba(28,25,23,0.4);flex:1;text-align:center">Notes</span>
+            <span style="font-size:10px;padding:4px 10px;border-radius:7px;color:rgba(28,25,23,0.4);flex:1;text-align:center">Members</span>
+            <span style="font-size:10px;padding:4px 10px;border-radius:7px;color:rgba(28,25,23,0.4);flex:1;text-align:center">Branding</span>
+          </div>
+
+          <!-- Upload zone (compact) -->
+          <div style="border:2px dashed rgba(28,25,23,0.14);background:#FDFAF5;border-radius:14px;padding:12px;text-align:center;margin-bottom:8px">
+            <span style="font-size:10.5px;color:rgba(28,25,23,0.4)">Drop files here</span>
+            <span style="font-size:10px;display:inline-block;margin-left:10px;padding:3px 10px;border-radius:20px;background:#1C1917;color:#F5F0E8;font-weight:600">Upload files</span>
+          </div>
+
+          <!-- File rows -->
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <!-- File 1 -->
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:#FDFAF5;border:1px solid rgba(28,25,23,0.07)">
+              <div style="width:30px;height:30px;border-radius:8px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <p style="font-size:11.5px;font-weight:600;color:#1C1917;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">campaign-photos.zip</p>
+                <p style="font-size:9.5px;color:rgba(28,25,23,0.4);margin:2px 0 0">48 MB · alex · 2h ago</p>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="width:25px;height:25px;border-radius:6px;background:#EAE4D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+              </div>
+            </div>
+            <!-- File 2 -->
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:#FDFAF5;border:1px solid rgba(28,25,23,0.07)">
+              <div style="width:30px;height:30px;border-radius:8px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <p style="font-size:11.5px;font-weight:600;color:#1C1917;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Q2-report-final.pdf</p>
+                <p style="font-size:9.5px;color:rgba(28,25,23,0.4);margin:2px 0 0">3.2 MB · you · 1d ago</p>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="width:25px;height:25px;border-radius:6px;background:#EAE4D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+              </div>
+            </div>
+            <!-- File 3 -->
+            <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:#FDFAF5;border:1px solid rgba(28,25,23,0.07)">
+              <div style="width:30px;height:30px;border-radius:8px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="1.8" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <p style="font-size:11.5px;font-weight:600;color:#1C1917;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">product-demo.mp4</p>
+                <p style="font-size:9.5px;color:rgba(28,25,23,0.4);margin:2px 0 0">120 MB · sam · 3d ago</p>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="width:25px;height:25px;border-radius:6px;background:#EAE4D9;display:flex;align-items:center;justify-content:center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1C1917" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="px-6 py-24" style="background:#EDE8DF">
+  <div class="max-w-[900px] mx-auto">
+    <p class="text-xs uppercase tracking-[0.14em] text-center mb-3" style="color:rgba(28,25,23,0.28)">What you get</p>
+    <h2 class="text-center font-bold tracking-tight mb-14" style="font-size:clamp(28px,4vw,42px);color:#1C1917">A cloud built for teams — not just you.</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">Two private clouds</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">Pro gives you two separate cloud workspaces. Keep personal files in one and a client project in the other — both share your 50 GB weekly quota.</p>
+      </div>
+
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">No Pro needed to join</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">Invite anyone to your cloud. Members upload, download, and collaborate for free — all storage counts against your quota, not theirs.</p>
+      </div>
+
+      <div class="rounded-2xl p-7" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.07)">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center mb-5" style="background:#1C1917">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3 class="font-bold text-[15px] mb-2" style="color:#1C1917">Shared notes &amp; versioning</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.5)">A shared scratchpad lives alongside your files. Re-upload a filename to create a new version without losing the original.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STORAGE SECTION ── -->
+<section class="px-6 py-24">
+  <div class="max-w-[900px] mx-auto flex flex-col lg:flex-row items-center gap-14">
+    <div class="flex-1 max-w-md">
+      <p class="text-xs uppercase tracking-[0.14em] mb-4" style="color:rgba(28,25,23,0.28)">Storage</p>
+      <h2 class="font-bold tracking-tight mb-5" style="font-size:clamp(24px,3.5vw,36px);color:#1C1917">50 GB, refreshed every week.</h2>
+      <p class="leading-relaxed mb-8" style="color:rgba(28,25,23,0.5);font-size:15px">
+        Your Pro plan includes 50 GB of rolling weekly storage — shared across both your cloud workspaces and any files your members upload. The counter resets every 7 days so you're never stuck.
+      </p>
+      <button id="storage-cta" onclick="handleCta()" class="px-6 py-3 rounded-full font-semibold text-sm hover:opacity-85 transition-opacity" style="background:#8B6F47;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Get started</button>
+    </div>
+
+    <!-- Storage visual -->
+    <div class="flex-shrink-0">
+      <div class="rounded-2xl p-7" style="background:#1C1917;width:280px">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-5" style="color:rgba(245,240,232,0.35)">Weekly storage</p>
+
+        <!-- Cloud 1 -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium" style="color:rgba(245,240,232,0.65)">My Cloud</span>
+            <span class="text-xs" style="color:rgba(245,240,232,0.35)">18 GB</span>
+          </div>
+          <div class="w-full rounded-full" style="height:6px;background:rgba(245,240,232,0.10)">
+            <div style="height:6px;border-radius:9px;background:#8B6F47;width:36%"></div>
+          </div>
+        </div>
+
+        <!-- Cloud 2 -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-medium" style="color:rgba(245,240,232,0.65)">Work Files</span>
+            <span class="text-xs" style="color:rgba(245,240,232,0.35)">7 GB</span>
+          </div>
+          <div class="w-full rounded-full" style="height:6px;background:rgba(245,240,232,0.10)">
+            <div style="height:6px;border-radius:9px;background:#6B8F9E;width:14%"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4" style="border-top:1px solid rgba(245,240,232,0.08)">
+          <span class="text-xs" style="color:rgba(245,240,232,0.4)">25 GB used of 50 GB</span>
+          <span class="text-xs font-semibold" style="color:#8B6F47">50% free</span>
+        </div>
+        <p class="text-xs mt-2" style="color:rgba(245,240,232,0.25)">Resets in 4 days</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW MEMBERS WORK ── -->
+<section class="px-6 py-24" style="background:#EDE8DF">
+  <div class="max-w-[900px] mx-auto">
+    <p class="text-xs uppercase tracking-[0.14em] text-center mb-3" style="color:rgba(28,25,23,0.28)">Collaboration</p>
+    <h2 class="text-center font-bold tracking-tight mb-5" style="font-size:clamp(24px,3.5vw,36px);color:#1C1917">Invite anyone — free accounts welcome.</h2>
+    <p class="text-center max-w-md mx-auto mb-14 leading-relaxed" style="color:rgba(28,25,23,0.45);font-size:15px">
+      You own the cloud, so you own the storage bill. Members get full read/write access without needing a Pro subscription.
+    </p>
+
+    <div class="flex flex-col md:flex-row gap-5 items-stretch">
+      <!-- Owner card -->
+      <div class="flex-1 rounded-2xl p-6" style="background:#1C1917">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold mb-4" style="background:#8B6F47;color:#F5F0E8;font-size:15px">A</div>
+        <p class="font-bold text-sm mb-1" style="color:#F5F0E8">alex@studio.co</p>
+        <p class="text-xs mb-4" style="color:rgba(245,240,232,0.4)">Cloud owner · Pro plan</p>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(245,240,232,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Can invite &amp; remove members
+          </div>
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(245,240,232,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Owns the 50 GB quota
+          </div>
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(245,240,232,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Sets branding &amp; workspace name
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:#EAE4D9">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+
+      <!-- Member card -->
+      <div class="flex-1 rounded-2xl p-6" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.09)">
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:#EAE4D9;color:#1C1917;font-size:15px">S</div>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:#EAE4D9;color:#1C1917;font-size:15px">J</div>
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold" style="background:#EAE4D9;color:rgba(28,25,23,0.4)">+3</div>
+        </div>
+        <p class="font-bold text-sm mb-1" style="color:#1C1917">Members (free plan)</p>
+        <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Invited by the owner — no Pro needed</p>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(28,25,23,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Upload &amp; download files
+          </div>
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(28,25,23,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Read &amp; edit shared notes
+          </div>
+          <div class="flex items-center gap-2 text-xs" style="color:rgba(28,25,23,0.6)">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            No storage cost to them
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="px-6 py-24">
+  <div class="max-w-[680px] mx-auto">
+    <p class="text-xs uppercase tracking-[0.14em] text-center mb-3" style="color:rgba(28,25,23,0.28)">FAQ</p>
+    <h2 class="text-center font-bold tracking-tight mb-14" style="font-size:clamp(24px,3.5vw,36px);color:#1C1917">Common questions</h2>
+
+    <div class="flex flex-col" id="faq-list">
+      <div class="faq-item border-t" style="border-color:rgba(28,25,23,0.10)">
+        <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between gap-4 py-5 text-left" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="font-semibold text-[15px]" style="color:#1C1917">Do my members need a Fileo account?</span>
+          <svg class="faq-chevron flex-shrink-0 transition-transform duration-200" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-body">
+          <p class="pb-5 text-[14px] leading-relaxed" style="color:rgba(28,25,23,0.55)">Yes — they need a free Fileo account to sign in, but they don't need Pro. Invite them by email and once they sign up or sign in, the workspace will appear for them automatically at cloud.fileo.ca.</p>
+        </div>
+      </div>
+
+      <div class="faq-item border-t" style="border-color:rgba(28,25,23,0.10)">
+        <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between gap-4 py-5 text-left" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="font-semibold text-[15px]" style="color:#1C1917">Does my member's storage count against me?</span>
+          <svg class="faq-chevron flex-shrink-0 transition-transform duration-200" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-body">
+          <p class="pb-5 text-[14px] leading-relaxed" style="color:rgba(28,25,23,0.55)">Yes. Any file uploaded to your cloud — by you or any member — counts against your 50 GB weekly quota. You're the owner, so you're responsible for the storage. Members don't pay anything extra.</p>
+        </div>
+      </div>
+
+      <div class="faq-item border-t" style="border-color:rgba(28,25,23,0.10)">
+        <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between gap-4 py-5 text-left" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="font-semibold text-[15px]" style="color:#1C1917">Can I have completely separate files in each cloud?</span>
+          <svg class="faq-chevron flex-shrink-0 transition-transform duration-200" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-body">
+          <p class="pb-5 text-[14px] leading-relaxed" style="color:rgba(28,25,23,0.55)">Absolutely. Each workspace has its own file list, shared notes, and member list. Invite different people to each cloud — they'll only see the workspace you invited them to. Both clouds count toward your single 50 GB weekly quota.</p>
+        </div>
+      </div>
+
+      <div class="faq-item border-t" style="border-color:rgba(28,25,23,0.10)">
+        <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between gap-4 py-5 text-left" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="font-semibold text-[15px]" style="color:#1C1917">What happens when I hit the 50 GB limit?</span>
+          <svg class="faq-chevron flex-shrink-0 transition-transform duration-200" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-body">
+          <p class="pb-5 text-[14px] leading-relaxed" style="color:rgba(28,25,23,0.55)">Uploads are blocked until your quota refreshes. The window is a rolling 7 days — so as old uploads age out, space opens back up. You can also delete files in your cloud to reclaim storage immediately.</p>
+        </div>
+      </div>
+
+      <div class="faq-item border-t border-b" style="border-color:rgba(28,25,23,0.10)">
+        <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between gap-4 py-5 text-left" style="background:none;border:none;cursor:pointer;font-family:inherit">
+          <span class="font-semibold text-[15px]" style="color:#1C1917">Can I use branding inside my cloud workspace?</span>
+          <svg class="faq-chevron flex-shrink-0 transition-transform duration-200" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.4)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-body">
+          <p class="pb-5 text-[14px] leading-relaxed" style="color:rgba(28,25,23,0.55)">Yes. The Branding tab in your workspace lets you customize your brand profiles — name, logo, accent color, and backgrounds. These apply to your download links so recipients always see your identity when opening files you share.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── BOTTOM CTA ── -->
+<section class="px-6 pb-32">
+  <div class="max-w-xl mx-auto rounded-3xl text-center px-8 py-16" style="background:#1C1917">
+    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-6" style="background:rgba(245,240,232,0.1)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+    </div>
+    <h2 class="font-bold tracking-tight mb-3" style="font-size:clamp(22px,3vw,30px);color:#F5F0E8">Start your cloud today.</h2>
+    <p class="text-sm mb-8 leading-relaxed" style="color:rgba(245,240,232,0.45)">Everything your team needs to share files — in one permanent place.</p>
+    <button id="bottom-cta" onclick="handleCta()" class="px-8 py-3.5 rounded-full font-semibold text-[15px] hover:opacity-85 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Get started — $10/mo</button>
+  </div>
+</section>
+
+<script>
+function toggleFaq(btn) {
+  var item = btn.parentElement;
+  var body = item.querySelector('.faq-body');
+  var chevron = btn.querySelector('.faq-chevron');
+  var isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+  document.querySelectorAll('.faq-body').forEach(function(b) { b.style.maxHeight = '0px'; });
+  document.querySelectorAll('.faq-chevron').forEach(function(c) { c.style.transform = ''; });
+  if (!isOpen) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
+</script>
+
+<script>
+const SUPABASE_URL  = window.FILEO_CONFIG?.url  || '';
+const SUPABASE_ANON = window.FILEO_CONFIG?.anon || '';
+
+let _sb = null, currentUser = null, isPro = false, isMember = false;
+let _authTab = 'login';
+
+window.addEventListener('DOMContentLoaded', () => {
+  _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  _sb.auth.onAuthStateChange(async (_e, session) => {
+    if (session?.user) {
+      currentUser = session.user;
+      isPro = session.user.app_metadata?.is_pro === true;
+      showUserNav(session.user.email);
+      if (isPro) {
+        isMember = false;
+      } else {
+        const { data: memberships } = await _sb.from('workspace_members')
+          .select('workspace_id').eq('email', currentUser.email).limit(1);
+        isMember = !!(memberships?.length);
+      }
+      updateCtAs();
+    } else {
+      currentUser = null; isPro = false; isMember = false;
+      showSignedOutNav();
+      updateCtAs();
+    }
+  });
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('account-menu');
+    const av   = document.getElementById('btn-avatar');
+    if (!menu.contains(e.target) && e.target !== av) menu.classList.add('hidden');
+  });
+});
+
+function updateCtAs() {
+  const canAccess = isPro || isMember;
+  const label = !currentUser
+    ? 'Get started — $10/mo'
+    : canAccess
+      ? 'Open your cloud →'
+      : 'Upgrade to Pro — $10/mo';
+  ['hero-cta', 'bottom-cta', 'storage-cta', 'mob-cta'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+}
+
+function handleCta() {
+  if (!currentUser)     return window.location.href = 'index.html#pricing';
+  if (isPro || isMember) return window.location.href = 'cloud.html';
+  window.location.href = 'index.html#pricing';
+}
+
+// ── NAV scroll
+const _nb = document.getElementById('nav-bar');
+window.addEventListener('scroll', () => _nb.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+_nb && (_nb.style.transition = 'padding .25s,background .25s,box-shadow .25s,border-color .25s');
+
+// ── AUTH
+let _authAttempts = 0, _authLockedUntil = 0;
+function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(()=>document.getElementById('auth-email').focus(),50); }
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+function setAuthTab(tab) {
+  _authTab = tab;
+  const isL = tab === 'login';
+  document.getElementById('tab-login').style.cssText    = isL ? 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)' : 'background:transparent;color:rgba(28,25,23,0.45)';
+  document.getElementById('tab-register').style.cssText = isL ? 'background:transparent;color:rgba(28,25,23,0.45)' : 'background:#F5F0E8;color:#1C1917;box-shadow:0 1px 3px rgba(28,25,23,0.08)';
+  document.getElementById('auth-title').textContent     = isL ? 'Welcome back' : 'Create your account';
+  document.getElementById('auth-sub').textContent       = isL ? 'Sign in to continue.' : 'Create a free account to get started.';
+  document.getElementById('auth-password').placeholder  = isL ? 'Your password' : 'At least 6 characters';
+  document.getElementById('auth-submit').textContent    = isL ? 'Sign in' : 'Create account';
+  document.getElementById('auth-error').classList.add('hidden');
+}
+async function submitAuth(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('auth-error');
+  const now   = Date.now();
+  if (now < _authLockedUntil) {
+    errEl.textContent = 'Too many attempts. Try again in ' + Math.ceil((_authLockedUntil - now)/1000) + 's.';
+    errEl.classList.remove('hidden'); return;
+  }
+  const email = document.getElementById('auth-email').value.trim();
+  const pw    = document.getElementById('auth-password').value;
+  const btn   = document.getElementById('auth-submit');
+  errEl.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Please wait…';
+  const { error } = _authTab === 'login'
+    ? await _sb.auth.signInWithPassword({ email, password: pw })
+    : await _sb.auth.signUp({ email, password: pw });
+  btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
+  if (error) {
+    _authAttempts++;
+    if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
+    errEl.textContent = error.message; errEl.classList.remove('hidden');
+  } else { _authAttempts = 0; closeModal(); }
+}
+function showUserNav(email) {
+  document.getElementById('btn-signin').classList.add('hidden');
+  const av = document.getElementById('btn-avatar');
+  av.textContent = email[0].toUpperCase();
+  av.classList.remove('hidden'); av.classList.add('flex');
+  document.getElementById('menu-email').textContent = email;
+  document.getElementById('menu-plan').textContent  = isPro ? 'Pro plan' : 'Free plan';
+  if (isPro) document.getElementById('pro-badge').classList.remove('hidden');
+}
+function showSignedOutNav() {
+  document.getElementById('btn-signin').classList.remove('hidden');
+  document.getElementById('btn-avatar').classList.add('hidden');
+  document.getElementById('btn-avatar').classList.remove('flex');
+  document.getElementById('account-menu').classList.add('hidden');
+}
+function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
+function toggleMobileMenu() {
+  const open = document.getElementById('mob-menu').classList.toggle('hidden') === false;
+  document.getElementById('mob-icon-open').style.display  = open ? 'none' : '';
+  document.getElementById('mob-icon-close').style.display = open ? '' : 'none';
+}
+async function doSignOut() { await _sb.auth.signOut(); }
+
+let _toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.opacity = '1'; t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-8px)'; }, 2400);
+}
+</script>
+</body>
+</html>
