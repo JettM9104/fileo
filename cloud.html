@@ -18,7 +18,7 @@
     *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;box-sizing:border-box}
     body{background:#F5F0E8;color:#1C1917;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;margin:0}
     #nav-bar{transition:padding .25s,background .25s,box-shadow .25s,border-color .25s}
-    #nav-bar.scrolled{background:rgba(245,240,232,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:999px;padding:6px 16px;box-shadow:0 2px 16px rgba(28,25,23,0.10);border:1px solid rgba(28,25,23,0.09)}
+    #nav-bar.scrolled{background:#F5F0E8;border-radius:999px;padding:6px 16px;box-shadow:0 2px 16px rgba(28,25,23,0.10);border:1px solid rgba(28,25,23,0.09)}
     input:focus,textarea:focus{outline:none;border-color:rgba(28,25,23,0.35)!important;box-shadow:0 0 0 3px rgba(28,25,23,0.07)}
     #auth-modal{display:none} #auth-modal.open{display:flex}
     #toast{pointer-events:none;transition:opacity .3s,transform .3s;opacity:0;transform:translateX(-50%) translateY(-8px)}
@@ -118,7 +118,8 @@
         <a href="cloud-info.html" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline font-semibold" style="background:#1C1917;color:#F5F0E8">Cloud</a>
         <a href="index.html#pricing" class="text-sm rounded-full px-3 py-1 whitespace-nowrap no-underline" style="color:rgba(28,25,23,0.45)">Pricing</a>
         <span id="pro-badge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
-        <a href="upload.html" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-2 hover:opacity-80 transition-opacity whitespace-nowrap no-underline" style="background:#1C1917;color:#F5F0E8">Get started</a>
+        <button onclick="loadSharedOnly()" class="px-4 py-1.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity whitespace-nowrap" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Shared clouds</button>
+        <a href="upload.html" class="px-4 py-1.5 rounded-full text-sm font-semibold ml-1 hover:opacity-80 transition-opacity whitespace-nowrap no-underline" style="background:#1C1917;color:#F5F0E8">Get started</a>
       </nav>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
@@ -199,6 +200,7 @@
         <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.65)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Shared notes · version history</div>
       </div>
       <button onclick="activatePro()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upgrade to Pro — $10/mo</button>
+      <button onclick="loadSharedOnly()" class="w-full py-3 rounded-full text-sm font-medium hover:opacity-70 transition-opacity mt-2" style="background:rgba(245,240,232,0.08);color:rgba(245,240,232,0.6);border:1px solid rgba(245,240,232,0.12);cursor:pointer;font-family:inherit">Enter shared clouds</button>
       <a href="cloud-info.html" class="block mt-3 text-xs hover:opacity-70 transition-opacity" style="color:rgba(245,240,232,0.4)">Learn more about Cloud →</a>
     </div>
   </div>
@@ -533,6 +535,25 @@ async function loadWorkspace() {
 
   if (!allWorkspaces.length) { showState('upgrade'); return; }
   if (currentWorkspaceIndex >= allWorkspaces.length) currentWorkspaceIndex = 0;
+  workspace = allWorkspaces[currentWorkspaceIndex];
+  renderWorkspace();
+}
+
+async function loadSharedOnly() {
+  if (!currentUser) { openModal(); return; }
+  showState('loading');
+  const { data: memberships } = await _sb.from('workspace_members')
+    .select('workspace_id').eq('email', currentUser.email);
+  if (!memberships?.length) { showToast('No shared clouds found'); showState(isPro ? 'noclouds' : 'upgrade'); return; }
+  const wsIds = memberships.map(m => m.workspace_id);
+  const { data: shared } = await _sb.from('workspaces').select('*').in('id', wsIds);
+  if (!shared?.length) { showToast('No shared clouds found'); showState(isPro ? 'noclouds' : 'upgrade'); return; }
+  sharedWorkspaces = shared;
+  allWorkspaces = [
+    ...ownedWorkspaces.map(w => ({ ...w, _owned: true })),
+    ...shared.map(w => ({ ...w, _owned: false })),
+  ];
+  currentWorkspaceIndex = ownedWorkspaces.length;
   workspace = allWorkspaces[currentWorkspaceIndex];
   renderWorkspace();
 }
