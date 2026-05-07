@@ -297,6 +297,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             My files
           </button>
+          <button id="menu-billing" onclick="openBillingPortal()" class="hidden w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Billing
+          </button>
           <button onclick="signOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Sign out
@@ -374,7 +378,6 @@
 
     <!-- Browser mockup -->
     <div id="mockup-demo" class="rounded-2xl overflow-hidden" style="border:1px solid rgba(28,25,23,0.10);box-shadow:0 24px 80px rgba(28,25,23,0.12);position:relative">
-
       <!-- Browser chrome -->
       <div class="flex items-center gap-3 px-4 py-3" style="background:#E8E3DB;border-bottom:1px solid rgba(28,25,23,0.10)">
         <div class="flex items-center gap-1.5">
@@ -385,141 +388,107 @@
         <div class="flex-1 flex justify-center">
           <div class="flex items-center gap-2 px-3 py-1 rounded-md text-xs" style="background:rgba(28,25,23,0.07);color:rgba(28,25,23,0.4);font-family:ui-monospace,monospace;min-width:220px;max-width:340px">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <span id="md-url-text">fileo.ca/branding</span>
+            fileo.ca/upload
+          </div>
+        </div>
+      </div>
+      <!-- Page content -->
+      <div style="background:#F5F0E8;position:relative;min-height:420px">
+        <!-- Mini nav -->
+        <div class="px-8 pt-8 flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center" style="background:#1C1917"><svg width="13" height="13" viewBox="0 0 28 28" fill="none"><polygon points="14,5 21,19 7,19" fill="#F5F0E8"/></svg></div>
+            <span class="text-sm font-bold" style="color:#1C1917">Fileo</span>
+          </div>
+          <div class="flex items-center gap-1 px-2 py-1.5 rounded-full" style="background:rgba(245,240,232,0.85);border:1px solid rgba(28,25,23,0.08)">
+            <span class="text-[11px] px-2 py-0.5 rounded-full" style="background:#1C1917;color:#F5F0E8;font-weight:600">Upload</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full" style="color:rgba(28,25,23,0.4)">My Files</span>
+          </div>
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style="background:#1C1917;color:#F5F0E8">M</div>
+        </div>
+
+        <!-- SCREEN 1: Upload -->
+        <div id="mockup-s1" class="px-8 pb-8">
+          <div class="max-w-lg mx-auto">
+            <div class="mb-4">
+              <h3 class="text-lg font-bold mb-0.5" style="color:#1C1917">Upload</h3>
+              <p class="text-xs" style="color:rgba(28,25,23,0.45)">Drop a file or folder to get a shareable link.</p>
+            </div>
+            <div class="flex items-center gap-3 rounded-2xl p-4 mb-3" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;color:#8B6F47">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold truncate" style="color:#1C1917">team-photo-2026.jpg</p>
+                <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">3.2 MB</p>
+              </div>
+              <div class="w-5 h-5 flex items-center justify-center" style="color:rgba(28,25,23,0.3)">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+            </div>
+            <div class="rounded-2xl p-4 mb-3" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <p class="text-[10px] font-medium uppercase tracking-wide mb-2.5" style="color:rgba(28,25,23,0.35)">Expires after</p>
+              <div class="flex gap-2 flex-wrap">
+                <span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#1C1917;color:#F5F0E8">1 hour</span>
+                <span class="px-3 py-1 rounded-full text-xs font-medium" style="border:1px solid rgba(28,25,23,0.14);color:rgba(28,25,23,0.55)">24 hours</span>
+                <span class="relative px-3 py-1 rounded-full text-xs font-medium" style="border:1px solid rgba(28,25,23,0.10);color:rgba(28,25,23,0.28);background:#FDFAF5">7 days<span class="absolute -top-1.5 -right-1 text-[8px] font-bold px-1 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span></span>
+                <span class="relative px-3 py-1 rounded-full text-xs font-medium" style="border:1px solid rgba(28,25,23,0.10);color:rgba(28,25,23,0.28);background:#FDFAF5">30 days<span class="absolute -top-1.5 -right-1 text-[8px] font-bold px-1 py-0.5 rounded-full" style="background:#8B6F47;color:#F5F0E8">PRO</span></span>
+              </div>
+            </div>
+            <div id="mockup-upload-btn" class="w-full py-3 rounded-2xl text-sm font-semibold text-center" style="background:#1C1917;color:#F5F0E8">Upload file</div>
+          </div>
+        </div>
+
+        <!-- SCREEN 2: Loading -->
+        <div id="mockup-s2" class="px-8 pb-8" style="display:none;opacity:0">
+          <div class="max-w-lg mx-auto">
+            <div class="mb-5">
+              <h3 class="text-lg font-bold mb-0.5" style="color:#1C1917">Uploading...</h3>
+              <p class="text-xs" style="color:rgba(28,25,23,0.45)">Hang tight, your file is on its way.</p>
+            </div>
+            <div class="flex items-center gap-3 rounded-2xl p-4 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:#EAE4D9;color:#8B6F47">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold truncate" style="color:#1C1917">team-photo-2026.jpg</p>
+                <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">3.2 MB</p>
+              </div>
+            </div>
+            <div class="rounded-full overflow-hidden mb-1.5" style="height:5px;background:rgba(28,25,23,0.08)">
+              <div id="mockup-progress" style="width:0%;height:100%;background:#1C1917;border-radius:9999px"></div>
+            </div>
+            <p class="text-[11px]" style="color:rgba(28,25,23,0.35)">Uploading...</p>
+          </div>
+        </div>
+
+        <!-- SCREEN 3: Link ready -->
+        <div id="mockup-s3" class="px-8 pb-8" style="display:none;opacity:0">
+          <div class="max-w-lg mx-auto">
+            <div class="flex items-center gap-2 mb-5">
+              <div class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style="background:#28C840">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <h3 class="text-lg font-bold" style="color:#1C1917">Your link is ready</h3>
+            </div>
+            <div class="rounded-2xl p-4 mb-3" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+              <p class="text-[10px] font-medium uppercase tracking-wide mb-2" style="color:rgba(28,25,23,0.35)">Share this link</p>
+              <div class="flex items-center gap-2">
+                <div class="flex-1 px-3 py-2 rounded-xl text-sm truncate" style="background:#EAE4D9;color:#1C1917;font-family:ui-monospace,monospace;font-size:12px">fileo.ca/xK9mP2</div>
+                <div class="px-3 py-2 rounded-xl text-xs font-semibold flex-shrink-0 cursor-pointer" style="background:#1C1917;color:#F5F0E8">Copy</div>
+              </div>
+              <p class="text-[10px] mt-2" style="color:rgba(28,25,23,0.35)">Expires in 1 hour · team-photo-2026.jpg · 3.2 MB</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Content area -->
-      <div style="height:580px;overflow:hidden">
-        <div id="md-scroller" style="transition:transform 0.95s cubic-bezier(0.4,0,0.2,1)">
-
-          <!-- PANEL 1: Branding settings replica (520px) -->
-          <div style="height:580px;background:#F5F0E8;display:flex;flex-direction:column">
-
-            <!-- Mini page nav -->
-            <div style="padding:10px 18px;border-bottom:1px solid rgba(28,25,23,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-              <div style="display:flex;align-items:center;gap:6px">
-                <svg width="20" height="20" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
-                <span style="font-size:12px;font-weight:700;color:#1C1917">Fileo</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:1px;padding:3px;border-radius:8px;background:rgba(28,25,23,0.06);border:1px solid rgba(28,25,23,0.07)">
-                <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;color:rgba(28,25,23,0.38)">Upload</span>
-                <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;background:#1C1917;color:#F5F0E8;font-weight:600">Branding</span>
-                <span style="font-size:9.5px;padding:2px 7px;border-radius:5px;color:rgba(28,25,23,0.38)">Cloud</span>
-              </div>
-              <div style="width:24px;height:24px;border-radius:50%;background:#1C1917;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">M</div>
-            </div>
-
-            <!-- Settings sections -->
-            <div style="flex:1;padding:10px 18px;display:flex;flex-direction:column;gap:6px;overflow:visible">
-
-              <!-- Logo section -->
-              <div style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);border-radius:14px;padding:11px 14px;flex-shrink:0">
-                <p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,25,23,0.35);margin:0 0 9px">Logo</p>
-                <div style="display:flex;align-items:center;gap:12px">
-                  <div id="md-logo-box" style="width:52px;height:52px;border-radius:12px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;transition:background 0.3s">
-                    <svg id="md-logo-placeholder" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.28)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                    <svg id="md-logo-filled" width="52" height="52" viewBox="0 0 28 28" fill="none" style="display:none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
-                  </div>
-                  <div>
-                    <div id="md-upload-btn" style="display:inline-block;padding:5px 10px;border-radius:8px;background:#EAE4D9;font-size:10px;font-weight:600;color:#1C1917;cursor:pointer;transition:background 0.15s">Upload logo</div>
-                    <p style="font-size:9px;color:rgba(28,25,23,0.35);margin:4px 0 0">PNG or JPEG · square · max 2 MB</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Brand identity section -->
-              <div style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);border-radius:14px;padding:11px 14px;flex-shrink:0">
-                <p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,25,23,0.35);margin:0 0 9px">Brand identity</p>
-                <div style="margin-bottom:7px">
-                  <label style="font-size:9.5px;font-weight:500;color:rgba(28,25,23,0.45);display:block;margin-bottom:3px">Brand name</label>
-                  <div id="md-name-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:5px 10px;font-size:12px;color:#1C1917;height:27px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
-                    <span id="md-name-text"></span><span id="md-name-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
-                  </div>
-                </div>
-                <div style="margin-bottom:7px">
-                  <label style="font-size:9.5px;font-weight:500;color:rgba(28,25,23,0.45);display:block;margin-bottom:3px">Tagline <span style="color:rgba(28,25,23,0.28)">(optional)</span></label>
-                  <div id="md-tag-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:6px 10px;font-size:12px;color:#1C1917;height:27px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
-                    <span id="md-tag-text"></span><span id="md-tag-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
-                  </div>
-                </div>
-                <div>
-                  <label style="font-size:9.5px;font-weight:500;color:rgba(28,25,23,0.45);display:block;margin-bottom:3px">Domain <span style="color:rgba(28,25,23,0.28)">(optional)</span></label>
-                  <div id="md-domain-field" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);border-radius:9px;padding:6px 10px;font-size:12px;color:#1C1917;height:27px;display:flex;align-items:center;transition:border-color 0.15s,background 0.15s">
-                    <span id="md-domain-text"></span><span id="md-domain-cur" style="display:inline-block;width:1.5px;height:11px;background:#1C1917;vertical-align:middle;margin-left:1px;opacity:0"></span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Backgrounds section -->
-              <div style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10);border-radius:14px;padding:11px 14px;flex-shrink:0">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-                  <p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,25,23,0.35);margin:0">Backgrounds</p>
-                  <span id="md-bg-count" style="font-size:9px;color:rgba(28,25,23,0.35)">0 / 5</span>
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
-                  <div id="md-slot-0" style="aspect-ratio:1;border-radius:7px;background:#EAE4D9;border:1.5px dashed rgba(28,25,23,0.20);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.4s,border 0.3s;overflow:hidden">
-                    <svg id="md-slot-0-plus" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.35)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  </div>
-                  <div style="aspect-ratio:1;border-radius:7px;background:#EAE4D9;border:1.5px dashed rgba(28,25,23,0.15)"></div>
-                  <div style="aspect-ratio:1;border-radius:7px;background:#EAE4D9;border:1.5px dashed rgba(28,25,23,0.15)"></div>
-                  <div style="aspect-ratio:1;border-radius:7px;background:#EAE4D9;border:1.5px dashed rgba(28,25,23,0.15)"></div>
-                  <div style="aspect-ratio:1;border-radius:7px;background:#EAE4D9;border:1.5px dashed rgba(28,25,23,0.15)"></div>
-                </div>
-              </div>
-
-            </div>
-          </div><!-- /panel 1 -->
-
-          <!-- PANEL 2: "What recipients see" — branded download page (520px) -->
-          <div id="md-preview-page" style="height:580px;position:relative;overflow:hidden;background:#1C1917;background-size:cover;background-position:center;transition:background-color 0.5s">
-
-            <!-- Dim overlay for wallpaper -->
-            <div id="md-wall-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.32);z-index:1"></div>
-
-            <!-- Logo + name top-left -->
-            <div style="position:absolute;top:20px;left:22px;display:flex;align-items:center;gap:9px;z-index:2">
-              <svg id="md-big-logo" width="34" height="34" viewBox="0 0 28 28" fill="none" style="flex-shrink:0"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
-              <div>
-                <div id="md-big-name" style="font-size:13px;font-weight:700;color:#F5F0E8;line-height:1.2">Fileo</div>
-                <div id="md-big-tag" style="font-size:10px;color:rgba(245,240,232,0.5);margin-top:1px"></div>
-              </div>
-            </div>
-
-            <!-- Domain top-right -->
-            <div id="md-domain-corner" style="position:absolute;top:22px;right:22px;font-size:11px;font-weight:600;color:rgba(245,240,232,0.55);z-index:2;display:none"></div>
-
-            <!-- Centered download card (matches real preview-card) -->
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:2">
-              <div style="width:100%;max-width:300px;border-radius:20px;padding:22px;background:rgba(253,250,245,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 40px rgba(0,0,0,0.4)">
-                <p style="font-size:9.5px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(28,25,23,0.35);margin:0 0 12px">Ready to download</p>
-                <div style="border-radius:12px;padding:12px;background:rgba(28,25,23,0.04);border:1px solid rgba(28,25,23,0.07);margin-bottom:13px;display:flex;align-items:center;gap:10px">
-                  <div style="width:34px;height:34px;border-radius:9px;background:#EAE4D9;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  </div>
-                  <div style="min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#1C1917;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">brand-assets.zip</div>
-                    <div style="font-size:11px;color:rgba(28,25,23,0.4);margin-top:2px">48 MB · 6 days left</div>
-                  </div>
-                </div>
-                <div id="md-big-btn" style="background:#8B6F47;color:#F5F0E8;border-radius:13px;text-align:center;padding:12px 0;font-size:13px;font-weight:600;transition:background 0.4s">Download file</div>
-                <div style="text-align:center;font-size:10px;color:rgba(28,25,23,0.3);margin-top:12px">Sent via Fileo</div>
-              </div>
-            </div>
-
-          </div><!-- /panel 2 -->
-
-        </div><!-- /md-scroller -->
-      </div><!-- /content area -->
-
-      <!-- Cursor -->
+      <!-- Animated cursor -->
       <div id="mockup-cursor" style="position:absolute;pointer-events:none;opacity:0;top:0;left:0;z-index:20;transform-origin:3px 1px;will-change:left,top,opacity,transform">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3.5 1.5L3.5 17L8 12.5L10.8 18.2L12.8 17.3L10 11.5H16.5L3.5 1.5Z" fill="#1C1917" stroke="#F5F0E8" stroke-width="1" stroke-linejoin="round"/>
         </svg>
       </div>
-
     </div>
   </div>
 </section>
@@ -801,220 +770,113 @@
 <script>
 (function(){
   function initMockupDemo() {
-    var demo       = document.getElementById('mockup-demo');
-    if (!demo) return;
-    var cur        = document.getElementById('mockup-cursor');
-    var logoBox         = document.getElementById('md-logo-box');
-    var logoPlaceholder = document.getElementById('md-logo-placeholder');
-    var logoFilled      = document.getElementById('md-logo-filled');
-    var uploadBtn       = document.getElementById('md-upload-btn');
-    var nameField       = document.getElementById('md-name-field');
-    var nameText        = document.getElementById('md-name-text');
-    var nameCur         = document.getElementById('md-name-cur');
-    var tagField        = document.getElementById('md-tag-field');
-    var tagText         = document.getElementById('md-tag-text');
-    var tagCur          = document.getElementById('md-tag-cur');
-    var domainField     = document.getElementById('md-domain-field');
-    var domainText      = document.getElementById('md-domain-text');
-    var domainCur       = document.getElementById('md-domain-cur');
-    var slot0           = document.getElementById('md-slot-0');
-    var slot0plus       = document.getElementById('md-slot-0-plus');
-    var bgCount         = document.getElementById('md-bg-count');
-    var scroller        = document.getElementById('md-scroller');
-    var previewPage     = document.getElementById('md-preview-page');
-    var wallOverlay     = document.getElementById('md-wall-overlay');
-    var bigLogo         = document.getElementById('md-big-logo');
-    var bigName         = document.getElementById('md-big-name');
-    var bigTag          = document.getElementById('md-big-tag');
-    var bigBtn          = document.getElementById('md-big-btn');
-    var domainCorner    = document.getElementById('md-domain-corner');
-    var urlText         = document.getElementById('md-url-text');
-    var BG_COLOR = '#0a0a0a';
+    var mockup = document.getElementById('mockup-demo');
+    var s1 = document.getElementById('mockup-s1');
+    var s2 = document.getElementById('mockup-s2');
+    var s3 = document.getElementById('mockup-s3');
+    var cur = document.getElementById('mockup-cursor');
+    var btn = document.getElementById('mockup-upload-btn');
+    var prog = document.getElementById('mockup-progress');
+    if (!mockup) return;
 
-    var timers = [], visible = false;
+    var timers = [];
+    var visible = false;
+
     function after(ms, fn) { timers.push(setTimeout(fn, ms)); }
 
     function reset() {
       timers.forEach(clearTimeout); timers = [];
       cur.style.transition = 'none'; cur.style.opacity = '0'; cur.style.transform = 'scale(1)';
-      // logo
-      logoBox.style.background = '#EAE4D9';
-      logoPlaceholder.style.display = ''; logoFilled.style.display = 'none';
-      // name
-      nameText.textContent = ''; nameCur.style.opacity = '0'; nameCur.style.animation = 'none';
-      nameField.style.borderColor = 'rgba(28,25,23,0.12)'; nameField.style.background = '#EAE4D9';
-      // tag
-      tagText.textContent = ''; tagCur.style.opacity = '0'; tagCur.style.animation = 'none';
-      tagField.style.borderColor = 'rgba(28,25,23,0.12)'; tagField.style.background = '#EAE4D9';
-      // domain
-      domainText.textContent = ''; domainCur.style.opacity = '0'; domainCur.style.animation = 'none';
-      domainField.style.borderColor = 'rgba(28,25,23,0.12)'; domainField.style.background = '#EAE4D9';
-      // bg slot
-      slot0.style.background = '#EAE4D9';
-      slot0.style.border = '1.5px dashed rgba(28,25,23,0.20)';
-      slot0plus.style.opacity = '1'; bgCount.textContent = '0 / 5';
-      // preview page
-      previewPage.style.backgroundColor = '#1C1917';
-      wallOverlay.style.display = 'none';
-      bigName.textContent = ''; bigTag.textContent = '';
-      domainCorner.style.display = 'none'; domainCorner.textContent = '';
-      // scroller + url
-      scroller.style.transition = 'none'; scroller.style.transform = 'translateY(0)';
-      urlText.textContent = 'fileo.ca/branding';
+      btn.style.transition = 'none'; btn.style.transform = 'scale(1)'; btn.style.opacity = '1';
+      prog.style.transition = 'none'; prog.style.width = '0%';
+      s1.style.display = ''; s1.style.opacity = '1'; s1.style.transition = 'none';
+      s2.style.display = 'none'; s2.style.opacity = '0';
+      s3.style.display = 'none'; s3.style.opacity = '0';
     }
 
-    function relCtr(el) {
-      var dr = demo.getBoundingClientRect(), er = el.getBoundingClientRect();
-      return { x: er.left - dr.left + er.width * 0.5, y: er.top - dr.top + er.height * 0.5 };
+    function fadeIn(el) {
+      el.style.display = '';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        el.style.transition = 'opacity 0.3s';
+        el.style.opacity = '1';
+      }); });
     }
-    function moveCursor(x, y, dur) {
-      cur.style.transition = 'left '+dur+'s cubic-bezier(0.25,0.46,0.45,0.94),top '+dur+'s cubic-bezier(0.25,0.46,0.45,0.94)';
-      cur.style.left = x+'px'; cur.style.top = y+'px';
-    }
-    function clickAnim(cb) {
-      cur.style.transition = 'transform 0.1s'; cur.style.transform = 'scale(0.8)';
-      timers.push(setTimeout(function(){ cur.style.transform = 'scale(1)'; if(cb) cb(); }, 130));
+
+    function fadeOut(el, cb) {
+      el.style.transition = 'opacity 0.3s';
+      el.style.opacity = '0';
+      setTimeout(function(){ el.style.display = 'none'; if (cb) cb(); }, 320);
     }
 
     function play() {
-      var BRAND  = 'Fileo';
-      var TAG    = 'Share files · Instantly';
-      var DOMAIN = 'fileo.ca';
-      var dr = demo.getBoundingClientRect();
+      var mr = mockup.getBoundingClientRect();
+      var br = btn.getBoundingClientRect();
+      var startX = mr.width * 0.22;
+      var startY = mr.height * 0.5;
+      var endX = br.left - mr.left + br.width * 0.5;
+      var endY = br.top - mr.top + br.height * 0.5;
 
       cur.style.transition = 'none';
-      cur.style.left = (dr.width * 0.08) + 'px';
-      cur.style.top  = (uploadBtn.getBoundingClientRect().top - dr.top) + 'px';
-      cur.style.opacity = '0';
+      cur.style.left = startX + 'px'; cur.style.top = startY + 'px';
+      cur.style.opacity = '0'; cur.style.transform = 'scale(1)';
 
-      // 1 — cursor appears
-      after(500, function(){ cur.style.transition = 'opacity 0.35s'; cur.style.opacity = '1'; });
-
-      // 2 — move to Upload logo button
-      after(1000, function(){ var p = relCtr(uploadBtn); moveCursor(p.x, p.y, 0.7); });
-
-      // 3 — click Upload logo → actual Fileo logo appears
-      after(1820, function(){
-        clickAnim(function(){
-          after(350, function(){
-            logoPlaceholder.style.display = 'none';
-            logoFilled.style.display = '';
-            logoBox.style.background = '#1C1917';
+      after(600, function(){
+        cur.style.transition = 'opacity 0.35s';
+        cur.style.opacity = '1';
+      });
+      after(1100, function(){
+        cur.style.transition = 'left 0.85s cubic-bezier(0.25,0.46,0.45,0.94), top 0.85s cubic-bezier(0.25,0.46,0.45,0.94)';
+        cur.style.left = endX + 'px'; cur.style.top = endY + 'px';
+      });
+      after(2080, function(){
+        cur.style.transition = 'transform 0.1s';
+        cur.style.transform = 'scale(0.8)';
+        btn.style.transition = 'transform 0.1s, opacity 0.1s';
+        btn.style.transform = 'scale(0.97)'; btn.style.opacity = '0.75';
+      });
+      after(2230, function(){
+        cur.style.transform = 'scale(1)';
+        btn.style.transform = 'scale(1)'; btn.style.opacity = '1';
+      });
+      after(2500, function(){
+        cur.style.transition = 'opacity 0.25s'; cur.style.opacity = '0';
+        fadeOut(s1, function(){
+          fadeIn(s2);
+          after(150, function(){
+            prog.style.transition = 'width 1.9s cubic-bezier(0.4,0,0.2,1)';
+            prog.style.width = '100%';
           });
         });
       });
-
-      // 4 — move to brand name field
-      after(2600, function(){ var p = relCtr(nameField); moveCursor(p.x, p.y, 0.65); });
-
-      // 5 — click name field
-      after(3380, function(){
-        nameField.style.borderColor = '#8B6F47'; nameField.style.background = '#fff';
-        nameCur.style.opacity = '1'; nameCur.style.animation = 'bdBlink 0.85s step-end infinite';
-        clickAnim();
+      after(4800, function(){
+        fadeOut(s2, function(){ fadeIn(s3); });
       });
-
-      // 6 — type brand name
-      var T0 = 3650;
-      BRAND.split('').forEach(function(ch, i){
-        after(T0 + i * 100, function(){ nameText.textContent = BRAND.slice(0, i + 1); });
-      });
-      var T1 = T0 + BRAND.length * 100 + 200;
-
-      // 7 — move to tagline field
-      after(T1, function(){
-        nameCur.style.animation = 'none'; nameCur.style.opacity = '0';
-        nameField.style.borderColor = 'rgba(28,25,23,0.12)'; nameField.style.background = '#EAE4D9';
-        var p = relCtr(tagField); moveCursor(p.x, p.y, 0.5);
-      });
-
-      // 8 — click tagline
-      after(T1 + 620, function(){
-        tagField.style.borderColor = '#8B6F47'; tagField.style.background = '#fff';
-        tagCur.style.opacity = '1'; tagCur.style.animation = 'bdBlink 0.85s step-end infinite';
-        clickAnim();
-      });
-
-      // 9 — type tagline
-      var T2 = T1 + 850;
-      TAG.split('').forEach(function(ch, i){
-        after(T2 + i * 55, function(){ tagText.textContent = TAG.slice(0, i + 1); });
-      });
-      var T3 = T2 + TAG.length * 55 + 200;
-
-      // 10 — move to domain field
-      after(T3, function(){
-        tagCur.style.animation = 'none'; tagCur.style.opacity = '0';
-        tagField.style.borderColor = 'rgba(28,25,23,0.12)'; tagField.style.background = '#EAE4D9';
-        var p = relCtr(domainField); moveCursor(p.x, p.y, 0.45);
-      });
-
-      // 11 — click domain field
-      after(T3 + 580, function(){
-        domainField.style.borderColor = '#8B6F47'; domainField.style.background = '#fff';
-        domainCur.style.opacity = '1'; domainCur.style.animation = 'bdBlink 0.85s step-end infinite';
-        clickAnim();
-      });
-
-      // 12 — type domain
-      var T4 = T3 + 800;
-      DOMAIN.split('').forEach(function(ch, i){
-        after(T4 + i * 90, function(){ domainText.textContent = DOMAIN.slice(0, i + 1); });
-      });
-      var T5 = T4 + DOMAIN.length * 90 + 250;
-
-      // 13 — move to background slot
-      after(T5, function(){
-        domainCur.style.animation = 'none'; domainCur.style.opacity = '0';
-        domainField.style.borderColor = 'rgba(28,25,23,0.12)'; domainField.style.background = '#EAE4D9';
-        var p = relCtr(slot0); moveCursor(p.x, p.y, 0.65);
-      });
-
-      // 14 — click slot → solid dark thumbnail appears
-      after(T5 + 780, function(){
-        clickAnim(function(){
-          after(200, function(){
-            slot0.style.background = BG_COLOR;
-            slot0.style.border = '1.5px solid rgba(255,255,255,0.08)';
-            slot0plus.style.opacity = '0';
-            bgCount.textContent = '1 / 5';
-          });
-        });
-      });
-
-      // 15 — cursor fades out
-      after(T5 + 1650, function(){ cur.style.transition = 'opacity 0.4s'; cur.style.opacity = '0'; });
-
-      // 16 — scroll to preview + update URL
-      after(T5 + 2300, function(){
-        bigName.textContent = BRAND;
-        bigTag.textContent  = TAG;
-        domainCorner.textContent = DOMAIN;
-        domainCorner.style.display = '';
-        previewPage.style.backgroundColor = BG_COLOR;
-        wallOverlay.style.display = 'none';
-        urlText.textContent = 'fileo.ca/xK9mP2';
-        scroller.style.transition = 'transform 0.95s cubic-bezier(0.4,0,0.2,1)';
-        scroller.style.transform  = 'translateY(-580px)';
-      });
-
-      // 17 — hold, reset, loop
-      after(T5 + 5800, function(){ reset(); after(600, play); });
+      after(7500, function(){ reset(); after(600, play); });
     }
 
     reset();
 
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
-        if (e.isIntersecting && !visible) { visible = true; reset(); after(300, play); }
-        else if (!e.isIntersecting && visible) { visible = false; reset(); }
+        if (e.isIntersecting && !visible) {
+          visible = true;
+          reset();
+          after(300, play);
+        } else if (!e.isIntersecting && visible) {
+          visible = false;
+          reset();
+        }
       });
-    }, { threshold: 0.5 });
-    io.observe(demo);
+    }, { threshold: 0.55 });
+
+    io.observe(mockup);
   }
 
-  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initMockupDemo); }
-  else { initMockupDemo(); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMockupDemo);
+  } else {
+    initMockupDemo();
+  }
 })();
 </script>
 
@@ -1166,6 +1028,8 @@ function showUser(email) {
   av.classList.remove('hidden'); av.classList.add('flex');
   document.getElementById('menu-email').textContent = email;
   document.getElementById('menu-plan').textContent = isPro ? 'Pro plan' : 'Free plan';
+  const billingBtn = document.getElementById('menu-billing');
+  if (billingBtn) billingBtn.classList.toggle('hidden', !isPro);
 }
 function showSignedOut() {
   document.getElementById('btn-signin').classList.remove('hidden');
@@ -1364,7 +1228,24 @@ function applyProPricingCard() {
   if (btn) { btn.textContent = 'Pro Active ✓'; btn.style.opacity = '0.7'; btn.style.cursor = 'default'; btn.onclick = null; }
 }
 function downgradeToFree() {
-  showToastIndex('To cancel your subscription, visit your Stripe billing portal.');
+  openBillingPortal();
+}
+
+async function openBillingPortal() {
+  document.getElementById('account-menu').classList.add('hidden');
+  const { data: { session } } = await _sb.auth.getSession();
+  if (!session) return;
+  try {
+    const r = await fetch(API_BASE_URL + '/create-billing-portal-session', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const d = await r.json();
+    if (d.url) window.location.href = d.url;
+    else showToastIndex('Could not open billing portal — please try again.');
+  } catch {
+    showToastIndex('Could not open billing portal — please try again.');
+  }
 }
 
 async function loadPricingUsage() {

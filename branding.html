@@ -73,7 +73,7 @@
 <div id="toast" class="fixed left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="top:80px;background:#1C1917;color:#F5F0E8"></div>
 
 <!-- ── NAV ── -->
-<div id="nav-bar" class="fixed top-4 z-50" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
+<div id="nav-bar" class="fixed top-4 z-50 scrolled" style="left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:900px">
   <div id="nav-main-row" class="flex items-center justify-between gap-3">
     <a href="index.html" class="flex items-center gap-2 px-1 no-underline flex-shrink-0">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="14" fill="#1C1917"/><polygon points="14,7 21,19 7,19" fill="#F5F0E8"/></svg>
@@ -104,6 +104,10 @@
           <button onclick="window.location.href='upload.html?tab=files'" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             My files
+          </button>
+          <button id="menu-billing" onclick="openBillingPortal()" class="hidden w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Billing
           </button>
           <button onclick="doSignOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -718,7 +722,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('scroll', () => {
-    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+    document.getElementById('nav-bar').classList.add('scrolled');
   }, { passive: true });
 
   document.addEventListener('click', e => {
@@ -774,6 +778,25 @@ function showUserNav(email) {
   document.getElementById('menu-email').textContent = email;
   document.getElementById('menu-plan').textContent  = isPro ? 'Pro plan' : 'Free plan';
   if (isPro) document.getElementById('pro-badge').classList.remove('hidden');
+  const billingBtn = document.getElementById('menu-billing');
+  if (billingBtn) billingBtn.classList.toggle('hidden', !isPro);
+}
+
+async function openBillingPortal() {
+  document.getElementById('account-menu').classList.add('hidden');
+  const { data: { session } } = await _sb.auth.getSession();
+  if (!session) return;
+  try {
+    const r = await fetch((window.FILEO_CONFIG?.apiBaseUrl || '') + '/create-billing-portal-session', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token }
+    });
+    const d = await r.json();
+    if (d.url) window.location.href = d.url;
+    else showToast('Could not open billing portal — please try again.');
+  } catch {
+    showToast('Could not open billing portal — please try again.');
+  }
 }
 
 function showSignedOutNav() {

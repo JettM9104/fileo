@@ -73,7 +73,11 @@ The frontend is **pure static HTML + vanilla JS** (no build step). The Flask bac
 - Checkout session created server-side with `metadata.user_id` so the webhook can identify the buyer.
 - Success URL: `/?upgrade=success&session_id={CHECKOUT_SESSION_ID}`
 - Cancel URL: `/?upgrade=cancelled`
-- Webhook event handled: `checkout.session.completed`
+- Webhook events handled: `checkout.session.completed`, `customer.subscription.deleted`
+- On Pro activation (`checkout.session.completed`): `stripe_customer_id` stored in Supabase `app_metadata`; Stripe customer tagged with `metadata.supabase_user_id` for reverse lookup on cancellation.
+- On cancellation (`customer.subscription.deleted`): retrieves the Stripe customer, reads `metadata.supabase_user_id`, sets `app_metadata.is_pro=false` in Supabase — stops access immediately when the subscription ends.
+- Billing portal: Pro users see a "Billing" item in the account dropdown on all pages; clicking it calls `/create-billing-portal-session` and redirects to the Stripe-hosted portal where they can cancel or manage their subscription.
+- **Required**: add `customer.subscription.deleted` to the Stripe webhook's subscribed events in the Stripe dashboard.
 
 ---
 
@@ -140,6 +144,13 @@ Returns a JS snippet setting `window.FILEO_CONFIG` with Supabase URL, anon key, 
 - Body: `{ session_id }` (Stripe checkout session ID from redirect URL)
 - Retrieves Stripe session, checks `metadata.user_id === authenticated_user_id`, checks `payment_status === "paid"`
 - Calls `_activate_pro(user_id)` — fallback for missed webhooks
+
+### `POST /create-billing-portal-session`
+- Rate limit: 10/min
+- Auth: Bearer
+- Looks up the user's Stripe customer ID from `app_metadata.stripe_customer_id` (stored at Pro activation); falls back to searching Stripe by email
+- Creates a Stripe billing portal session and returns `{ url }` — frontend redirects there
+- Returns 404 if no Stripe customer found for the user
 
 ### `POST /stripe-webhook` (also `/stripe-webhook/`)
 - Rate limit: exempt

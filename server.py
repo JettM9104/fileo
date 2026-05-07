@@ -179,13 +179,16 @@ def _verify_supabase_token(token):
         return None, None
 
 
-def _activate_pro(user_id):
+def _activate_pro(user_id, stripe_customer_id=None):
     """Set app_metadata.is_pro=true for a Supabase user via the Admin API."""
     if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
         log.error("_activate_pro: missing SUPABASE_SERVICE_KEY or SUPABASE_URL")
         return False
     try:
-        body = json.dumps({"app_metadata": {"is_pro": True}}).encode()
+        meta = {"is_pro": True}
+        if stripe_customer_id:
+            meta["stripe_customer_id"] = stripe_customer_id
+        body = json.dumps({"app_metadata": meta}).encode()
         req = urllib.request.Request(
             f"{SUPABASE_URL}/auth/v1/admin/users/{user_id}",
             data=body,
@@ -202,6 +205,45 @@ def _activate_pro(user_id):
     except Exception as exc:
         log.error("_activate_pro failed for user %s: %s", user_id, exc)
         return False
+
+
+def _deactivate_pro(user_id):
+    """Set app_metadata.is_pro=false for a Supabase user via the Admin API."""
+    if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        log.error("_deactivate_pro: missing SUPABASE_SERVICE_KEY or SUPABASE_URL")
+        return False
+    try:
+        body = json.dumps({"app_metadata": {"is_pro": False}}).encode()
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/auth/v1/admin/users/{user_id}",
+            data=body,
+            method="PUT",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            ok = resp.status == 200
+            if not ok:
+                log.error("_deactivate_pro: Supabase returned HTTP %s for user %s", resp.status, user_id)
+            return ok
+    except Exception as exc:
+        log.error("_deactivate_pro failed for user %s: %s", user_id, exc)
+        return False
+
+
+def _get_supabase_user(user_id):
+    """Fetch user record from Supabase admin API."""
+    if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        return None
+    try:
+        req = urllib.request.Request(f"{SUPABASE_URL}/auth/v1/admin/users/{user_id}")
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return json.loads(resp.read())
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -508,9 +550,53 @@ def activate_pro_from_session():
     if checkout.payment_status not in ("paid", "no_payment_required"):
         return jsonify({"activated": False, "reason": "payment_incomplete"}), 200
 
-    ok = _activate_pro(user_id)
+    stripe_customer_id = checkout.get("customer") or None
+    ok = _activate_pro(user_id, stripe_customer_id=stripe_customer_id)
     log.info("activate_pro_from_session: _activate_pro(%s) -> %s", user_id, ok)
     return jsonify({"activated": ok})
+
+
+@app.route("/create-billing-portal-session", methods=["POST"])
+@limiter.limit("10 per minute")
+def create_billing_portal_session():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, user_email = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+    if not STRIPE_SECRET_KEY:
+        return jsonify({"error": "Payments not configured"}), 503
+
+    # Try saved customer ID from Supabase app_metadata first
+    customer_id = None
+    user_data = _get_supabase_user(user_id)
+    if user_data:
+        customer_id = user_data.get("app_metadata", {}).get("stripe_customer_id")
+
+    # Fall back to Stripe customer search by email
+    if not customer_id and user_email:
+        try:
+            customers = stripe.Customer.list(email=user_email, limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+        except stripe.error.StripeError as e:
+            log.error("create_billing_portal_session: customer lookup failed: %s", e)
+
+    if not customer_id:
+        return jsonify({"error": "No billing account found for this user"}), 404
+
+    base = SITE_URL or request.host_url.rstrip("/")
+    try:
+        portal = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=base + "/",
+        )
+        return jsonify({"url": portal.url})
+    except stripe.error.StripeError as e:
+        log.error("create_billing_portal_session: stripe error for user %s: %s", user_id, e)
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/stripe-webhook", methods=["POST"], strict_slashes=False)
@@ -530,12 +616,36 @@ def stripe_webhook():
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         user_id = getattr(session.metadata, "user_id", None)
+        stripe_customer_id = session.get("customer") or None
         log.info("stripe webhook: checkout.session.completed user_id=%s", user_id)
         if user_id:
-            ok = _activate_pro(user_id)
+            ok = _activate_pro(user_id, stripe_customer_id=stripe_customer_id)
             log.info("stripe webhook: _activate_pro(%s) -> %s", user_id, ok)
+            # Tag the Stripe customer with the Supabase user_id so cancellation
+            # webhooks can find the right user without a database lookup.
+            if stripe_customer_id:
+                try:
+                    stripe.Customer.modify(stripe_customer_id, metadata={"supabase_user_id": user_id})
+                except stripe.error.StripeError as e:
+                    log.warning("stripe webhook: could not tag customer %s: %s", stripe_customer_id, e)
         else:
             log.error("stripe webhook: no user_id in metadata — metadata=%s", session.metadata)
+
+    elif event["type"] == "customer.subscription.deleted":
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        log.info("stripe webhook: customer.subscription.deleted customer=%s", customer_id)
+        if customer_id:
+            try:
+                customer = stripe.Customer.retrieve(customer_id)
+                user_id = customer.metadata.get("supabase_user_id")
+                if user_id:
+                    ok = _deactivate_pro(user_id)
+                    log.info("stripe webhook: _deactivate_pro(%s) -> %s", user_id, ok)
+                else:
+                    log.error("stripe webhook: no supabase_user_id on customer %s", customer_id)
+            except stripe.error.StripeError as e:
+                log.error("stripe webhook: could not retrieve customer %s: %s", customer_id, e)
 
     return jsonify({"received": True})
 
