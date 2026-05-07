@@ -286,6 +286,90 @@ def upload_url():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/ws-upload-url", methods=["POST"])
+@limiter.limit("30 per minute")
+def ws_upload_url():
+    """Presigned PUT URL for workspace files (key must start with ws/)."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+    if not _r2:
+        return jsonify({"error": "Storage not configured"}), 503
+    body = request.get_json(silent=True) or {}
+    key          = body.get("key", "")
+    content_type = body.get("content_type", "application/octet-stream")
+    if not key or not key.startswith("ws/"):
+        return jsonify({"error": "Invalid key"}), 400
+    try:
+        url = _r2.generate_presigned_url(
+            "put_object",
+            Params={"Bucket": R2_BUCKET_NAME, "Key": key, "ContentType": content_type},
+            ExpiresIn=900,
+        )
+        return jsonify({"url": url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/ws-delete", methods=["POST"])
+@limiter.limit("30 per minute")
+def ws_delete():
+    """Delete one or more workspace files from R2 by storage path."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+    if not _r2:
+        return jsonify({"error": "Storage not configured"}), 503
+    body = request.get_json(silent=True) or {}
+    paths = body.get("paths", [])
+    if not paths or not isinstance(paths, list):
+        return jsonify({"error": "paths required"}), 400
+    paths = [p for p in paths if isinstance(p, str) and p.startswith("ws/")]
+    errors = []
+    for path in paths:
+        try:
+            _r2.delete_object(Bucket=R2_BUCKET_NAME, Key=path)
+        except Exception as e:
+            errors.append(str(e))
+    return jsonify({"deleted": len(paths) - len(errors), "errors": errors})
+
+
+@app.route("/ws-download-url", methods=["POST"])
+@limiter.limit("120 per minute")
+def ws_download_url():
+    """Presigned GET URL for a workspace file path."""
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, _ = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+    if not _r2:
+        return jsonify({"error": "Storage not configured"}), 503
+    body = request.get_json(silent=True) or {}
+    storage_path = body.get("storage_path", "")
+    if not storage_path or not storage_path.startswith("ws/"):
+        return jsonify({"error": "Invalid path"}), 400
+    try:
+        url = _r2.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": R2_BUCKET_NAME, "Key": storage_path},
+            ExpiresIn=3600,
+        )
+        return jsonify({"url": url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/download-url/<file_id>", methods=["GET"])
 @limiter.limit("120 per minute")
 def download_url(file_id):
