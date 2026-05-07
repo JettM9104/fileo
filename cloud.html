@@ -213,17 +213,12 @@
     <div id="ws-switcher" class="hidden gap-1 p-1 rounded-xl mb-5" style="background:#EAE4D9;max-width:100%;overflow-x:auto"></div>
 
     <!-- Active brand bar -->
-    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-5 overflow-hidden relative" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.08)">
-      <div id="ws-brand-bar-bg" class="absolute inset-0" style="background-size:cover;background-position:center;display:none"></div>
-      <div id="ws-brand-bar-scrim" class="absolute inset-0 hidden" style="background:rgba(253,250,245,0.82)"></div>
-      <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden relative" style="background:#8B6F47;color:#F5F0E8;z-index:1"></div>
-      <div class="flex-1 min-w-0 relative" style="z-index:1">
+    <div id="ws-brand-bar" class="hidden items-center gap-3 rounded-2xl px-4 py-3 mb-5" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.08)">
+      <div id="ws-brand-logo" class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm overflow-hidden" style="background:#8B6F47;color:#F5F0E8"></div>
+      <div class="flex-1 min-w-0">
         <p id="ws-brand-name" class="text-sm font-semibold truncate" style="color:#1C1917"></p>
       </div>
-      <p id="ws-brand-domain" class="text-xs truncate flex-shrink-0 relative" style="color:rgba(28,25,23,0.4);z-index:1;max-width:140px"></p>
-      <button id="ws-brand-remove" onclick="clearWorkspaceBranding()" title="Remove branding" class="hidden w-6 h-6 items-center justify-center rounded-full hover:opacity-60 flex-shrink-0 relative" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;z-index:1">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <p id="ws-brand-domain" class="text-xs truncate flex-shrink-0" style="color:rgba(28,25,23,0.45);max-width:140px"></p>
     </div>
 
     <!-- Header -->
@@ -479,7 +474,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   window.addEventListener('scroll', () => {
-    document.getElementById('nav-bar').classList.toggle('scrolled', window.scrollY > 40);
+    document.getElementById('nav-bar').classList.add('scrolled');
   }, { passive: true });
 
   document.addEventListener('click', e => {
@@ -759,11 +754,20 @@ async function uploadFiles(files) {
     const nextVersion = (snaps?.[0]?.version_number || 0) + 1;
     const snapshotId  = crypto.randomUUID();
 
-    // Upload to storage
+    // Upload to R2 via presigned URL
     const safeKey     = file.name.replace(/[^a-zA-Z0-9._\-]/g, '_');
     const storagePath = 'ws/' + workspace.id + '/files/' + folderId + '/' + snapshotId + '/' + safeKey;
-    const { error: upErr } = await _sb.storage.from(BUCKET).upload(storagePath, file, { upsert: false });
-    if (upErr) { showToast('Upload failed: ' + upErr.message); break; }
+    const { data: { session } } = await _sb.auth.getSession();
+    const jwt = session?.access_token;
+    const presignResp = await fetch(window.FILEO_CONFIG.apiBaseUrl + '/ws-upload-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify({ key: storagePath, content_type: file.type || 'application/octet-stream' }),
+    });
+    if (!presignResp.ok) { showToast('Upload failed: could not get upload URL'); break; }
+    const { url: putUrl } = await presignResp.json();
+    const putResp = await fetch(putUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type || 'application/octet-stream' } });
+    if (!putResp.ok) { showToast('Upload failed'); break; }
 
     // Create snapshot + file record
     await _sb.from('workspace_folder_snapshots').insert({
@@ -876,14 +880,32 @@ async function loadFiles() {
 }
 
 // ── DOWNLOAD
-function downloadFile(folderId) {
+async function wsDeleteR2(paths) {
+  if (!paths?.length) return;
+  const { data: { session } } = await _sb.auth.getSession();
+  const jwt = session?.access_token;
+  await fetch(window.FILEO_CONFIG.apiBaseUrl + '/ws-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+    body: JSON.stringify({ paths }),
+  });
+}
+
+async function downloadFile(folderId) {
   const item = _fileItems[folderId];
   if (!item?.storagePath) { showToast('File not found'); return; }
-  const { data } = _sb.storage.from(BUCKET).getPublicUrl(item.storagePath);
+  const { data: { session } } = await _sb.auth.getSession();
+  const jwt = session?.access_token;
+  const resp = await fetch(window.FILEO_CONFIG.apiBaseUrl + '/ws-download-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+    body: JSON.stringify({ storage_path: item.storagePath }),
+  });
+  if (!resp.ok) { showToast('Could not get download link'); return; }
+  const { url } = await resp.json();
   const a = document.createElement('a');
-  a.href = data.publicUrl;
+  a.href = url;
   a.download = item.filename;
-  a.target = '_blank';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -898,7 +920,7 @@ async function deleteFile(folderId) {
   if (snaps?.length) {
     const snapIds = snaps.map(s => s.id);
     const { data: recs } = await _sb.from('workspace_folder_files').select('storage_path').in('snapshot_id', snapIds);
-    if (recs?.length) await _sb.storage.from(BUCKET).remove(recs.map(r => r.storage_path));
+    if (recs?.length) await wsDeleteR2(recs.map(r => r.storage_path));
     await _sb.from('workspace_folder_files').delete().in('snapshot_id', snapIds);
     await _sb.from('workspace_folder_snapshots').delete().eq('folder_id', folderId);
   }
@@ -1232,7 +1254,7 @@ async function deleteWorkspace() {
     if (snaps?.length) {
       const snapIds = snaps.map(s => s.id);
       const { data: recs } = await _sb.from('workspace_folder_files').select('storage_path').in('snapshot_id', snapIds);
-      if (recs?.length) await _sb.storage.from(BUCKET).remove(recs.map(r => r.storage_path));
+      if (recs?.length) await wsDeleteR2(recs.map(r => r.storage_path));
       await _sb.from('workspace_folder_files').delete().in('snapshot_id', snapIds);
       await _sb.from('workspace_folder_snapshots').delete().in('folder_id', folderIds);
     }
@@ -1276,12 +1298,9 @@ async function selectWorkspaceBranding(id) {
 
 function applyWorkspaceBranding(profile) {
   const bar      = document.getElementById('ws-brand-bar');
-  const barBg    = document.getElementById('ws-brand-bar-bg');
-  const barScrim = document.getElementById('ws-brand-bar-scrim');
   const logoEl   = document.getElementById('ws-brand-logo');
   const nameEl   = document.getElementById('ws-brand-name');
   const domainEl = document.getElementById('ws-brand-domain');
-  const removeBtn= document.getElementById('ws-brand-remove');
   const wsBg     = document.getElementById('ws-wallpaper-bg');
 
   const clearBg = () => {
@@ -1301,19 +1320,14 @@ function applyWorkspaceBranding(profile) {
   const accent = profile.accent_color || '#8B6F47';
   document.documentElement.style.setProperty('--ws-accent', accent);
 
-  // Wallpaper — apply to full-page background
+  // Wallpaper — apply to full-page background only
   const wallpaper = (profile.wallpapers || []).find(wp => wp.type === 'image');
   if (wallpaper && wsBg) {
     wsBg.style.backgroundImage = `url('${wallpaper.url}')`;
     wsBg.style.display = 'block';
-    // Mirror wallpaper on the brand bar too
-    if (barBg)    { barBg.style.backgroundImage = `url('${wallpaper.url}')`; barBg.style.display = 'block'; }
-    if (barScrim) barScrim.classList.remove('hidden');
   } else {
     clearBg();
     document.body.style.backgroundColor = profile.bg_color || '#F5F0E8';
-    if (barBg)    barBg.style.display = 'none';
-    if (barScrim) barScrim.classList.add('hidden');
   }
 
   // Logo
@@ -1331,9 +1345,6 @@ function applyWorkspaceBranding(profile) {
 
   const domain = profile.domain_url || profile.tagline || '';
   if (domainEl) { domainEl.textContent = domain; domainEl.style.display = domain ? '' : 'none'; }
-
-  const isOwner = workspace?.owner_id === currentUser?.id;
-  if (removeBtn) { removeBtn.classList.toggle('hidden', !isOwner); removeBtn.classList.toggle('flex', isOwner); }
 
   bar.classList.remove('hidden'); bar.classList.add('flex');
 }
