@@ -19,6 +19,8 @@ const ACCENT_PRESETS = [
 let _profiles       = [];
 let _editingId      = null;
 let _profilesLoaded = false;
+let _selectedProfileId = null;
+let _onProfileCardClick = id => openProfileEditor(id);
 
 // ── Per-editor session state ────────────────────────────────────────────────
 let _branding  = { brand_name:'', tagline:'', domain_url:'', accent_color:'#8B6F47', bg_color:'#F5F0E8', logo_url:null, card_align:'center' };
@@ -320,6 +322,10 @@ function renderProfilesList() {
   _profiles.forEach(p => {
     const card = document.createElement('div');
     card.style.cssText = 'border-radius:16px;overflow:hidden;border:1px solid rgba(28,25,23,0.10);background:#FDFAF5;cursor:pointer;transition:transform .15s,box-shadow .15s';
+    const isSelected = p.id === _selectedProfileId;
+    if (isSelected) {
+      card.style.border = '2px solid #1C1917';
+    }
     card.onmouseover = () => { card.style.transform='translateY(-2px)'; card.style.boxShadow='0 6px 20px rgba(28,25,23,0.10)'; };
     card.onmouseout  = () => { card.style.transform=''; card.style.boxShadow=''; };
 
@@ -363,7 +369,7 @@ function renderProfilesList() {
     row.appendChild(actions);
     card.appendChild(strip);
     card.appendChild(row);
-    card.onclick = () => openProfileEditor(p.id);
+    card.onclick = () => _onProfileCardClick(p.id);
     grid.appendChild(card);
   });
 

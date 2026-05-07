@@ -292,147 +292,66 @@
 
     <!-- ════ MEMBERS TAB ════ -->
     <div id="ws-panel-members" class="hidden">
-      <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-        <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Invite a collaborator</p>
+      <!-- Invite link (owner only) -->
+      <div id="invite-link-section" class="rounded-2xl p-5 mb-4 hidden" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:rgba(28,25,23,0.35)">Invite link</p>
+        <p class="text-xs mb-3" style="color:rgba(28,25,23,0.4)">Share this link — anyone with it can request to join. You'll approve or decline each request.</p>
         <div class="flex gap-2">
-          <input id="invite-email" type="email" placeholder="their@email.com"
+          <input id="invite-link-input" type="text" readonly
             class="flex-1 px-3.5 py-2.5 rounded-xl text-sm"
-            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917"
-            onkeydown="if(event.key==='Enter')inviteMember()" />
-          <button onclick="inviteMember()" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-70 flex-shrink-0" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Invite</button>
+            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;cursor:pointer"
+            onclick="this.select()" />
+          <button id="copy-link-btn" onclick="generateInviteLink()" class="px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-70 flex-shrink-0" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Copy link</button>
         </div>
-        <p class="text-xs mt-2" style="color:rgba(28,25,23,0.4)">They'll see this workspace the next time they open Cloud.</p>
       </div>
+      <!-- Pending join requests (owner only) -->
+      <div id="pending-requests-section" class="hidden mb-4">
+        <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Pending requests</p>
+        <div id="pending-requests-list" class="flex flex-col gap-2"></div>
+      </div>
+      <!-- Member list -->
       <div id="ws-members-list" class="flex flex-col gap-2"></div>
     </div>
 
     <!-- ════ BRANDING TAB ════ -->
     <div id="ws-panel-branding" class="hidden">
-  <div class="flex flex-col lg:flex-row gap-5">
-
-    <!-- Settings column -->
-    <div class="flex-1 flex flex-col gap-4">
-
-      <!-- PROFILES LIST VIEW -->
-      <div id="profiles-list-view">
-        <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:rgba(28,25,23,0.35)">Branding profiles</p>
-        <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">The default profile appears on all your download links. Up to 3 profiles.</p>
-        <div id="profiles-cards" class="grid gap-3 mb-4" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr))"></div>
-        <button id="add-profile-btn" onclick="addNewProfile()"
-          class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-75 transition-opacity"
-          style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add profile
-        </button>
+      <div class="rounded-2xl p-5 mb-4" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Active branding</p>
+          <a href="branding.html" class="text-xs font-medium no-underline hover:opacity-60 transition-opacity" style="color:#8B6F47">Edit profiles →</a>
+        </div>
+        <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Select which branding profile applies to this workspace. Create or edit profiles in the Branding section.</p>
+        <!-- profiles-list-view and profiles-cards are used by branding-shared.js -->
+        <div id="profiles-list-view">
+          <div id="profiles-cards" class="grid gap-3" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+        </div>
+        <!-- hidden stub so branding-shared.js doesn't error -->
+        <div id="profile-editor-view" class="hidden"></div>
       </div>
-
-      <!-- PROFILE EDITOR VIEW -->
-      <div id="profile-editor-view" class="hidden flex flex-col gap-4">
-
-        <div class="flex items-center gap-3">
-          <button onclick="closeProfileEditor()" class="flex items-center gap-1.5 text-xs font-medium hover:opacity-60 transition-opacity flex-shrink-0" style="color:rgba(28,25,23,0.45);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-            All profiles
-          </button>
-          <div class="w-px h-4 flex-shrink-0" style="background:rgba(28,25,23,0.12)"></div>
-          <input id="profile-name-input" type="text" maxlength="32" placeholder="Profile name"
-            class="flex-1 px-3 py-1.5 rounded-lg text-sm font-semibold"
-            style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-          <label class="flex items-center gap-1.5 text-xs font-medium flex-shrink-0" style="color:rgba(28,25,23,0.5);cursor:pointer">
-            <input id="profile-is-default" type="checkbox" style="accent-color:#8B6F47" />
-            Default
-          </label>
-        </div>
-
-        <!-- Logo -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Logo</p>
-          <div class="flex flex-col items-center gap-3">
-            <div id="logo-preview" onclick="document.getElementById('logo-input').click()"
-              style="width:72px;height:72px;border-radius:16px;background:#EAE4D9;border:1px solid rgba(28,25,23,0.10);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" title="Upload logo">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(28,25,23,0.3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            </div>
-            <button onclick="document.getElementById('logo-input').click()" class="px-4 py-2 rounded-xl text-xs font-semibold hover:opacity-75 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Upload logo</button>
-            <p class="text-xs text-center" style="color:rgba(28,25,23,0.35)">PNG or JPEG · square recommended · max 2 MB</p>
-            <button id="logo-remove-btn" class="hidden text-xs hover:opacity-60" onclick="removeLogo()" style="color:rgba(28,25,23,0.4);background:none;border:none;cursor:pointer;padding:0;font-family:inherit">Remove</button>
-          </div>
-          <input type="file" id="logo-input" class="hidden" accept="image/jpeg,image/png" onchange="onLogoSelected(event)" />
-        </div>
-
-        <!-- Identity -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <p class="text-xs font-semibold uppercase tracking-wide mb-4" style="color:rgba(28,25,23,0.35)">Brand identity</p>
-          <div class="flex flex-col gap-3">
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Brand name</label>
-              <input id="brand-name" type="text" maxlength="40" placeholder="Your company or name" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Tagline <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="brand-tagline" type="text" maxlength="80" placeholder="e.g. Creative agency · London" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-            <div>
-              <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Domain <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="brand-domain" type="text" maxlength="100" placeholder="e.g. acme.com" oninput="updateBrandPreview()"
-                class="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917;font-family:inherit" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Wallpapers -->
-        <div class="rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.10)">
-          <div class="flex items-center justify-between mb-1">
-            <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Backgrounds</p>
-            <span id="wallpaper-count" class="text-xs" style="color:rgba(28,25,23,0.35)">0 / 5</span>
-          </div>
-          <p class="text-xs mb-4" style="color:rgba(28,25,23,0.4)">Images &amp; videos shown behind your download page, rotating every 30 seconds.</p>
-          <div id="wallpaper-slots" class="grid gap-2 mb-3" style="grid-template-columns:repeat(5,1fr)"></div>
-          <p class="text-xs mt-1" style="color:rgba(28,25,23,0.3)">JPEG, PNG or MP4 · max 5 MB · up to 5 backgrounds</p>
-        </div>
-
-        <input type="file" id="wallpaper-input" class="hidden" accept="image/jpeg,image/png,video/mp4" onchange="onWallpaperSelected(event)" />
-
-        <button onclick="saveBranding()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Save profile</button>
-        <p class="text-xs text-center -mt-1" style="color:rgba(28,25,23,0.35)">The default profile applies to all your shared links</p>
-
-      </div><!-- /profile-editor-view -->
-    </div>
-
-    <!-- Preview panel (unchanged) -->
-    <div style="width:100%;max-width:240px" class="mx-auto lg:mx-0 flex-shrink-0">
-      <div class="rounded-2xl overflow-hidden" style="border:1px solid rgba(28,25,23,0.10)">
-        <div class="px-4 py-3" style="background:#FDFAF5;border-bottom:1px solid rgba(28,25,23,0.08)">
-          <p class="text-xs font-semibold uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Preview</p>
-        </div>
-        <div id="brand-preview-bg" style="padding:20px 16px;background:#F5F0E8;transition:background .25s">
-          <div class="flex items-center gap-2 mb-5">
-            <div id="preview-logo" style="width:30px;height:30px;border-radius:8px;background:#8B6F47;color:#F5F0E8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;transition:background .25s">F</div>
-            <div>
-              <p id="preview-name" style="font-weight:700;font-size:14px;color:#1C1917;line-height:1.2;margin:0;transition:color .25s">Your Brand</p>
-              <p id="preview-tagline" style="font-size:11px;color:rgba(28,25,23,0.4);margin:2px 0 0;display:none;transition:color .25s"></p>
-              <p id="preview-domain" style="font-size:10px;color:rgba(28,25,23,0.35);margin:1px 0 0;display:none;transition:color .25s"></p>
-            </div>
-          </div>
-          <div id="preview-card" style="background:rgba(28,25,23,0.06);border-radius:12px;padding:10px 12px;margin-bottom:8px;transition:background .25s">
-            <p id="preview-card-text" style="font-weight:600;font-size:12px;color:#1C1917;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;transition:color .25s">document.pdf</p>
-            <p id="preview-card-meta" style="font-size:11px;color:rgba(28,25,23,0.4);margin:3px 0 0;transition:color .25s">2.3 MB · 7d left</p>
-          </div>
-          <div id="preview-btn-mock" style="background:#8B6F47;border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:600;color:#F5F0E8;transition:background .25s">Download file</div>
-          <p id="preview-footer" style="font-size:10px;text-align:center;margin:10px 0 0;color:rgba(28,25,23,0.3);transition:color .25s">Sent via Fileo</p>
-        </div>
-      </div>
-      <p class="text-xs text-center mt-3" style="color:rgba(28,25,23,0.35)">How your download links look</p>
-    </div>
-
-  </div>
     </div><!-- /ws-panel-branding -->
 
   </div><!-- /state-workspace -->
+
+  <!-- ── JOIN REQUEST STATE (visiting ?invite=TOKEN) ── -->
+  <div id="state-join" class="hidden max-w-xs mx-auto text-center pt-36 fade-up opacity-0">
+    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:#EAE4D9">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    </div>
+    <h2 id="join-ws-name" class="text-2xl font-bold mb-2" style="color:#1C1917">Join workspace</h2>
+    <p class="text-sm mb-6" style="color:rgba(28,25,23,0.5)">You've been invited to collaborate in this cloud workspace.</p>
+    <div id="join-action">
+      <button onclick="requestToJoin()" class="w-full py-3 rounded-2xl text-sm font-semibold hover:opacity-80 transition-opacity mb-3" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Request access</button>
+      <p class="text-xs" style="color:rgba(28,25,23,0.35)">The workspace owner will approve your request.</p>
+    </div>
+    <div id="join-sent" class="hidden">
+      <div class="rounded-2xl px-5 py-4 mb-3" style="background:#EAE4D9">
+        <p class="text-sm font-semibold mb-1" style="color:#1C1917">Request sent</p>
+        <p class="text-xs" style="color:rgba(28,25,23,0.5)">The owner will review your request. Check back soon.</p>
+      </div>
+      <a href="cloud.html" class="text-xs no-underline hover:opacity-60" style="color:rgba(28,25,23,0.4)">Go to my workspace →</a>
+    </div>
+  </div>
+
 </main>
 
 <script src="branding-shared.js"></script>
@@ -452,17 +371,30 @@ let _fileItems = {}; // folderId → item, used by download/delete actions
 window.addEventListener('DOMContentLoaded', () => {
   _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+  // Override branding card click: select profile instead of opening editor
+  _onProfileCardClick = id => selectWorkspaceBranding(id);
+
+  const inviteToken = new URLSearchParams(window.location.search).get('invite');
+
   _sb.auth.onAuthStateChange((_e, session) => {
     if (session?.user) {
       currentUser = session.user;
       isPro = session.user.app_metadata?.is_pro === true;
       showUserNav(session.user.email);
-      loadWorkspace();
+      if (inviteToken) {
+        handleInviteToken(inviteToken);
+      } else {
+        loadWorkspace();
+      }
     } else {
       currentUser = null; isPro = false;
       ownedWorkspaces = []; workspace = null;
       showSignedOutNav();
-      showState('signin');
+      if (inviteToken) {
+        handleInviteToken(inviteToken);
+      } else {
+        showState('signin');
+      }
     }
   });
 
@@ -478,7 +410,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function showState(s) {
-  ['loading','signin','upgrade','workspace'].forEach(id =>
+  ['loading','signin','upgrade','workspace','join'].forEach(id =>
     document.getElementById('state-' + id).classList.toggle('hidden', id !== s)
   );
 }
@@ -542,6 +474,9 @@ function renderWorkspace() {
   const invBtn = document.getElementById('ws-invite-btn');
   invBtn.classList.toggle('hidden', !isOwner);
   invBtn.classList.toggle('flex', isOwner);
+
+  // Show invite link panel only for owners
+  document.getElementById('invite-link-section').classList.toggle('hidden', !isOwner);
 
   // Branding tab: Pro owners only
   document.getElementById('wstab-branding').style.display = (isPro && isOwner) ? '' : 'none';
@@ -643,8 +578,8 @@ function switchWsTab(tab) {
     document.getElementById('ws-panel-' + t).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'notes')    loadWsNotes();
-  if (tab === 'members')  renderMembersList();
-  if (tab === 'branding') loadBranding();
+  if (tab === 'members')  { renderMembersList(); if (workspace.owner_id === currentUser.id) loadPendingRequests(); }
+  if (tab === 'branding') { _selectedProfileId = workspace.branding_profile_id || null; loadBranding(); }
 }
 
 // ── DRAG & DROP
@@ -915,7 +850,10 @@ async function loadWsMembers() {
   const { data: members } = await _sb.from('workspace_members').select('*').eq('workspace_id', workspace.id).order('added_at');
   wsMembers = members || [];
   renderAvatars();
-  if (activeTab === 'members') renderMembersList();
+  if (activeTab === 'members') {
+    renderMembersList();
+    if (workspace.owner_id === currentUser.id) loadPendingRequests();
+  }
 }
 function renderAvatars() {
   const c = document.getElementById('ws-avatars');
@@ -961,22 +899,71 @@ function renderMembersList() {
   if (!wsMembers.length) {
     const p = document.createElement('p');
     p.className = 'text-sm text-center py-4'; p.style.color = 'rgba(28,25,23,0.35)';
-    p.textContent = 'No collaborators yet — invite someone above.';
+    p.textContent = workspace.owner_id === currentUser.id ? 'No collaborators yet — share an invite link above.' : 'No other collaborators yet.';
     list.appendChild(p);
   }
 }
-async function inviteMember() {
-  const input = document.getElementById('invite-email');
-  const email = input.value.trim().toLowerCase();
-  if (!email || !email.includes('@')) { showToast('Enter a valid email'); return; }
-  if (email === currentUser.email.toLowerCase()) { showToast("That's your own email"); return; }
-  if (wsMembers.some(m => m.email.toLowerCase() === email)) { showToast('Already a member'); return; }
-  const { error } = await _sb.from('workspace_members').insert({ workspace_id: workspace.id, email, role: 'member' });
-  if (error) { showToast('Could not invite: ' + error.message); return; }
-  input.value = '';
+async function generateInviteLink() {
+  const btn = document.getElementById('copy-link-btn');
+  btn.textContent = 'Generating…';
+  const { data: inv, error } = await _sb.from('workspace_invites')
+    .insert({ workspace_id: workspace.id, created_by: currentUser.id })
+    .select('id').single();
+  if (error) { showToast('Could not generate link: ' + error.message); btn.textContent = 'Copy link'; return; }
+  const link = window.location.origin + '/cloud.html?invite=' + inv.id;
+  document.getElementById('invite-link-input').value = link;
+  try {
+    await navigator.clipboard.writeText(link);
+    btn.textContent = 'Copied!';
+    showToast('Invite link copied');
+  } catch {
+    btn.textContent = 'Copy link';
+    showToast('Link generated — copy it above');
+  }
+  setTimeout(() => { btn.textContent = 'Copy link'; }, 2500);
+}
+
+async function loadPendingRequests() {
+  const { data: reqs } = await _sb.from('workspace_join_requests')
+    .select('*').eq('workspace_id', workspace.id).eq('status', 'pending')
+    .order('requested_at');
+  const section = document.getElementById('pending-requests-section');
+  const list    = document.getElementById('pending-requests-list');
+  if (!reqs?.length) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  list.innerHTML = '';
+  reqs.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'flex items-center gap-3 rounded-2xl px-4 py-3.5';
+    el.style.cssText = 'background:#FDFAF5;border:1px solid rgba(139,111,71,0.25)';
+    el.innerHTML = `
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:#8B6F47;color:#F5F0E8">${escHtml(r.requester_email[0].toUpperCase())}</div>
+      <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style="color:#1C1917">${escHtml(r.requester_email)}</p><p class="text-xs" style="color:rgba(28,25,23,0.4)">Requested ${timeAgo(r.requested_at)}</p></div>
+      <div class="flex gap-1.5 flex-shrink-0">
+        <button onclick="acceptJoinRequest('${escHtml(r.id)}','${escHtml(r.requester_email)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-70" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Accept</button>
+        <button onclick="declineJoinRequest('${escHtml(r.id)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold hover:opacity-70" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Decline</button>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+async function acceptJoinRequest(reqId, email) {
+  const already = wsMembers.some(m => m.email.toLowerCase() === email.toLowerCase());
+  if (!already) {
+    const { error } = await _sb.from('workspace_members').insert({ workspace_id: workspace.id, email, role: 'member' });
+    if (error) { showToast('Could not add member: ' + error.message); return; }
+  }
+  await _sb.from('workspace_join_requests').update({ status: 'accepted' }).eq('id', reqId);
   showToast(email + ' added');
   loadWsMembers();
 }
+
+async function declineJoinRequest(reqId) {
+  await _sb.from('workspace_join_requests').update({ status: 'declined' }).eq('id', reqId);
+  showToast('Request declined');
+  loadPendingRequests();
+}
+
 async function removeMember(id) {
   if (!confirm('Remove this member?')) return;
   await _sb.from('workspace_members').delete().eq('id', id);
@@ -984,7 +971,66 @@ async function removeMember(id) {
   loadWsMembers();
 }
 
-// ── BRANDING (functions in branding-shared.js)
+// ── INVITE TOKEN HANDLING (visiting ?invite=TOKEN)
+let _pendingInviteToken = null;
+
+async function handleInviteToken(token) {
+  _pendingInviteToken = token;
+  const { data: inv } = await _sb.from('workspace_invites')
+    .select('workspace_id, workspaces(name)').eq('id', token).maybeSingle();
+  if (!inv) { showToast('This invite link is invalid or expired'); showState('signin'); return; }
+
+  const wsName = inv.workspaces?.name || 'this workspace';
+  document.getElementById('join-ws-name').textContent = wsName;
+
+  if (!currentUser) {
+    showState('signin');
+    document.getElementById('auth-sub').textContent = 'Sign in to request access to ' + wsName + '.';
+    return;
+  }
+
+  // Check if already a member
+  const { data: existing } = await _sb.from('workspace_members')
+    .select('id').eq('workspace_id', inv.workspace_id).eq('email', currentUser.email).maybeSingle();
+  if (existing) {
+    window.location.href = 'cloud.html';
+    return;
+  }
+
+  showState('join');
+}
+
+async function requestToJoin() {
+  if (!currentUser || !_pendingInviteToken) return;
+  const { data: inv } = await _sb.from('workspace_invites')
+    .select('workspace_id').eq('id', _pendingInviteToken).maybeSingle();
+  if (!inv) { showToast('Invalid invite link'); return; }
+
+  const { error } = await _sb.from('workspace_join_requests').insert({
+    workspace_id:    inv.workspace_id,
+    invite_id:       _pendingInviteToken,
+    requester_id:    currentUser.id,
+    requester_email: currentUser.email,
+    status:          'pending',
+  });
+  if (error && !error.message.includes('duplicate')) {
+    showToast('Could not send request: ' + error.message); return;
+  }
+  document.getElementById('join-action').classList.add('hidden');
+  document.getElementById('join-sent').classList.remove('hidden');
+}
+
+// ── BRANDING SELECTION (cloud.html overrides _onProfileCardClick)
+async function selectWorkspaceBranding(id) {
+  _selectedProfileId = id;
+  renderProfilesList();
+  await _sb.from('workspaces').update({ branding_profile_id: id }).eq('id', workspace.id);
+  workspace.branding_profile_id = id;
+  const p = _profiles.find(x => x.id === id);
+  showToast((p?.name || 'Profile') + ' selected');
+}
+
+// ── BRANDING (remaining functions in branding-shared.js)
 
 // ── HELPERS
 function fmtSize(b) {

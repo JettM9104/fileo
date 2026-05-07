@@ -274,16 +274,42 @@ A simple shared file storage with notes and member management.
 
 **Notes tab**: Shared markdown-free textarea. Auto-saves 3.5 seconds after last keystroke. Upserts `workspace_notes` record.
 
-**Members tab**: Invite by email (inserted into `workspace_members`). Owner sees "Remove" buttons. Avatar row in header shows up to 4 members + overflow count.
+**Members tab**: Link-based invite system. Owner clicks "Copy link" → `generateInviteLink()` inserts into `workspace_invites` table and copies `cloud.html?invite={id}` to clipboard. Anyone visiting that URL sees a join request screen → clicks "Request access" → inserts into `workspace_join_requests`. Owner sees pending requests in Members tab with Accept / Decline buttons. Accepting adds email to `workspace_members`. Avatar row in header shows up to 4 members + overflow count.
 
-**Branding tab** (Pro, 4th tab): Lets a Pro user set custom branding applied to all their shared links and cloud workspace.
-- Fields: brand name, tagline, domain (shown in top-left of download page), accent color (8 presets + custom color picker), page background (5 presets), backgrounds/wallpapers (up to 5 images/videos)
-- Live preview card shows brand name, tagline, domain, accent color, and background color in real time
-- Saved to `user_branding` Supabase table — upsert on save
-- **Schema** (`user_branding`): `user_id`, `brand_name`, `tagline`, `domain_url`, `accent_color`, `bg_color`, `wallpapers` (JSONB array of `{url, type}`), `updated_at`
-- **⚠️ DB migration required**: `ALTER TABLE user_branding ADD COLUMN IF NOT EXISTS domain_url TEXT, ADD COLUMN IF NOT EXISTS wallpapers JSONB DEFAULT '[]';`
+**Branding tab** (Pro owners only, 4th tab): Profile selector only — no inline editor. Clicking a profile card calls `selectWorkspaceBranding(id)`, which saves `branding_profile_id` to the workspace row and highlights the selected card. To create or edit profiles, users go to `branding.html`. Card click behavior is overridden in `cloud.html` by setting `_onProfileCardClick = id => selectWorkspaceBranding(id)` after branding-shared.js loads.
+- `_selectedProfileId` in `branding-shared.js` tracks the active selection; `renderProfilesList()` draws a bold border on the selected card
+- Selected profile is loaded on tab open: `_selectedProfileId = workspace.branding_profile_id || null`
+- **⚠️ DB migration required for branding column**: `ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS branding_profile_id TEXT;`
 - Applied on download page (`index.html`): when a file has `is_pro=true` and `user_id`, the download page fetches `user_branding` and calls `applyBranding()`, which: replaces Fileo header with brand logo initial + name + tagline + domain, sets accent color on download button, adapts colors for dark/light backgrounds, and if wallpapers are set starts a 30-second rotating background (`startWallpaperRotation()`) with a scrim overlay for text readability
 - Wallpaper files stored in Supabase Storage bucket `uploads` under `branding/{userId}/wp_{timestamp}.{ext}`; public URLs stored in `wallpapers` JSONB column; JPEG/PNG/MP4 only, max 5 MB each
+
+**Invite link flow**:
+- `cloud.html?invite=TOKEN` triggers `handleInviteToken(token)` on DOMContentLoaded (detected before auth state)
+- If not signed in: shows sign-in modal with custom subtitle; after auth, invite flow resumes
+- If already a member: redirects to `cloud.html`
+- Otherwise: shows `state-join` screen with workspace name + "Request access" button
+- `requestToJoin()` inserts into `workspace_join_requests` with `invite_id`, `requester_id`, `requester_email`, `status: 'pending'`
+- `loadPendingRequests()` queries `workspace_join_requests` filtered by `workspace_id` + `status=pending`; renders accept/decline buttons for owner
+- `acceptJoinRequest(reqId, email)` inserts into `workspace_members` + sets request status to `accepted`
+- `declineJoinRequest(reqId)` sets request status to `declined`
+- **⚠️ New DB tables required**:
+  ```sql
+  CREATE TABLE workspace_invites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    created_by UUID,
+    created_at TIMESTAMPTZ DEFAULT now()
+  );
+  CREATE TABLE workspace_join_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+    invite_id UUID REFERENCES workspace_invites(id) ON DELETE CASCADE,
+    requester_id UUID,
+    requester_email TEXT,
+    status TEXT DEFAULT 'pending',
+    requested_at TIMESTAMPTZ DEFAULT now()
+  );
+  ```
 
 ---
 
