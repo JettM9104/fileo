@@ -387,13 +387,12 @@ Client-side PBKDF2 (Web Crypto API):
 - CNAME: `fileo.ca`
 - `config.js` sets `apiBaseUrl: "https://api.fileo.ca"`
 
-**API server** (Ubuntu VPS):
-- App directory: `/var/www/fileo`
-- Python venv at `/var/www/fileo/venv`
-- Env file: `/var/www/fileo/.env` (chmod 600, owned by www-data)
-- systemd service: `fileo-api` (from `myapp.service`)
-- Caddy reverse-proxies `api.fileo.ca` → `127.0.0.1:5001`
-- Gunicorn: 2 workers, 4 threads, 120s timeout, logs to stdout/stderr
+**API server** (MacBook):
+- Caddy: `sudo caddy run --config Caddyfile` — reverse-proxies `api.fileo.ca` → `127.0.0.1:5001`
+- Gunicorn: `python -m gunicorn --bind 127.0.0.1:5001 server:app` — picks up `gunicorn.conf.py` automatically (2 workers, 4 threads, 120s timeout)
+- Env file: `.env` in the project directory (loaded automatically by `server.py` via python-dotenv)
+- No systemd (macOS) — both processes run in foreground; use tmux/screen for persistence
+- `myapp.service` is a leftover Linux artifact, not used
 
 **Required external config**:
 - Supabase: add `https://fileo.ca`, `https://fileo.ca/index.html`, `https://fileo.ca/upload.html` to allowed auth redirect URLs
