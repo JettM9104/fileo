@@ -73,6 +73,29 @@
   </div>
 </div>
 
+<!-- ── CONFIRM MODAL ── -->
+<div id="confirm-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4" style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)">
+  <div class="modal-in w-full max-w-xs rounded-2xl p-6 flex flex-col gap-4" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
+    <p id="confirm-msg" class="text-sm font-medium leading-relaxed" style="color:#1C1917"></p>
+    <div class="flex gap-2">
+      <button onclick="dismissConfirm()" class="flex-1 py-2.5 rounded-xl text-sm font-medium hover:opacity-70" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Cancel</button>
+      <button id="confirm-ok" onclick="runConfirm()" class="flex-1 py-2.5 rounded-xl text-sm font-semibold hover:opacity-80" style="background:#DC2626;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CLOUD NAME MODAL (create / rename via modal) ── -->
+<div id="cloud-name-modal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4" style="background:rgba(28,25,23,0.4);backdrop-filter:blur(4px)" onclick="if(event.target===this)dismissCloudName()">
+  <div class="modal-in w-full max-w-xs rounded-2xl p-6 flex flex-col gap-4" style="background:#F5F0E8;border:1px solid rgba(28,25,23,0.12);box-shadow:0 8px 40px rgba(28,25,23,0.14)">
+    <h3 id="cloud-name-modal-title" class="text-base font-bold" style="color:#1C1917">Name your cloud</h3>
+    <input id="cloud-name-input" type="text" maxlength="60" placeholder="Cloud name" class="w-full px-3.5 py-2.5 rounded-xl text-sm" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" onkeydown="if(event.key==='Enter')confirmCloudName();if(event.key==='Escape')dismissCloudName()" />
+    <div class="flex gap-2">
+      <button onclick="dismissCloudName()" class="flex-1 py-2.5 rounded-xl text-sm font-medium hover:opacity-70" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Cancel</button>
+      <button id="cloud-name-ok" onclick="confirmCloudName()" class="flex-1 py-2.5 rounded-xl text-sm font-semibold hover:opacity-80" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer;font-family:inherit">Create</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── TOAST ── -->
 <div id="toast" class="fixed left-1/2 z-[200] px-4 py-2.5 rounded-full text-sm font-medium" style="top:80px;background:#1C1917;color:#F5F0E8"></div>
 
@@ -141,7 +164,6 @@
 
 <!-- ── WALLPAPER BACKGROUND (behind everything, shown when brand has a wallpaper) ── -->
 <div id="ws-wallpaper-bg" style="position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;background-repeat:no-repeat;display:none"></div>
-<div id="ws-wallpaper-scrim" style="position:fixed;inset:0;z-index:-1;background:rgba(245,240,232,0.80);display:none"></div>
 
 <!-- ── MAIN ── -->
 <main class="min-h-screen pt-24 pb-20 px-4">
@@ -202,9 +224,18 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-start justify-between mb-7 gap-3">
       <div>
-        <div class="flex items-center gap-2.5 mb-1">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
           <h1 id="ws-name" class="text-2xl font-bold tracking-tight" style="color:#1C1917">My Cloud</h1>
-          <button id="ws-rename-btn" onclick="renameWorkspace()" title="Rename" class="hidden w-6 h-6 items-center justify-center rounded-lg hover:opacity-60 transition-opacity flex-shrink-0" style="background:none;border:none;cursor:pointer;color:rgba(28,25,23,0.3)">
+          <input id="ws-name-input" type="text" maxlength="60" class="hidden text-2xl font-bold tracking-tight rounded-xl px-2 py-0.5" style="color:#1C1917;background:#EAE4D9;border:1px solid rgba(28,25,23,0.2);outline:none;max-width:280px" onkeydown="if(event.key==='Enter')confirmRename();if(event.key==='Escape')cancelRename()" />
+          <div id="ws-rename-actions" class="hidden items-center gap-1">
+            <button onclick="confirmRename()" title="Save" class="w-7 h-7 flex items-center justify-center rounded-lg hover:opacity-70" style="background:#1C1917;color:#F5F0E8;border:none;cursor:pointer">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button onclick="cancelRename()" title="Cancel" class="w-7 h-7 flex items-center justify-center rounded-lg hover:opacity-70" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <button id="ws-rename-btn" onclick="startRename()" title="Rename" class="hidden w-6 h-6 items-center justify-center rounded-lg hover:opacity-60 transition-opacity flex-shrink-0" style="background:none;border:none;cursor:pointer;color:rgba(28,25,23,0.3)">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
           <span id="ws-pro-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:#8B6F47;color:#F5F0E8">PRO</span>
@@ -584,20 +615,21 @@ async function switchToWorkspace(idx) {
 
 async function addSecondWorkspace() {
   if (ownedWorkspaces.length >= 2) { showToast('Maximum 2 clouds per account'); return; }
-  const name = (prompt('Name your second cloud:', 'Work Files') || '').trim() || 'Work Files';
-  const { data: newWs, error } = await _sb.from('workspaces')
-    .insert({ name, owner_id: currentUser.id }).select().single();
-  if (error) { showToast('Could not create: ' + error.message); return; }
-  const tagged = { ...newWs, _owned: true };
-  ownedWorkspaces.push(newWs);
-  allWorkspaces = [
-    ...ownedWorkspaces.map(w => ({ ...w, _owned: true })),
-    ...sharedWorkspaces.map(w => ({ ...w, _owned: false })),
-  ];
-  currentWorkspaceIndex = allWorkspaces.findIndex(w => w.id === newWs.id);
-  workspace = tagged;
-  renderWorkspace();
-  showToast('"' + name + '" created');
+  showCloudNameModal('Name your second cloud', 'Work Files', 'Create', async (name) => {
+    const { data: newWs, error } = await _sb.from('workspaces')
+      .insert({ name, owner_id: currentUser.id }).select().single();
+    if (error) { showToast('Could not create: ' + error.message); return; }
+    const tagged = { ...newWs, _owned: true };
+    ownedWorkspaces.push(newWs);
+    allWorkspaces = [
+      ...ownedWorkspaces.map(w => ({ ...w, _owned: true })),
+      ...sharedWorkspaces.map(w => ({ ...w, _owned: false })),
+    ];
+    currentWorkspaceIndex = allWorkspaces.findIndex(w => w.id === newWs.id);
+    workspace = tagged;
+    renderWorkspace();
+    showToast('"' + name + '" created');
+  });
 }
 
 // ── OWNER QUOTA CHECK (storage always charged to workspace owner)
@@ -836,8 +868,7 @@ function downloadFile(folderId) {
 async function deleteFile(folderId) {
   const item = _fileItems[folderId];
   if (!item) return;
-  if (!confirm('Delete "' + item.filename + '"? This cannot be undone.')) return;
-
+  showConfirm('Delete "' + item.filename + '"? This cannot be undone.', 'Delete', async () => {
   const { data: snaps } = await _sb.from('workspace_folder_snapshots').select('id').eq('folder_id', folderId);
   if (snaps?.length) {
     const snapIds = snaps.map(s => s.id);
@@ -848,9 +879,9 @@ async function deleteFile(folderId) {
   }
   await _sb.from('workspace_folders').delete().eq('id', folderId);
   delete _fileItems[folderId];
-
   showToast('"' + item.filename + '" deleted');
   loadFiles();
+  });
 }
 
 // ── FILE TYPE ICON
@@ -954,7 +985,7 @@ function renderMembersList() {
     el.innerHTML = `
       <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style="background:#8B6F47;color:#F5F0E8">${escHtml(m.email[0].toUpperCase())}</div>
       <div class="flex-1 min-w-0"><p class="text-sm font-medium truncate" style="color:#1C1917">${escHtml(m.email)}</p><p class="text-xs" style="color:rgba(28,25,23,0.4)">Member · added ${timeAgo(m.added_at)}</p></div>
-      ${isOwner ? `<button onclick="removeMember('${escHtml(m.id)}')" class="text-xs hover:opacity-60" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;font-family:inherit">Remove</button>` : ''}`;
+      ${isOwner ? `<button onclick="removeMember('${escHtml(m.id)}','${escHtml(m.email)}')" class="text-xs hover:opacity-60" style="color:rgba(28,25,23,0.35);background:none;border:none;cursor:pointer;font-family:inherit">Remove</button>` : ''}`;
     list.appendChild(el);
   });
   if (!wsMembers.length) {
@@ -1033,11 +1064,12 @@ async function declineJoinRequest(reqId) {
   loadPendingRequests();
 }
 
-async function removeMember(id) {
-  if (!confirm('Remove this member?')) return;
-  await _sb.from('workspace_members').delete().eq('id', id);
-  showToast('Member removed');
-  loadWsMembers();
+async function removeMember(id, email) {
+  showConfirm('Remove ' + (email || 'this member') + ' from this cloud?', 'Remove', async () => {
+    await _sb.from('workspace_members').delete().eq('id', id);
+    showToast('Member removed');
+    loadWsMembers();
+  });
 }
 
 // ── INVITE TOKEN HANDLING (visiting ?invite=TOKEN)
@@ -1089,9 +1121,67 @@ async function requestToJoin() {
   document.getElementById('join-sent').classList.remove('hidden');
 }
 
-// ── RENAME / DELETE / CLEAR NOTES
-async function renameWorkspace() {
-  const name = (prompt('Rename cloud:', workspace.name) || '').trim();
+// ── CONFIRM MODAL
+let _confirmCallback = null;
+function showConfirm(msg, okLabel, cb) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-ok').textContent = okLabel || 'Delete';
+  _confirmCallback = cb;
+  const el = document.getElementById('confirm-modal');
+  el.classList.remove('hidden'); el.classList.add('flex');
+}
+function dismissConfirm() {
+  const el = document.getElementById('confirm-modal');
+  el.classList.add('hidden'); el.classList.remove('flex');
+  _confirmCallback = null;
+}
+function runConfirm() { const cb = _confirmCallback; dismissConfirm(); if (cb) cb(); }
+
+// ── CLOUD NAME MODAL
+let _cloudNameCallback = null;
+function showCloudNameModal(title, defaultVal, okLabel, cb) {
+  document.getElementById('cloud-name-modal-title').textContent = title;
+  document.getElementById('cloud-name-input').value = defaultVal || '';
+  document.getElementById('cloud-name-ok').textContent = okLabel || 'Create';
+  _cloudNameCallback = cb;
+  const el = document.getElementById('cloud-name-modal');
+  el.classList.remove('hidden'); el.classList.add('flex');
+  setTimeout(() => document.getElementById('cloud-name-input').focus(), 50);
+}
+function dismissCloudName() {
+  const el = document.getElementById('cloud-name-modal');
+  el.classList.add('hidden'); el.classList.remove('flex');
+  _cloudNameCallback = null;
+}
+function confirmCloudName() {
+  const name = document.getElementById('cloud-name-input').value.trim();
+  const cb = _cloudNameCallback;
+  dismissCloudName();
+  if (cb && name) cb(name);
+}
+
+// ── INLINE RENAME
+function startRename() {
+  const h1 = document.getElementById('ws-name');
+  const input = document.getElementById('ws-name-input');
+  const actions = document.getElementById('ws-rename-actions');
+  const btn = document.getElementById('ws-rename-btn');
+  input.value = workspace.name;
+  h1.classList.add('hidden');
+  input.classList.remove('hidden');
+  actions.classList.remove('hidden');
+  btn.classList.add('hidden');
+  input.focus(); input.select();
+}
+function cancelRename() {
+  document.getElementById('ws-name').classList.remove('hidden');
+  document.getElementById('ws-name-input').classList.add('hidden');
+  document.getElementById('ws-rename-actions').classList.add('hidden');
+  document.getElementById('ws-rename-btn').classList.remove('hidden');
+}
+async function confirmRename() {
+  const name = document.getElementById('ws-name-input').value.trim();
+  cancelRename();
   if (!name || name === workspace.name) return;
   const { error } = await _sb.from('workspaces').update({ name }).eq('id', workspace.id);
   if (error) { showToast('Could not rename: ' + error.message); return; }
@@ -1101,11 +1191,13 @@ async function renameWorkspace() {
   if (owned) owned.name = name;
   document.getElementById('ws-name').textContent = name;
   renderWsSwitcher();
-  showToast('Renamed to "' + name + '"');
+  showToast('Renamed');
 }
 
+// ── RENAME / DELETE / CLEAR NOTES
+
 async function deleteWorkspace() {
-  if (!confirm('Delete "' + workspace.name + '"? All files, notes, and members are permanently removed. This cannot be undone.')) return;
+  showConfirm('Delete "' + workspace.name + '"? All files, notes, and members are permanently removed. This cannot be undone.', 'Delete', async () => {
   const wsId = workspace.id;
   showToast('Deleting…');
   const { data: folders } = await _sb.from('workspace_folders').select('id').eq('workspace_id', wsId);
@@ -1133,14 +1225,16 @@ async function deleteWorkspace() {
   workspace = allWorkspaces[0];
   showToast('Cloud deleted');
   renderWorkspace();
+  });
 }
 
 async function clearNotes() {
-  if (!confirm('Clear all notes? This cannot be undone.')) return;
-  document.getElementById('ws-notes-area').value = '';
-  _notesDirty = true;
-  await saveNotes();
-  showToast('Notes cleared');
+  showConfirm('Clear all notes? This cannot be undone.', 'Clear', async () => {
+    document.getElementById('ws-notes-area').value = '';
+    _notesDirty = true;
+    await saveNotes();
+    showToast('Notes cleared');
+  });
 }
 
 // ── BRANDING SELECTION
@@ -1163,11 +1257,9 @@ function applyWorkspaceBranding(profile) {
   const nameEl   = document.getElementById('ws-brand-name');
   const subEl    = document.getElementById('ws-brand-sub');
   const wsBg     = document.getElementById('ws-wallpaper-bg');
-  const wsScrim  = document.getElementById('ws-wallpaper-scrim');
 
   const clearBg = () => {
-    if (wsBg)    { wsBg.style.backgroundImage = ''; wsBg.style.display = 'none'; }
-    if (wsScrim) wsScrim.style.display = 'none';
+    if (wsBg) { wsBg.style.backgroundImage = ''; wsBg.style.display = 'none'; }
     document.body.style.backgroundColor = '';
   };
 
@@ -1188,7 +1280,6 @@ function applyWorkspaceBranding(profile) {
   if (wallpaper && wsBg) {
     wsBg.style.backgroundImage = `url('${wallpaper.url}')`;
     wsBg.style.display = 'block';
-    if (wsScrim) wsScrim.style.display = 'block';
     // Mirror wallpaper on the brand bar too
     if (barBg)    { barBg.style.backgroundImage = `url('${wallpaper.url}')`; barBg.style.display = 'block'; }
     if (barScrim) barScrim.classList.remove('hidden');
@@ -1240,15 +1331,16 @@ async function clearWorkspaceBranding() {
 }
 
 async function createFirstCloud() {
-  const name = (prompt('Name your cloud:', 'My Cloud') || '').trim() || 'My Cloud';
-  const { data: newWs, error } = await _sb.from('workspaces')
-    .insert({ name, owner_id: currentUser.id }).select().single();
-  if (error) { showToast('Could not create: ' + error.message); return; }
-  ownedWorkspaces = [newWs];
-  allWorkspaces   = [{ ...newWs, _owned: true }];
-  currentWorkspaceIndex = 0;
-  workspace = allWorkspaces[0];
-  renderWorkspace();
+  showCloudNameModal('Name your cloud', 'My Cloud', 'Create', async (name) => {
+    const { data: newWs, error } = await _sb.from('workspaces')
+      .insert({ name, owner_id: currentUser.id }).select().single();
+    if (error) { showToast('Could not create: ' + error.message); return; }
+    ownedWorkspaces = [newWs];
+    allWorkspaces   = [{ ...newWs, _owned: true }];
+    currentWorkspaceIndex = 0;
+    workspace = allWorkspaces[0];
+    renderWorkspace();
+  });
 }
 
 // ── BRANDING (remaining functions in branding-shared.js)
