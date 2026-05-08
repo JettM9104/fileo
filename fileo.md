@@ -100,6 +100,7 @@ The frontend is **pure static HTML + vanilla JS** (no build step). The Flask bac
 | `API_BASE_URL` | `https://api.fileo.ca` — also injected into CSP headers |
 | `BEHIND_PROXY` | Set to `1` when behind Caddy/Nginx so rate limiting uses real IPs |
 | `ALLOWED_ORIGINS` | Comma-separated CORS origins, e.g. `https://fileo.ca,https://www.fileo.ca` |
+| `RESEND_API_KEY` | Resend API key for sending transactional emails (verification on signup) |
 | `FORCE_HTTPS` | `0` — SSL terminated by Caddy, not Flask |
 | `RATELIMIT_STORAGE_URL` | Defaults to `memory://`; set to `redis://...` in production |
 
@@ -144,6 +145,15 @@ Returns a JS snippet setting `window.FILEO_CONFIG` with Supabase URL, anon key, 
 - Body: `{ session_id }` (Stripe checkout session ID from redirect URL)
 - Retrieves Stripe session, checks `metadata.user_id === authenticated_user_id`, checks `payment_status === "paid"`
 - Calls `_activate_pro(user_id)` — fallback for missed webhooks
+
+### `POST /send-verification-email`
+- Rate limit: 5/min
+- No auth required (user may not have a session yet immediately after signup)
+- Body: `{ email }`
+- Calls Supabase admin `generate_link` API (`type: "signup"`) to get the email confirmation URL
+- Sends a branded Fileo HTML email via Resend with that link
+- Returns `{ ok: true, sent: bool }` — never surfaces errors to the client
+- **Note**: disable Supabase's built-in confirmation email in the Supabase dashboard (Auth → Email Templates) to avoid sending two emails per signup
 
 ### `POST /create-billing-portal-session`
 - Rate limit: 10/min

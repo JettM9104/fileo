@@ -55,6 +55,8 @@ STRIPE_PRICE_ID       = os.environ.get("STRIPE_PRICE_ID", "")
 SITE_URL              = os.environ.get("SITE_URL", "").rstrip("/")
 API_BASE_URL          = os.environ.get("API_BASE_URL", "").rstrip("/")
 
+RESEND_API_KEY        = os.environ.get("RESEND_API_KEY", "")
+
 R2_ACCOUNT_ID        = os.environ.get("R2_ACCOUNT_ID", "")
 R2_ACCESS_KEY_ID     = os.environ.get("R2_ACCESS_KEY_ID", "")
 R2_SECRET_ACCESS_KEY = os.environ.get("R2_SECRET_ACCESS_KEY", "")
@@ -244,6 +246,58 @@ def _get_supabase_user(user_id):
             return json.loads(resp.read())
     except Exception:
         return None
+
+
+def _generate_supabase_verification_link(email, redirect_to):
+    """Ask Supabase to generate an email-confirmation link for the given address."""
+    if not SUPABASE_SERVICE_KEY or not SUPABASE_URL:
+        return None
+    try:
+        body = json.dumps({
+            "type": "signup",
+            "email": email,
+            "options": {"redirect_to": redirect_to},
+        }).encode()
+        req = urllib.request.Request(
+            f"{SUPABASE_URL}/auth/v1/admin/generate_link",
+            data=body,
+            method="POST",
+        )
+        req.add_header("apikey", SUPABASE_SERVICE_KEY)
+        req.add_header("Authorization", f"Bearer {SUPABASE_SERVICE_KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            return (data.get("properties") or {}).get("action_link") or data.get("action_link")
+    except Exception as e:
+        log.error("_generate_supabase_verification_link failed for %s: %s", email, e)
+        return None
+
+
+def _send_resend_email(to, subject, html):
+    """Send a transactional email via the Resend API."""
+    if not RESEND_API_KEY:
+        log.warning("_send_resend_email: RESEND_API_KEY not set")
+        return False
+    try:
+        body = json.dumps({
+            "from": "Fileo <noreply@fileo.ca>",
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=body,
+            method="POST",
+        )
+        req.add_header("Authorization", f"Bearer {RESEND_API_KEY}")
+        req.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            return resp.status in (200, 201)
+    except Exception as e:
+        log.error("_send_resend_email to %s failed: %s", to, e)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -478,6 +532,54 @@ def r2_cleanup():
 
     _delete_r2_object(key)
     return jsonify({"ok": True})
+
+
+@app.route("/send-verification-email", methods=["POST"])
+@limiter.limit("5 per minute")
+def send_verification_email():
+    body = request.get_json(silent=True) or {}
+    email = (body.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"error": "Missing email"}), 400
+
+    base = SITE_URL or request.host_url.rstrip("/")
+    action_link = _generate_supabase_verification_link(email, base + "/")
+    if not action_link:
+        # User may already be confirmed, or Supabase is misconfigured — don't
+        # surface this as an error so the frontend still shows the success state.
+        return jsonify({"ok": True, "sent": False})
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>
+  body{{margin:0;padding:40px 20px;background:#F5F0E8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .wrap{{max-width:480px;margin:0 auto}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:36px;text-decoration:none}}
+  .logo-icon{{width:36px;height:36px;background:#1C1917;border-radius:50%;display:flex;align-items:center;justify-content:center}}
+  h1{{font-size:24px;font-weight:700;color:#1C1917;margin:0 0 12px}}
+  p{{color:rgba(28,25,23,0.55);font-size:15px;line-height:1.6;margin:0 0 28px}}
+  .btn{{display:inline-block;background:#1C1917;color:#F5F0E8;text-decoration:none;padding:13px 32px;border-radius:999px;font-weight:600;font-size:15px}}
+  .footer{{margin-top:40px;font-size:12px;color:rgba(28,25,23,0.35);line-height:1.6}}
+</style></head>
+<body><div class="wrap">
+  <a class="logo" href="{base}">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 28 28" fill="none"><polygon points="14,6 22,21 6,21" fill="#F5F0E8"/></svg>
+    </div>
+    <span style="font-weight:700;font-size:18px;color:#1C1917">Fileo</span>
+  </a>
+  <h1>Verify your email</h1>
+  <p>Click the button below to confirm your address and start using Fileo. This link expires in 24 hours.</p>
+  <a href="{action_link}" class="btn">Verify email</a>
+  <div class="footer">
+    <p>If you didn't create a Fileo account, you can safely ignore this email.</p>
+    <p style="margin-top:6px;word-break:break-all">Or paste this link into your browser:<br>{action_link}</p>
+  </div>
+</div></body></html>"""
+
+    sent = _send_resend_email(email, "Verify your Fileo email", html)
+    return jsonify({"ok": True, "sent": sent})
 
 
 @app.route("/create-checkout-session", methods=["POST"])

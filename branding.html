@@ -66,6 +66,16 @@
       <div id="auth-error" class="hidden text-xs px-3 py-2 rounded-lg" style="background:rgba(220,38,38,0.08);color:#DC2626"></div>
       <button id="auth-submit" type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 mt-1" style="background:#1C1917;color:#F5F0E8">Sign in</button>
     </form>
+    <div id="auth-verify-state" class="hidden flex-col items-center text-center gap-5 py-2">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:#EAE4D9">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold mb-1.5" style="color:#1C1917">Check your inbox</h3>
+        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.45)">We sent a verification link to<br><strong id="verify-email-addr" style="color:#1C1917"></strong></p>
+      </div>
+      <button id="resend-btn" onclick="resendVerification()" class="text-sm font-medium hover:opacity-60 transition-opacity" style="color:#8B6F47;background:none;border:none;cursor:pointer;font-family:inherit">Didn't receive it? Resend</button>
+    </div>
   </div>
 </div>
 
@@ -817,7 +827,14 @@ async function doSignOut() {
 }
 
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
-function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); }
+function closeModal() {
+  document.getElementById('auth-modal').classList.remove('open');
+  document.getElementById('auth-error').classList.add('hidden');
+  document.getElementById('auth-form').reset();
+  document.getElementById('auth-form').classList.remove('hidden');
+  const vs = document.getElementById('auth-verify-state');
+  vs.classList.add('hidden'); vs.classList.remove('flex');
+}
 function setAuthTab(tab) {
   _authTab = tab;
   const isL = tab === 'login';
@@ -851,7 +868,39 @@ async function submitAuth(e) {
     _authAttempts++;
     if (_authAttempts >= 5) { _authLockedUntil = Date.now() + 60000; _authAttempts = 0; }
     errEl.textContent = error.message; errEl.classList.remove('hidden');
-  } else { _authAttempts = 0; closeModal(); }
+  } else {
+    _authAttempts = 0;
+    if (_authTab === 'register') {
+      showVerifyState(email);
+      _sendVerificationEmail(email);
+    } else {
+      closeModal();
+    }
+  }
+}
+function showVerifyState(email) {
+  document.getElementById('auth-form').classList.add('hidden');
+  const vs = document.getElementById('auth-verify-state');
+  vs.classList.remove('hidden'); vs.classList.add('flex');
+  document.getElementById('verify-email-addr').textContent = email;
+}
+async function _sendVerificationEmail(email) {
+  try {
+    await fetch((window.FILEO_CONFIG?.apiBaseUrl || '') + '/send-verification-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+  } catch {}
+}
+async function resendVerification() {
+  const btn = document.getElementById('resend-btn');
+  const email = document.getElementById('verify-email-addr').textContent;
+  if (!email) return;
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  await _sendVerificationEmail(email);
+  btn.textContent = 'Sent!';
+  setTimeout(() => { btn.textContent = "Didn't receive it? Resend"; btn.disabled = false; }, 3000);
 }
 
 function togglePreviewFullscreen() {
