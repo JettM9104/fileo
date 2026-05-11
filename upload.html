@@ -78,24 +78,19 @@
       <div id="auth-error" class="hidden text-xs px-3 py-2 rounded-lg" style="background:rgba(220,38,38,0.08);color:#DC2626"></div>
       <button id="auth-submit" type="submit" class="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 mt-1" style="background:#1C1917;color:#F5F0E8">Sign in</button>
     </form>
-    <div class="auth-extra flex items-center gap-3 mt-3">
+    <div id="auth-or-sep" class="flex items-center gap-3 mt-3">
       <div class="flex-1 h-px" style="background:rgba(28,25,23,0.1)"></div>
       <span class="text-xs" style="color:rgba(28,25,23,0.35)">or</span>
       <div class="flex-1 h-px" style="background:rgba(28,25,23,0.1)"></div>
     </div>
-    <button type="button" onclick="signInWithGoogle()" class="auth-extra w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2.5 hover:opacity-80 transition-opacity mt-3" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">
+    <button id="auth-google-btn" type="button" onclick="signInWithGoogle()" class="w-full py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-2.5 hover:opacity-80 transition-opacity mt-3" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">
       <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
       Continue with Google
     </button>
-    <div id="auth-verify-state" class="hidden flex-col items-center text-center gap-5 py-2">
-      <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:#EAE4D9">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-      </div>
-      <div>
-        <h3 class="text-lg font-bold mb-1.5" style="color:#1C1917">Check your inbox</h3>
-        <p class="text-sm leading-relaxed" style="color:rgba(28,25,23,0.45)">We sent a verification link to<br><strong id="verify-email-addr" style="color:#1C1917"></strong></p>
-      </div>
-      <button id="resend-btn" onclick="resendVerification()" class="text-sm font-medium hover:opacity-60 transition-opacity" style="color:#8B6F47;background:none;border:none;cursor:pointer;font-family:inherit">Didn't receive it? Resend</button>
+    <div id="auth-verify" class="hidden text-center py-4">
+      <p class="text-2xl mb-3">📬</p>
+      <p class="text-sm font-semibold mb-2" style="color:#1C1917">Check your inbox</p>
+      <p class="text-xs leading-relaxed" style="color:rgba(28,25,23,0.5)">We sent a confirmation link to <span id="auth-verify-email" class="font-medium" style="color:#1C1917"></span>. Click it to activate your account.</p>
     </div>
   </div>
 </div>
@@ -436,7 +431,7 @@
           <div class="flex flex-col gap-4">
             <div>
               <label class="text-xs font-medium block mb-1.5" style="color:rgba(28,25,23,0.5)">Password <span style="color:rgba(28,25,23,0.3)">(optional)</span></label>
-              <input id="opt-password" type="password" placeholder="Leave blank for none"
+              <input id="opt-password" type="text" placeholder="Leave blank for none" autocomplete="off"
                 class="w-full px-3.5 py-2.5 rounded-xl text-sm"
                 style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917" />
             </div>
@@ -1374,15 +1369,7 @@ async function deleteFile(id) {
 // ── AUTH
 let _authAttempts = 0, _authLockedUntil = 0;
 function openModal()  { document.getElementById('auth-modal').classList.add('open'); setTimeout(() => document.getElementById('auth-email').focus(), 50); }
-function closeModal() {
-  document.getElementById('auth-modal').classList.remove('open');
-  document.getElementById('auth-error').classList.add('hidden');
-  document.getElementById('auth-form').reset();
-  document.getElementById('auth-form').classList.remove('hidden');
-  document.querySelectorAll('.auth-extra').forEach(el => el.style.display = '');
-  const vs = document.getElementById('auth-verify-state');
-  vs.classList.add('hidden'); vs.classList.remove('flex');
-}
+function closeModal() { document.getElementById('auth-modal').classList.remove('open'); document.getElementById('auth-error').classList.add('hidden'); document.getElementById('auth-form').reset(); document.getElementById('auth-form').classList.remove('hidden'); document.getElementById('auth-or-sep').classList.remove('hidden'); document.getElementById('auth-google-btn').classList.remove('hidden'); document.getElementById('auth-verify').classList.add('hidden'); }
 
 function setAuthTab(tab) {
   _authTab = tab;
@@ -1443,7 +1430,7 @@ async function submitAuth(e) {
   try {
     const { error } = _authTab === 'login'
       ? await _sb.auth.signInWithPassword({ email, password: pw })
-      : await _sb.auth.signUp({ email, password: pw });
+      : await _sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: window.location.origin + '/index.html' } });
     btn.disabled = false; btn.textContent = _authTab === 'login' ? 'Sign in' : 'Create account';
     if (error) {
       _authAttempts++;
@@ -1452,8 +1439,11 @@ async function submitAuth(e) {
     } else {
       _authAttempts = 0;
       if (_authTab === 'register') {
-        showVerifyState(email);
-        _sendVerificationEmail(email);
+        document.getElementById('auth-form').classList.add('hidden');
+        document.getElementById('auth-or-sep').classList.add('hidden');
+        document.getElementById('auth-google-btn').classList.add('hidden');
+        document.getElementById('auth-verify-email').textContent = email;
+        document.getElementById('auth-verify').classList.remove('hidden');
       } else {
         closeModal();
       }
@@ -1463,31 +1453,6 @@ async function submitAuth(e) {
     errEl.textContent = err.message || 'An unexpected error occurred.';
     errEl.classList.remove('hidden');
   }
-}
-function showVerifyState(email) {
-  document.getElementById('auth-form').classList.add('hidden');
-  document.querySelectorAll('.auth-extra').forEach(el => el.style.display = 'none');
-  const vs = document.getElementById('auth-verify-state');
-  vs.classList.remove('hidden'); vs.classList.add('flex');
-  document.getElementById('verify-email-addr').textContent = email;
-}
-async function _sendVerificationEmail(email) {
-  try {
-    await fetch(API_BASE_URL + '/send-verification-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-  } catch {}
-}
-async function resendVerification() {
-  const btn = document.getElementById('resend-btn');
-  const email = document.getElementById('verify-email-addr').textContent;
-  if (!email) return;
-  btn.textContent = 'Sending…'; btn.disabled = true;
-  await _sendVerificationEmail(email);
-  btn.textContent = 'Sent!';
-  setTimeout(() => { btn.textContent = "Didn't receive it? Resend"; btn.disabled = false; }, 3000);
 }
 
 function togglePwVis() {
