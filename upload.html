@@ -178,23 +178,23 @@
         </div>
       </div>
 
+      <!-- Quota card (shown when logged in, persists across both tabs) -->
+      <div id="quota-card" class="hidden mb-5 rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)">
+        <div class="flex items-center justify-between mb-2">
+          <span id="storage-kind" class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Storage used</span>
+          <span id="storage-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
+        </div>
+        <div class="w-full h-1.5 rounded-full mb-4" style="background:#EAE4D9">
+          <div id="storage-fill" class="h-1.5 rounded-full transition-all duration-500" style="background:#8B6F47;width:0%"></div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs" style="color:rgba(28,25,23,0.45)">Active links</span>
+          <span id="links-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
+        </div>
+      </div>
+
       <!-- ══════════════════ UPLOAD PANEL ══════════════════ -->
       <div id="panel-upload">
-
-        <!-- Quota card (shown when logged in) -->
-        <div id="quota-card" class="hidden mb-5 rounded-2xl p-5" style="background:#FDFAF5;border:1px solid rgba(28,25,23,0.08)">
-          <div class="flex items-center justify-between mb-2">
-            <span id="storage-kind" class="text-xs font-medium uppercase tracking-wide" style="color:rgba(28,25,23,0.35)">Storage used</span>
-            <span id="storage-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
-          </div>
-          <div class="w-full h-1.5 rounded-full mb-4" style="background:#EAE4D9">
-            <div id="storage-fill" class="h-1.5 rounded-full transition-all duration-500" style="background:#8B6F47;width:0%"></div>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs" style="color:rgba(28,25,23,0.45)">Active links</span>
-            <span id="links-label" class="text-xs font-semibold" style="color:#1C1917">— / —</span>
-          </div>
-        </div>
 
         <!-- Drop zone -->
         <div id="drop-zone"
