@@ -667,15 +667,13 @@ async function loadQuota() {
     document.getElementById('storage-kind').textContent = 'Weekly storage';
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
+    const [{ data: weekFiles }, { data: activeLinks }] = await Promise.all([
       _sb.from('upload_history').select('size').eq('user_id', currentUser.id).gt('uploaded_at', weekAgo),
-      getWeeklyWorkspaceStorage(weekAgo),
       _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
     ]);
 
-    const filesUsed   = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
-    const used        = filesUsed + wsUsed;
-    const pct         = Math.min(100, (used / PRO_MAX_STORAGE) * 100);
+    const used = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
+    const pct  = Math.min(100, (used / PRO_MAX_STORAGE) * 100);
     const linkCount   = (activeLinks || []).length;
 
     document.getElementById('storage-fill').style.width  = pct + '%';
@@ -947,13 +945,11 @@ async function doUpload() {
     const now = new Date().toISOString();
     if (isPro) {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
+      const [{ data: weekFiles }, { data: activeLinks }] = await Promise.all([
         _sb.from('upload_history').select('size').eq('user_id', currentUser.id).gt('uploaded_at', weekAgo),
-        getWeeklyWorkspaceStorage(weekAgo),
         _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
       ]);
-      const filesUsed = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
-      const usedStorage = filesUsed + wsUsed;
+      const usedStorage = (weekFiles || []).reduce((s, f) => s + (f.size || 0), 0);
       if ((activeLinks?.length || 0) >= PRO_MAX_LINKS) {
         showToast('You have ' + PRO_MAX_LINKS + ' active links — the Pro plan maximum. Delete one.');
         return;
@@ -1250,8 +1246,9 @@ async function loadCloudFiles() {
         <p class="font-semibold text-sm truncate" style="color:#1C1917">${escHtml(f.filename)}</p>
         <p class="text-xs mt-0.5" style="color:rgba(28,25,23,0.4)">${fmtSize(f.size)} · v${f.version} · ${escHtml(f.wsName)}</p>
       </div>
-      <div class="flex-shrink-0">
+      <div class="flex items-center gap-2 flex-shrink-0">
         <button onclick="downloadCloudFile(${i})" class="px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:#EAE4D9;color:#1C1917;border:none;cursor:pointer;font-family:inherit">Download</button>
+        <button onclick="deleteCloudFile(${i})" class="px-3 py-1 rounded-lg text-xs font-semibold hover:opacity-70 transition-opacity" style="background:rgba(28,25,23,0.07);color:rgba(28,25,23,0.55);border:none;cursor:pointer;font-family:inherit">Delete</button>
       </div>`;
     list.appendChild(div);
   });
@@ -1269,6 +1266,36 @@ function downloadCloudFile(idx) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+async function deleteCloudFile(idx) {
+  const f = _cloudFiles[idx];
+  if (!f?.storage_path) return;
+  if (!confirm('Delete "' + f.filename + '" from the cloud? This cannot be undone.')) return;
+
+  // Delete storage object
+  await _sb.storage.from('uploads').remove([f.storage_path]);
+
+  // Delete the file record
+  await _sb.from('workspace_folder_files')
+    .delete().eq('storage_path', f.storage_path);
+
+  // Clean up empty snapshot
+  const { data: remaining } = await _sb.from('workspace_folder_files')
+    .select('storage_path').eq('snapshot_id', f.snapshot_id);
+  if (!remaining?.length) {
+    await _sb.from('workspace_folder_snapshots').delete().eq('id', f.snapshot_id);
+
+    // Clean up empty folder
+    const { data: snapsLeft } = await _sb.from('workspace_folder_snapshots')
+      .select('id').eq('folder_id', f.folder_id);
+    if (!snapsLeft?.length) {
+      await _sb.from('workspace_folders').delete().eq('id', f.folder_id);
+    }
+  }
+
+  loadCloudFiles();
+  loadQuota();
 }
 
 async function loadFiles() {
