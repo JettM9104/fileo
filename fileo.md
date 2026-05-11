@@ -52,7 +52,7 @@ The frontend is **pure static HTML + vanilla JS** (no build step). The Flask bac
 ## External Services
 
 ### Supabase
-- **Auth**: Email/password and Google OAuth. JWT tokens carry `app_metadata.is_pro` to gate Pro features client-side.
+- **Auth**: Email/password and Google OAuth. JWT tokens carry `app_metadata.is_pro` to gate Pro features client-side. Email confirmation is required for new email/password sign-ups (enable in Supabase Auth settings).
 - **Database**: Postgres tables (queried via Supabase JS client and REST API):
   - `files` — uploaded file records (`id`, `filename`, `size`, `storage_path`, `expires_at`, `downloads`, `user_id`, `password_hash`, `download_limit`, `access_control`, `allowed_emails`, `is_pro`) — *Note: Pro columns are not yet in the schema; a fallback insert skips them*
   - `workspaces` — Cloud workspace records (`id`, `name`, `owner_id`, `created_at`)
