@@ -208,9 +208,9 @@ The fallback endpoint ensures activation even if the webhook is dropped or delay
 
 | Feature | Free | Pro |
 |---|---|---|
-| Max file size | 500 MB | 10 GB |
-| Active links | 3 | 10 |
-| Total storage | 500 MB (active files) | 50 GB/week (uploads in rolling 7-day window, includes cloud workspace files for owned workspaces only) |
+| Max file size | 1 GB | 10 GB |
+| Active links | 5 | 10 |
+| Total storage | 1 GB (active files) | 50 GB/week (cumulative uploads in rolling 7-day window — does not decrease on deletion; includes cloud workspace files for owned workspaces only) |
 | Expiry options | 1h, 24h | 1h, 24h, 7d, 30d |
 | Password protection | No | Yes |
 | Download limits | No | Yes |
@@ -234,7 +234,7 @@ Cloud sub-tab loads via `loadCloudFiles()`: queries `workspaces` (owned) + `work
 ## Upload Flow (`upload.html`)
 
 1. User drops file or clicks browse; zip created on-the-fly if a folder is dropped (JSZip)
-2. Free users checked against 3-link and 500 MB quota before upload
+2. Free users checked against 5-link and 1 GB quota before upload
 3. `POST /upload-url` fetched → presigned R2 PUT URL returned
 4. XHR PUT to R2 with real-time progress bar (speed, "Slow connection" badge)
 5. On success, DB record inserted into `files` table via Supabase JS client

@@ -140,14 +140,19 @@
     <h2 class="text-xl font-bold mb-1" style="color:#F5F0E8">Upgrade to Pro</h2>
     <p class="text-sm mb-5" style="color:rgba(245,240,232,0.5)">$10/mo — cancel anytime. Billed securely via Stripe.</p>
     <div class="flex flex-col gap-2 mb-6">
+      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 GB max file size</div>
+      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>10 active links max</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>50 GB weekly storage</div>
-      <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>5 active links max</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>7-day &amp; 30-day expiry options</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Password protection</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Cloud storage — access files anywhere</div>
       <div class="flex items-center gap-2.5 text-sm" style="color:rgba(245,240,232,0.7)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8B6F47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Automatic malware scanning on downloads</div>
     </div>
-    <button id="upgrade-checkout-btn" onclick="startCheckout()" class="w-full py-3 rounded-full text-sm font-semibold hover:opacity-85 transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:pointer;font-family:inherit">
+    <label class="flex items-start gap-2.5 mb-4 cursor-pointer">
+      <input type="checkbox" id="tos-agree-cb" onchange="toggleCheckoutBtn()" style="margin-top:3px;accent-color:#8B6F47;flex-shrink:0">
+      <span class="text-xs leading-relaxed" style="color:rgba(245,240,232,0.55)">I have read and agree to the <button type="button" onclick="openTosFromModal()" style="background:none;border:none;color:rgba(245,240,232,0.8);cursor:pointer;text-decoration:underline;font-size:inherit;padding:0;font-family:inherit">Terms of Service</button></span>
+    </label>
+    <button id="upgrade-checkout-btn" onclick="startCheckout()" disabled class="w-full py-3 rounded-full text-sm font-semibold transition-opacity" style="background:#F5F0E8;color:#1C1917;border:none;cursor:not-allowed;font-family:inherit;opacity:0.4">
       Subscribe — $10/mo
     </button>
   </div>
@@ -512,12 +517,12 @@
           <p class="text-sm" style="color:rgba(28,25,23,0.45)">Start sharing in seconds. No setup required.</p>
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Max file size</span><span class="text-sm font-medium" style="color:#1C1917">500 MB</span></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Max file size</span><span class="text-sm font-medium" style="color:#1C1917">1 GB</span></div>
           <div class="py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)">
-            <div class="flex items-center justify-between"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Active links</span><span id="free-links-val" class="text-sm font-medium" style="color:#1C1917">3 max</span></div>
+            <div class="flex items-center justify-between"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Active links</span><span id="free-links-val" class="text-sm font-medium" style="color:#1C1917">5 max</span></div>
           </div>
           <div class="py-2" style="border-bottom:1px solid rgba(28,25,23,0.07)">
-            <div class="flex items-center justify-between mb-1.5"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Total storage</span><span id="free-storage-val" class="text-sm font-medium" style="color:#1C1917">500 MB</span></div>
+            <div class="flex items-center justify-between mb-1.5"><span class="text-sm" style="color:rgba(28,25,23,0.45)">Total storage</span><span id="free-storage-val" class="text-sm font-medium" style="color:#1C1917">1 GB</span></div>
             <div id="free-storage-bar-wrap" class="hidden w-full h-1 rounded-full" style="background:#EAE4D9"><div id="free-storage-bar" class="h-1 rounded-full transition-all duration-500" style="background:#8B6F47;width:0%"></div></div>
           </div>
           <div><p class="text-sm mb-2" style="color:rgba(28,25,23,0.45)">Expiry options</p><div class="flex gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:#EAE4D9;border:1px solid rgba(28,25,23,0.12);color:#1C1917">24 hours</span></div></div>
@@ -534,7 +539,7 @@
         </div>
         <div class="flex flex-col gap-3 mb-8 flex-1">
           <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Max file size</span><span class="text-sm font-medium" style="color:#F5F0E8">10 GB</span></div>
-          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active links</span><span id="pro-links-val" class="text-sm font-medium" style="color:#F5F0E8">5 max</span></div>
+          <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Active links</span><span id="pro-links-val" class="text-sm font-medium" style="color:#F5F0E8">10 max</span></div>
           <div class="flex items-center justify-between py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><span class="text-sm" style="color:rgba(245,240,232,0.5)">Weekly storage</span><span class="text-sm font-medium" style="color:#F5F0E8">50 GB</span></div>
           <div class="py-2" style="border-bottom:1px solid rgba(245,240,232,0.08)"><p class="text-sm mb-2" style="color:rgba(245,240,232,0.5)">Expiry options</p><div class="flex flex-wrap gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">1 hour</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">24 hours</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">7 days</span><span class="px-3 py-1 rounded-full text-xs font-medium" style="background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.15);color:#F5F0E8">30 days</span></div></div>
           <div class="flex flex-col gap-2 pt-1">
@@ -582,7 +587,7 @@
           <span class="text-base font-semibold" style="color:#1C1917">What file types are supported?</span>
           <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         </button>
-        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Any file type — images, videos, documents, archives, code, you name it. If your browser can upload it, Fileo can store and share it. Free plan supports up to 500 MB per file; Pro raises that to 10 GB.</p></div>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">Any file type — images, videos, documents, archives, code, you name it. If your browser can upload it, Fileo can store and share it. Free plan supports up to 1 GB per file; Pro raises that to 10 GB.</p></div>
       </div>
 
       <div class="faq-item" style="border-bottom:1px solid rgba(28,25,23,0.1)">
@@ -614,7 +619,7 @@
           <span class="text-base font-semibold" style="color:#1C1917">What does Pro cost?</span>
           <span class="faq-icon flex-shrink-0" style="color:rgba(28,25,23,0.35);transition:transform 0.25s ease"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
         </button>
-        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">$10/month. That gets you 10 GB uploads, 5 active links, 50 GB weekly storage, 7-day and 30-day expiry, password protection, access control, and the Cloud workspace for shared team folders.</p></div>
+        <div class="faq-a" style="overflow:hidden;max-height:0;transition:max-height 0.3s ease"><p class="text-sm pb-5" style="color:rgba(28,25,23,0.6);line-height:1.7">$10/month. That gets you 10 GB max file size, 10 active links, 50 GB weekly storage, 7-day and 30-day expiry, password protection, access control, and the Cloud workspace for shared team folders.</p></div>
       </div>
 
     </div>
@@ -655,12 +660,12 @@
 
       <div>
         <h3 class="font-semibold mb-1.5" style="color:#1C1917">5. Free plan limits</h3>
-        <p>Free accounts may upload files up to 500 MB each, hold a maximum of 3 active links at once, and use up to 500 MB of total storage. Links expire after 1 hour or 24 hours. These limits may change over time.</p>
+        <p>Free accounts may upload files up to 1 GB each, hold a maximum of 5 active links at once, and use up to 1 GB of total storage. Links expire after 1 hour or 24 hours. These limits may change over time.</p>
       </div>
 
       <div>
         <h3 class="font-semibold mb-1.5" style="color:#1C1917">6. Pro plan</h3>
-        <p>Pro accounts receive increased limits including up to 10 GB per file, up to 5 active links, 50 GB weekly storage, extended expiry options, and access to advanced features such as password protection, access control, and malware scanning. Pro is currently in testing mode — no payment is required during this period.</p>
+        <p>Pro accounts receive increased limits including up to 10 GB per file, up to 10 active links, and 50 GB of weekly storage. Weekly storage is cumulative — it counts all uploads made within the rolling 7-day window and does not decrease when files are deleted. Pro also includes extended expiry options and access to advanced features such as password protection, access control, malware scanning, and the Cloud workspace.</p>
       </div>
 
       <div>
@@ -762,7 +767,7 @@
     <div class="flex flex-col md:flex-row items-center justify-between gap-3 pt-6" style="border-top:1px solid rgba(28,25,23,0.07)">
       <p class="text-xs" style="color:rgba(28,25,23,0.28)">© 2026 Fileo. All rights reserved.</p>
       <div class="flex items-center gap-4">
-        <span class="text-xs" style="color:rgba(28,25,23,0.22)">500 MB free</span>
+        <span class="text-xs" style="color:rgba(28,25,23,0.22)">1 GB free</span>
         <span style="color:rgba(28,25,23,0.15)">·</span>
         <span class="text-xs" style="color:rgba(28,25,23,0.22)">No account needed to download</span>
         <span style="color:rgba(28,25,23,0.15)">·</span>
@@ -1196,13 +1201,32 @@ function closePrivacy() { document.getElementById('privacy-modal').style.display
 function openUpgradeModal() {
   if (isPro) { showToastIndex('Pro plan is already active!'); return; }
   if (!currentUser) { openModal(); return; }
+  const cb = document.getElementById('tos-agree-cb');
+  if (cb) { cb.checked = false; }
   const btn = document.getElementById('upgrade-checkout-btn');
-  if (btn) { btn.disabled = false; btn.textContent = 'Subscribe — $10/mo'; }
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; btn.textContent = 'Subscribe — $10/mo'; }
   document.getElementById('upgrade-modal').classList.add('open');
 }
 function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); }
 
+function toggleCheckoutBtn() {
+  const cb  = document.getElementById('tos-agree-cb');
+  const btn = document.getElementById('upgrade-checkout-btn');
+  if (!btn) return;
+  btn.disabled = !cb?.checked;
+  btn.style.opacity = cb?.checked ? '1' : '0.4';
+  btn.style.cursor  = cb?.checked ? 'pointer' : 'not-allowed';
+}
+
+function openTosFromModal() {
+  openTos();
+}
+
 async function startCheckout() {
+  if (!document.getElementById('tos-agree-cb')?.checked) {
+    showToastIndex('Please agree to the Terms of Service to continue.');
+    return;
+  }
   const btn = document.getElementById('upgrade-checkout-btn');
   btn.disabled = true;
   btn.textContent = 'Redirecting to checkout…';
@@ -1269,18 +1293,13 @@ async function loadPricingUsage() {
 
   const count = (files || []).length;
 
-  if (isPro) {
-    const el = document.getElementById('pro-links-val');
-    if (el) el.textContent = count + ' active';
-  } else {
+  if (!isPro) {
     const used = (files || []).reduce((s, f) => s + (f.size || 0), 0);
-    const pct  = Math.min(100, (used / (500 * 1024 * 1024)) * 100);
-    const linksEl   = document.getElementById('free-links-val');
+    const pct  = Math.min(100, (used / (1 * 1024 * 1024 * 1024)) * 100);
     const storageEl = document.getElementById('free-storage-val');
     const barWrap   = document.getElementById('free-storage-bar-wrap');
     const barFill   = document.getElementById('free-storage-bar');
-    if (linksEl)   linksEl.textContent = count + ' / 3';
-    if (storageEl) storageEl.textContent = fmtSize(used) + ' / 500 MB';
+    if (storageEl) storageEl.textContent = fmtSize(used) + ' / 1 GB';
     if (barWrap)   barWrap.classList.remove('hidden');
     if (barFill)   barFill.style.width = pct + '%';
   }

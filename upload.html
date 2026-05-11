@@ -209,7 +209,7 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <p class="font-semibold text-[15px] mb-1.5" style="color:#1C1917">Drop your file here</p>
-          <p class="text-sm mb-5" style="color:rgba(28,25,23,0.45)">or click to browse · any format up to <span id="dz-limit">500 MB</span></p>
+          <p class="text-sm mb-5" style="color:rgba(28,25,23,0.45)">or click to browse · any format up to <span id="dz-limit">1 GB</span></p>
           <div class="flex items-center gap-2 flex-wrap justify-center">
             <button type="button" onclick="event.stopPropagation();document.getElementById('folder-input').click()"
               class="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium hover:opacity-70 transition-opacity"
@@ -399,7 +399,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
               </div>
               <p class="font-semibold text-lg mb-2" style="color:#1C1917">Cloud is a Pro feature</p>
-              <p class="text-sm mb-6 max-w-xs mx-auto leading-relaxed" style="color:rgba(28,25,23,0.45)">Upgrade to Pro to get a persistent cloud workspace with 3 GB/week of storage.</p>
+              <p class="text-sm mb-6 max-w-xs mx-auto leading-relaxed" style="color:rgba(28,25,23,0.45)">Upgrade to Pro to get a persistent cloud workspace with 50 GB/week of storage.</p>
               <a href="index.html#pricing" class="px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-80 transition-opacity no-underline" style="background:#1C1917;color:#F5F0E8;display:inline-block">Upgrade to Pro</a>
             </div>
 
@@ -474,9 +474,9 @@ const API_BASE_URL  = (window.FILEO_CONFIG?.apiBaseUrl || '').replace(/\/$/, '')
 function apiUrl(path) {
   return API_BASE_URL ? API_BASE_URL + path : path;
 }
-const FREE_MAX_LINKS   = 3;
-const FREE_MAX_STORAGE = 500 * 1024 * 1024;
-const PRO_MAX_LINKS    = 5;
+const FREE_MAX_LINKS   = 5;
+const FREE_MAX_STORAGE = 1 * 1024 * 1024 * 1024;
+const PRO_MAX_LINKS    = 10;
 const PRO_MAX_STORAGE  = 50 * 1024 * 1024 * 1024;
 
 // ── STATE
@@ -572,7 +572,7 @@ function applyProUI() {
 
 function removeProUI() {
   document.getElementById('pro-badge').classList.add('hidden');
-  document.getElementById('dz-limit').textContent = '500 MB';
+  document.getElementById('dz-limit').textContent = '1 GB';
   ['btn-7d','btn-30d'].forEach(id => {
     const b = document.getElementById(id);
     b.style.color = 'rgba(28,25,23,0.28)';
@@ -668,7 +668,7 @@ async function loadQuota() {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
-      _sb.from('files').select('size').eq('user_id', currentUser.id).gt('created_at', weekAgo),
+      _sb.from('upload_history').select('size').eq('user_id', currentUser.id).gt('uploaded_at', weekAgo),
       getWeeklyWorkspaceStorage(weekAgo),
       _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
     ]);
@@ -695,7 +695,7 @@ async function loadQuota() {
 
   document.getElementById('storage-kind').textContent  = 'Storage used';
   document.getElementById('storage-fill').style.width  = pct + '%';
-  document.getElementById('storage-label').textContent = fmtSize(used) + ' / 500 MB';
+  document.getElementById('storage-label').textContent = fmtSize(used) + ' / 1 GB';
   document.getElementById('links-label').textContent   = count + ' / ' + FREE_MAX_LINKS + ' active';
 }
 
@@ -823,7 +823,7 @@ async function zipFiles(files, folderName) {
 function setFile(file) {
   const maxSize = isPro ? 10 * 1024 * 1024 * 1024 : FREE_MAX_STORAGE;
   if (file.size > maxSize) {
-    showToast(isPro ? 'Max file size is 10 GB' : 'Max file size is 500 MB on the free plan');
+    showToast(isPro ? 'Max file size is 10 GB' : 'Max file size is 1 GB on the free plan');
     return;
   }
   selectedFile = file;
@@ -948,7 +948,7 @@ async function doUpload() {
     if (isPro) {
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const [{ data: weekFiles }, wsUsed, { data: activeLinks }] = await Promise.all([
-        _sb.from('files').select('size').eq('user_id', currentUser.id).gt('created_at', weekAgo),
+        _sb.from('upload_history').select('size').eq('user_id', currentUser.id).gt('uploaded_at', weekAgo),
         getWeeklyWorkspaceStorage(weekAgo),
         _sb.from('files').select('id').eq('user_id', currentUser.id).gt('expires_at', now)
       ]);
@@ -1082,6 +1082,11 @@ async function doUpload() {
     document.getElementById('file-preview').classList.remove('hidden');
     showToast('Could not save file record: ' + (dbErr.message || dbErr));
     return;
+  }
+
+  // Record upload in history so weekly quota never decreases on deletion
+  if (currentUser && isPro) {
+    _sb.from('upload_history').insert({ user_id: currentUser.id, size: selectedFile.size }).catch(() => {});
   }
 
   // Show success
