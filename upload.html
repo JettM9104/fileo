@@ -1015,6 +1015,11 @@ async function doUpload() {
   document.getElementById('prog-pct').textContent   = '100%';
   document.getElementById('prog-label').textContent  = fmtSize(selectedFile.size) + ' of ' + fmtSize(selectedFile.size);
 
+  // Record history immediately after R2 succeeds so a page refresh can't lose it
+  if (currentUser && isPro) {
+    await _sb.from('upload_history').insert({ user_id: currentUser.id, size: selectedFile.size }).catch(() => {});
+  }
+
   // Build DB record
   const expiresAt = new Date(Date.now() + selectedExpiry * 3600000).toISOString();
   let passwordHash = null, accessControl = 'anyone';
@@ -1078,11 +1083,6 @@ async function doUpload() {
     document.getElementById('file-preview').classList.remove('hidden');
     showToast('Could not save file record: ' + (dbErr.message || dbErr));
     return;
-  }
-
-  // Record upload in history so weekly quota never decreases on deletion
-  if (currentUser && isPro) {
-    _sb.from('upload_history').insert({ user_id: currentUser.id, size: selectedFile.size }).catch(() => {});
   }
 
   // Show success
