@@ -311,6 +311,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             Billing
           </button>
+          <button id="menu-restore-pro" onclick="restorePro()" class="hidden w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#8B6F47;background:transparent;border:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Restore Pro access
+          </button>
           <button onclick="signOut()" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-left" style="color:#1C1917;background:transparent;border-top:1px solid rgba(28,25,23,0.08);border-left:none;border-right:none;border-bottom:none;cursor:pointer;font-family:inherit" onmouseover="this.style.background='#EAE4D9'" onmouseout="this.style.background='transparent'">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Sign out
@@ -1018,12 +1022,12 @@ window.addEventListener('DOMContentLoaded', () => {
           document.getElementById('pro-badge').classList.remove('hidden');
           showToastIndex('You\'re now Pro! All features are unlocked.');
         } else if (_proAttempts < 15) {
-          setTimeout(_pollPro, 2000);
+          setTimeout(_pollPro, 3000);
         } else {
-          showToastIndex('Pro activation is taking longer than expected — please refresh in a minute.');
+          showToastIndex('Activation timed out — open your account menu and tap "Restore Pro access".');
         }
       };
-      setTimeout(_pollPro, 2000);
+      setTimeout(_pollPro, 3000);
     } else if (_upgradeStatus === 'cancelled') {
       showToastIndex('Upgrade cancelled — no charge was made.');
     }
@@ -1040,6 +1044,37 @@ function showUser(email) {
   document.getElementById('menu-plan').textContent = isPro ? 'Pro plan' : 'Free plan';
   const billingBtn = document.getElementById('menu-billing');
   if (billingBtn) billingBtn.classList.toggle('hidden', !isPro);
+  const restoreBtn = document.getElementById('menu-restore-pro');
+  if (restoreBtn) restoreBtn.classList.toggle('hidden', !!isPro);
+}
+
+async function restorePro() {
+  document.getElementById('account-menu').classList.add('hidden');
+  showToastIndex('Checking your subscription…');
+  try {
+    const { data: { session } } = await _sb.auth.refreshSession();
+    if (!session) { showToastIndex('Sign in first, then try again.'); return; }
+    const res = await fetch(apiUrl('/restore-pro'), {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token },
+    });
+    const body = await res.json();
+    if (body.activated) {
+      isPro = true;
+      applyProPricingCard();
+      document.getElementById('pro-badge')?.classList.remove('hidden');
+      showUser(session.user.email);
+      showToastIndex('Pro restored! All features are unlocked.');
+    } else if (body.reason === 'no_active_subscription') {
+      showToastIndex('No active subscription found for this account.');
+    } else if (body.reason === 'no_stripe_customer') {
+      showToastIndex('No purchase found — contact support if you were charged.');
+    } else {
+      showToastIndex(body.error || 'Could not restore Pro. Contact support if you were charged.');
+    }
+  } catch {
+    showToastIndex('Network error — please try again.');
+  }
 }
 function showSignedOut() {
   document.getElementById('btn-signin').classList.remove('hidden');

@@ -615,7 +615,7 @@ def create_checkout_session():
 
 
 @app.route("/activate-pro-from-session", methods=["POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("30 per minute")
 def activate_pro_from_session():
     """Fallback: verify a completed Stripe checkout session and activate Pro.
 
@@ -656,6 +656,59 @@ def activate_pro_from_session():
     ok = _activate_pro(user_id, stripe_customer_id=stripe_customer_id)
     log.info("activate_pro_from_session: _activate_pro(%s) -> %s", user_id, ok)
     return jsonify({"activated": ok})
+
+
+@app.route("/restore-pro", methods=["POST"])
+@limiter.limit("10 per minute")
+def restore_pro():
+    """Let a user who paid but wasn't activated restore their Pro access.
+
+    Looks up the authenticated user's Stripe customer by email, checks for
+    an active subscription, and activates Pro if found.
+    """
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"error": "Unauthorized"}), 401
+    token = auth[7:]
+    user_id, user_email = _verify_supabase_token(token)
+    if not user_id:
+        return jsonify({"error": "Invalid or expired session"}), 401
+    if not STRIPE_SECRET_KEY:
+        return jsonify({"error": "Payments not configured"}), 503
+    if not user_email:
+        return jsonify({"error": "Could not determine account email"}), 400
+
+    try:
+        # Check saved customer ID first
+        customer_id = None
+        user_data = _get_supabase_user(user_id)
+        if user_data:
+            customer_id = user_data.get("app_metadata", {}).get("stripe_customer_id")
+
+        # Fall back to searching by email
+        if not customer_id:
+            customers = stripe.Customer.list(email=user_email, limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+
+        if not customer_id:
+            return jsonify({"activated": False, "reason": "no_stripe_customer"}), 200
+
+        # Check for an active or trialing subscription
+        subs = stripe.Subscription.list(customer=customer_id, status="active", limit=1)
+        if not subs.data:
+            subs = stripe.Subscription.list(customer=customer_id, status="trialing", limit=1)
+
+        if not subs.data:
+            return jsonify({"activated": False, "reason": "no_active_subscription"}), 200
+
+        ok = _activate_pro(user_id, stripe_customer_id=customer_id)
+        log.info("restore_pro: _activate_pro(%s) -> %s", user_id, ok)
+        return jsonify({"activated": ok})
+
+    except stripe.error.StripeError as e:
+        log.error("restore_pro: stripe error for user %s: %s", user_id, e)
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/create-billing-portal-session", methods=["POST"])
