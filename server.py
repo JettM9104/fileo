@@ -88,10 +88,10 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB request limit
 if os.environ.get("BEHIND_PROXY", "0") == "1":
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-# CORS — only enable when ALLOWED_ORIGINS is explicitly set (never default to *)
-_allowed_origins = os.environ.get("ALLOWED_ORIGINS", "")
-if _allowed_origins:
-    CORS(app, origins=[o.strip() for o in _allowed_origins.split(",")])
+# CORS — all endpoints are JWT-protected so it's safe to allow any origin.
+# ALLOWED_ORIGINS can restrict to specific domains in production if desired.
+_allowed_origins = os.environ.get("ALLOWED_ORIGINS", "*")
+CORS(app, origins=[o.strip() for o in _allowed_origins.split(",")])
 
 # Security headers
 # FORCE_HTTPS=1 only if Flask is terminating SSL directly (not needed behind Nginx+SSL)

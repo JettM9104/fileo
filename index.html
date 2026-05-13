@@ -975,37 +975,53 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle Stripe redirect result
   const _qp = new URLSearchParams(window.location.search);
   const _upgradeStatus = _qp.get('upgrade');
-  const _sessionIdFromUrl = _qp.get('session_id'); // capture before clearing URL
+  const _sessionIdFromUrl = _qp.get('session_id');
   if (_upgradeStatus) {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash);
     if (_upgradeStatus === 'success' && _sessionIdFromUrl) {
-      // Persist session_id so activation can be retried across page refreshes
-      localStorage.setItem('fileo_pending_pro_session', _sessionIdFromUrl);
+      // Wait for auth to be ready, then persist session_id + current user_id together
+      const _saveSession = async () => {
+        const { data } = await _sb.auth.getSession();
+        const uid = data?.session?.user?.id || '';
+        localStorage.setItem('fileo_pending_pro_session', JSON.stringify({ sid: _sessionIdFromUrl, uid }));
+      };
+      _saveSession();
     } else if (_upgradeStatus === 'cancelled') {
       showToastIndex('Upgrade cancelled — no charge was made.');
     }
   }
 
   // Try to activate Pro if there's a pending session (from this redirect or a previous one)
-  const _pendingSessionId = localStorage.getItem('fileo_pending_pro_session');
-  if (_pendingSessionId) {
-    showToastIndex('Payment received! Activating your Pro plan…');
+  const _rawPending = localStorage.getItem('fileo_pending_pro_session');
+  const _pendingPro = _rawPending ? (() => { try { return JSON.parse(_rawPending); } catch { return null; } })() : null;
 
-    const _triggerActivation = async (sessionId) => {
+  if (_pendingPro?.sid) {
+    showToastIndex('Activating your Pro plan…');
+
+    const _triggerActivation = async () => {
       try {
         const { data: rd } = await _sb.auth.refreshSession();
-        if (!rd?.session) return false;
+        if (!rd?.session) return 'no_session';
+        // If the pending session belongs to a different user (e.g. after account deletion), discard it
+        if (_pendingPro.uid && rd.session.user.id !== _pendingPro.uid) {
+          localStorage.removeItem('fileo_pending_pro_session');
+          return 'wrong_user';
+        }
         const resp = await fetch(apiUrl('/activate-pro-from-session'), {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + rd.session.access_token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId }),
+          body: JSON.stringify({ session_id: _pendingPro.sid }),
         });
-        if (!resp.ok) { console.warn('[fileo] activate-pro-from-session HTTP', resp.status); return false; }
+        if (!resp.ok) {
+          const txt = await resp.text().catch(() => resp.status);
+          console.warn('[fileo] activate-pro HTTP', resp.status, txt);
+          return 'http_' + resp.status;
+        }
         const body = await resp.json();
-        return body.activated === true;
+        return body.activated ? 'ok' : (body.reason || body.error || 'not_activated');
       } catch (err) {
-        console.warn('[fileo] _triggerActivation error:', err);
-        return false;
+        console.warn('[fileo] _triggerActivation network error:', err);
+        return 'network_error';
       }
     };
 
@@ -1013,22 +1029,27 @@ window.addEventListener('DOMContentLoaded', () => {
     let _activationOk = false;
     const _pollPro = async () => {
       _proAttempts++;
-      if (!_activationOk) _activationOk = await _triggerActivation(_pendingSessionId);
+      if (!_activationOk) {
+        const result = await _triggerActivation();
+        if (result === 'ok') _activationOk = true;
+        else if (result === 'wrong_user') { showToastIndex('Old purchase session cleared — this account has no pending Pro purchase.'); return; }
+        else if (result === 'http_403') { localStorage.removeItem('fileo_pending_pro_session'); showToastIndex('Purchase session does not match this account.'); return; }
+        else if (_proAttempts === 1) showToastIndex('Server busy — retrying activation (' + result + ')…');
+      }
       const { data } = await _sb.auth.refreshSession();
       if (data?.session?.user?.app_metadata?.is_pro) {
         isPro = true;
-        localStorage.removeItem('fileo_pending_pro_session'); // clear once activated
+        localStorage.removeItem('fileo_pending_pro_session');
         applyProPricingCard();
         document.getElementById('pro-badge').classList.remove('hidden');
         showToastIndex('You\'re now Pro! All features are unlocked.');
       } else if (_proAttempts < 20) {
         setTimeout(_pollPro, 3000);
       } else {
-        // Don't remove from localStorage — let them retry by refreshing the page
         showToastIndex('Activation is taking longer than usual — refresh the page to keep trying.');
       }
     };
-    setTimeout(_pollPro, 3000);
+    setTimeout(_pollPro, 2000);
   }
 });
 
@@ -1051,6 +1072,7 @@ function showSignedOut() {
 }
 function toggleAccountMenu() { document.getElementById('account-menu').classList.toggle('hidden'); }
 async function signOut() {
+  localStorage.removeItem('fileo_pending_pro_session');
   await _sb.auth.signOut();
   isPro = false;
   document.getElementById('pro-badge').classList.add('hidden');
