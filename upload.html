@@ -489,6 +489,7 @@ let _cloudFiles = [];
 let _selectedBrandingId = null;   // profile id to use, or null = no branding
 let _brandingProfiles   = [];     // loaded branding profiles for dropdown
 let _pendingUpload = false;
+let _lastUploadedFileId = null;   // track so we can clear the success panel if that file is deleted
 
 // ── INIT
 window.addEventListener('DOMContentLoaded', () => {
@@ -1086,6 +1087,7 @@ async function doUpload() {
   }
 
   // Show success
+  _lastUploadedFileId = fileId;
   const link = getShareLink(fileId);
   document.getElementById('upload-progress').classList.add('hidden');
   document.getElementById('upload-success').classList.remove('hidden');
@@ -1395,6 +1397,8 @@ async function deleteFile(id) {
     });
     if (!res.ok) { showToast('Delete failed — server returned ' + res.status); return; }
     showToast('File deleted.');
+    // If the upload panel is still showing this file's link, clear it
+    if (id === _lastUploadedFileId) { _lastUploadedFileId = null; resetUpload(); }
     loadFiles();
     loadQuota();
   } catch (e) {

@@ -975,58 +975,60 @@ window.addEventListener('DOMContentLoaded', () => {
   // Handle Stripe redirect result
   const _qp = new URLSearchParams(window.location.search);
   const _upgradeStatus = _qp.get('upgrade');
-  const _checkoutSessionId = _qp.get('session_id'); // capture before clearing URL
+  const _sessionIdFromUrl = _qp.get('session_id'); // capture before clearing URL
   if (_upgradeStatus) {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash);
-    if (_upgradeStatus === 'success') {
-      showToastIndex('Payment received! Activating your Pro plan…');
-
-      // Trigger server-side activation immediately as a webhook fallback, then
-      // poll refreshSession() until the updated JWT reflects is_pro=true.
-      const _triggerActivation = async () => {
-        if (!_checkoutSessionId) return false;
-        try {
-          // Use refreshSession (not getSession) so we always send a non-expired token —
-          // the Stripe checkout flow can take long enough to expire the cached JWT.
-          const { data: rd } = await _sb.auth.refreshSession();
-          if (!rd?.session) return false;
-          const resp = await fetch(apiUrl('/activate-pro-from-session'), {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + rd.session.access_token, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: _checkoutSessionId }),
-          });
-          if (!resp.ok) { console.warn('[fileo] activate-pro-from-session HTTP', resp.status); return false; }
-          const body = await resp.json();
-          return body.activated === true;
-        } catch (err) {
-          console.warn('[fileo] _triggerActivation error:', err);
-          return false;
-        }
-      };
-
-      let _proAttempts = 0;
-      let _activationOk = false;
-      const _pollPro = async () => {
-        _proAttempts++;
-        // Keep retrying activation on every poll until it succeeds (server may have been
-        // temporarily unreachable, or the JWT was expired on the first attempt).
-        if (!_activationOk) _activationOk = await _triggerActivation();
-        const { data } = await _sb.auth.refreshSession();
-        if (data?.session?.user?.app_metadata?.is_pro) {
-          isPro = true;
-          applyProPricingCard();
-          document.getElementById('pro-badge').classList.remove('hidden');
-          showToastIndex('You\'re now Pro! All features are unlocked.');
-        } else if (_proAttempts < 15) {
-          setTimeout(_pollPro, 3000);
-        } else {
-          showToastIndex('Activation timed out — please refresh the page or contact support if you were charged.');
-        }
-      };
-      setTimeout(_pollPro, 3000);
+    if (_upgradeStatus === 'success' && _sessionIdFromUrl) {
+      // Persist session_id so activation can be retried across page refreshes
+      localStorage.setItem('fileo_pending_pro_session', _sessionIdFromUrl);
     } else if (_upgradeStatus === 'cancelled') {
       showToastIndex('Upgrade cancelled — no charge was made.');
     }
+  }
+
+  // Try to activate Pro if there's a pending session (from this redirect or a previous one)
+  const _pendingSessionId = localStorage.getItem('fileo_pending_pro_session');
+  if (_pendingSessionId) {
+    showToastIndex('Payment received! Activating your Pro plan…');
+
+    const _triggerActivation = async (sessionId) => {
+      try {
+        const { data: rd } = await _sb.auth.refreshSession();
+        if (!rd?.session) return false;
+        const resp = await fetch(apiUrl('/activate-pro-from-session'), {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + rd.session.access_token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId }),
+        });
+        if (!resp.ok) { console.warn('[fileo] activate-pro-from-session HTTP', resp.status); return false; }
+        const body = await resp.json();
+        return body.activated === true;
+      } catch (err) {
+        console.warn('[fileo] _triggerActivation error:', err);
+        return false;
+      }
+    };
+
+    let _proAttempts = 0;
+    let _activationOk = false;
+    const _pollPro = async () => {
+      _proAttempts++;
+      if (!_activationOk) _activationOk = await _triggerActivation(_pendingSessionId);
+      const { data } = await _sb.auth.refreshSession();
+      if (data?.session?.user?.app_metadata?.is_pro) {
+        isPro = true;
+        localStorage.removeItem('fileo_pending_pro_session'); // clear once activated
+        applyProPricingCard();
+        document.getElementById('pro-badge').classList.remove('hidden');
+        showToastIndex('You\'re now Pro! All features are unlocked.');
+      } else if (_proAttempts < 20) {
+        setTimeout(_pollPro, 3000);
+      } else {
+        // Don't remove from localStorage — let them retry by refreshing the page
+        showToastIndex('Activation is taking longer than usual — refresh the page to keep trying.');
+      }
+    };
+    setTimeout(_pollPro, 3000);
   }
 });
 
