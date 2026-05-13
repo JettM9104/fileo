@@ -972,69 +972,71 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!menu.contains(e.target) && e.target !== avatar) menu.classList.add('hidden');
   });
 
-  // Handle Stripe redirect result
+  // Handle Stripe redirect result — capture session_id from URL before clearing it
   const _qp = new URLSearchParams(window.location.search);
   const _upgradeStatus = _qp.get('upgrade');
-  const _sessionIdFromUrl = _qp.get('session_id');
+  const _sessionIdFromUrl = _qp.get('session_id') || null;
   if (_upgradeStatus) {
     window.history.replaceState({}, '', window.location.pathname + window.location.hash);
-    if (_upgradeStatus === 'success' && _sessionIdFromUrl) {
-      // Wait for auth to be ready, then persist session_id + current user_id together
-      const _saveSession = async () => {
-        const { data } = await _sb.auth.getSession();
-        const uid = data?.session?.user?.id || '';
-        localStorage.setItem('fileo_pending_pro_session', JSON.stringify({ sid: _sessionIdFromUrl, uid }));
-      };
-      _saveSession();
-    } else if (_upgradeStatus === 'cancelled') {
-      showToastIndex('Upgrade cancelled — no charge was made.');
-    }
+    if (_upgradeStatus === 'cancelled') showToastIndex('Upgrade cancelled — no charge was made.');
   }
 
-  // Try to activate Pro if there's a pending session (from this redirect or a previous one)
-  const _rawPending = localStorage.getItem('fileo_pending_pro_session');
-  const _pendingPro = _rawPending ? (() => { try { return JSON.parse(_rawPending); } catch { return null; } })() : null;
+  // Determine the session to activate: URL takes priority (fresh redirect), then localStorage (retry)
+  const _storedRaw = localStorage.getItem('fileo_pending_pro_session');
+  const _stored = _storedRaw ? (() => { try { return JSON.parse(_storedRaw); } catch { return null; } })() : null;
+  // Use URL session_id directly on first load; fall back to stored for retries
+  const _pendingSessionId = _sessionIdFromUrl || _stored?.sid || null;
 
-  if (_pendingPro?.sid) {
+  if (_upgradeStatus === 'success' && _sessionIdFromUrl) {
+    // Save to localStorage immediately (synchronously) so retries work on refresh
+    localStorage.setItem('fileo_pending_pro_session', JSON.stringify({ sid: _sessionIdFromUrl, uid: '' }));
+    // Update uid once auth is ready (non-blocking)
+    _sb.auth.getSession().then(({ data }) => {
+      const uid = data?.session?.user?.id || '';
+      localStorage.setItem('fileo_pending_pro_session', JSON.stringify({ sid: _sessionIdFromUrl, uid }));
+    });
+  }
+
+  if (_pendingSessionId) {
     showToastIndex('Activating your Pro plan…');
 
     const _triggerActivation = async () => {
       try {
         const { data: rd } = await _sb.auth.refreshSession();
         if (!rd?.session) return 'no_session';
-        // If the pending session belongs to a different user (e.g. after account deletion), discard it
-        if (_pendingPro.uid && rd.session.user.id !== _pendingPro.uid) {
+        // Discard stale sessions from a different (e.g. deleted) account
+        const storedUid = _stored?.uid || '';
+        if (storedUid && rd.session.user.id !== storedUid) {
           localStorage.removeItem('fileo_pending_pro_session');
           return 'wrong_user';
         }
         const resp = await fetch(apiUrl('/activate-pro-from-session'), {
           method: 'POST',
           headers: { 'Authorization': 'Bearer ' + rd.session.access_token, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: _pendingPro.sid }),
+          body: JSON.stringify({ session_id: _pendingSessionId }),
         });
         if (!resp.ok) {
-          const txt = await resp.text().catch(() => resp.status);
+          const txt = await resp.text().catch(() => String(resp.status));
           console.warn('[fileo] activate-pro HTTP', resp.status, txt);
           return 'http_' + resp.status;
         }
         const body = await resp.json();
         return body.activated ? 'ok' : (body.reason || body.error || 'not_activated');
       } catch (err) {
-        console.warn('[fileo] _triggerActivation network error:', err);
+        console.warn('[fileo] _triggerActivation error:', err);
         return 'network_error';
       }
     };
 
-    let _proAttempts = 0;
-    let _activationOk = false;
+    let _proAttempts = 0, _activationOk = false;
     const _pollPro = async () => {
       _proAttempts++;
       if (!_activationOk) {
         const result = await _triggerActivation();
-        if (result === 'ok') _activationOk = true;
-        else if (result === 'wrong_user') { showToastIndex('Old purchase session cleared — this account has no pending Pro purchase.'); return; }
-        else if (result === 'http_403') { localStorage.removeItem('fileo_pending_pro_session'); showToastIndex('Purchase session does not match this account.'); return; }
-        else if (_proAttempts === 1) showToastIndex('Server busy — retrying activation (' + result + ')…');
+        if (result === 'ok') { _activationOk = true; }
+        else if (result === 'wrong_user') { showToastIndex('Old purchase session cleared.'); return; }
+        else if (result === 'http_403')   { localStorage.removeItem('fileo_pending_pro_session'); showToastIndex('Purchase session does not match this account.'); return; }
+        else if (_proAttempts === 1)      { showToastIndex('Retrying activation (' + result + ')…'); }
       }
       const { data } = await _sb.auth.refreshSession();
       if (data?.session?.user?.app_metadata?.is_pro) {
@@ -1046,7 +1048,7 @@ window.addEventListener('DOMContentLoaded', () => {
       } else if (_proAttempts < 20) {
         setTimeout(_pollPro, 3000);
       } else {
-        showToastIndex('Activation is taking longer than usual — refresh the page to keep trying.');
+        showToastIndex('Activation taking longer than usual — refresh to keep trying.');
       }
     };
     setTimeout(_pollPro, 2000);
