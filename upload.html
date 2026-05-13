@@ -1388,14 +1388,18 @@ async function deleteFile(id) {
   const { data: sessionData } = await _sb.auth.getSession();
   const token = sessionData?.session?.access_token;
   if (!token) { showToast('Sign in required.'); return; }
-  const res = await fetch(apiUrl(`/file/${encodeURIComponent(id)}`), {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` },
-  });
-  if (!res.ok) { showToast('Delete failed.'); return; }
-  showToast('File deleted.');
-  loadFiles();
-  loadQuota();
+  try {
+    const res = await fetch(apiUrl(`/file/${encodeURIComponent(id)}`), {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) { showToast('Delete failed — server returned ' + res.status); return; }
+    showToast('File deleted.');
+    loadFiles();
+    loadQuota();
+  } catch (e) {
+    showToast('Delete failed — server unreachable. Is the backend running?');
+  }
 }
 
 // ── AUTH
